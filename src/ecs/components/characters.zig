@@ -3,10 +3,6 @@ const game = @import("game");
 
 const AnimationSet = game.animation_sets.AnimationSet;
 
-pub const Player = struct {};
-pub const Head = struct {};
-pub const Body = struct {};
-
 pub const CharacterAnimator = struct {
     head_set: AnimationSet,
     body_set: AnimationSet,
