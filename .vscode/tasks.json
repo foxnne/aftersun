@@ -1,0 +1,113 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "options": {
+        "env": {
+            "ZIG_SYSTEM_LINKER_HACK": "1",
+            "MTL_SHADER_VALIDATION": "1",
+            "MTL_SHADER_VALIDATION_GLOBAL_MEMORY": "1",
+            "MTL_SHADER_VALIDATION_TEXTURE_USAGE": "1",
+            "MTL_DEBUG_LAYER": "1",
+            "METAL_DEVICE_WRAPPER_TYPE": "1",
+        },
+    },
+    "tasks": [
+        {
+            "label": "Build Project",
+            "type": "shell",
+            "command": "zig build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "Build and Run Project",
+            "type": "shell",
+            "command": "zig build run",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "Build and Run Project (release-fast)",
+            "type": "shell",
+            "command": "zig build run -Drelease-fast",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "Build and Run Project (release-small)",
+            "type": "shell",
+            "command": "zig build run -Drelease-small",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "Test Project",
+            "type": "shell",
+            "command": "zig build test",
+            "group": "build",
+            "presentation": {
+                "clear": true,
+            },
+        },
+        {
+            "label": "Test File",
+            "type": "shell",
+            "command": "zig test ${file}",
+            "presentation": {
+                "clear": true
+            },
+            "group": "build",
+        },
+        {
+            "label": "Process Assets",
+            "type": "shell",
+            "command": "zig build process-assets",
+            "group": "build",
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "Update Dependency - Flecs",
+            "type": "shell",
+            "command": "zig build update-flecs",
+            "group": "build",
+            "presentation": {
+                "clear": true
+            }
+        },
+    ],
+    "inputs": [
+        {
+            "id": "zigTarget",
+            "type": "command",
+            "command": "zig.build.getTargets",
+        },
+        {
+            "id": "zigLastTarget",
+            "type": "command",
+            "command": "zig.build.getLastTargetOrPrompt"
+        }
+    ]
+}
