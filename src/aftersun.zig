@@ -277,9 +277,9 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
         .bottom_set = animation_sets.bottom_f_02,
         .hair_set = animation_sets.hair_f_01,
     });
-    flecs.ecs_add_pair(world, player, components.Direction, components.Movement);
-    flecs.ecs_add_pair(world, player, components.Direction, components.Head);
-    flecs.ecs_add_pair(world, player, components.Direction, components.Body);
+    flecs.ecs_set_pair(world, player, &components.Direction{ .value = .none }, components.Movement);
+    flecs.ecs_set_pair(world, player, &components.Direction{ .value = .se }, components.Head);
+    flecs.ecs_set_pair(world, player, &components.Direction{ .value = .se }, components.Body);
     flecs.ecs_add_pair(world, player, components.Camera, components.Target);
 
     const debug = flecs.ecs_new(world, null);
