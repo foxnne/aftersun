@@ -74,7 +74,6 @@ fn register(world: *flecs.EcsWorld, comptime T: type) void {
         if (decl.is_pub) {
             const Type = @field(T, decl.name);
             if (@TypeOf(T) == type) {
-                std.log.debug("Registered type: {s}", .{ @typeName(Type)});
                 flecs.ecs_component(world, Type);
             }
         }
