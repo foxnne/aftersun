@@ -22,7 +22,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
         var i: usize = 0;
         while (i < it.count) : (i += 1) {
             const entity = it.entities[i];
-            const input_direction = game.state.controls.movement.direction();
+            const input_direction = game.state.controls.movement().direction();
 
             if (input_direction != .none) {
                 if (flecs.ecs_field(it, components.Tile, 2)) |current_tiles| {

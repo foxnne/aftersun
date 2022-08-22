@@ -47,7 +47,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             });
                         } else {
                             if (flecs.ecs_has_id(world, entity, flecs.ecs_id(components.Player))) {
-                                const input = game.state.controls.movement.direction();
+                                const input = game.state.controls.movement().direction();
 
                                 if (input == .none) {
                                     flecs.ecs_remove_pair(world, entity, components.Request, components.Movement);

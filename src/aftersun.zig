@@ -68,6 +68,8 @@ pub const Entities = struct {
     debug: flecs.EcsEntity,
 };
 
+/// Registers all public declarations within the passed type
+/// as components.
 fn register(world: *flecs.EcsWorld, comptime T: type) void {
     const decls = @typeInfo(T).Struct.decls;
     inline for (decls) |decl| {
@@ -230,8 +232,12 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
     flecs.ecs_system(world, "MovementRequestSystem", flecs.Constants.EcsOnUpdate, &movement_request);
     var movement = @import("ecs/systems/movement.zig").system();
     flecs.ecs_system(world, "MovementSystem", flecs.Constants.EcsOnUpdate, &movement);
+
+    // - Camera
     var camera_follow = @import("ecs/systems/camera_follow.zig").system();
     flecs.ecs_system(world, "CameraFollowSystem", flecs.Constants.EcsOnUpdate, &camera_follow);
+    var camera_zoom = @import("ecs/systems/camera_zoom.zig").system();
+    flecs.ecs_system(world, "CameraZoomSystem", flecs.Constants.EcsOnUpdate, &camera_zoom);
 
     // - Animation
     var animation_character = @import("ecs/systems/animation_character.zig").system();
@@ -425,7 +431,7 @@ fn update() void {
         zgui.bulletText("Ambient XY Angle: {d:.4}", .{state.environment.ambientXYAngle()});
         zgui.bulletText("Ambient Z Angle: {d:.4}", .{state.environment.ambientZAngle()});
 
-        zgui.bulletText("Movement Input: {s}", .{state.controls.movement.direction().fmt()});
+        zgui.bulletText("Movement Input: {s}", .{state.controls.movement().direction().fmt()});
 
         if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Movement)) |direction| {
             zgui.bulletText("Movement Direction: {s}", .{direction.value.fmt()});
@@ -503,12 +509,18 @@ pub fn main() !void {
     try glfw.init(.{});
     defer glfw.terminate();
 
+    // Create window
     const window = try glfw.Window.create(settings.design_width, settings.design_height, name, null, null, .{
         .client_api = .no_api,
         .cocoa_retina_framebuffer = true,
     });
     defer window.destroy();
     try window.setSizeLimits(.{ .width = 400, .height = 400 }, .{ .width = null, .height = null });
+
+    // Set callbacks
+    window.setCursorPosCallback(input.callbacks.cursor);
+    window.setScrollCallback(input.callbacks.scroll);
+    window.setKeyCallback(input.callbacks.key);
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();

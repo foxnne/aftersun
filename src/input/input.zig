@@ -4,47 +4,49 @@ const glfw = @import("glfw");
 const math = @import("../math/math.zig");
 const game = @import("game");
 
+pub const callbacks = @import("callbacks.zig");
+
 pub const Controls = struct {
     mouse: Mouse = .{},
 
-    // Controls
-    movement: Directional = .{
-        .name = "Movement",
-        .horizontal = .{
-            .name = "Horizontal",
-            .positive = .{
-                .name = "Right",
-                .primary = glfw.Key.d,
-                .secondary = glfw.Key.right,
-                .default_primary = glfw.Key.d,
-                .default_secondary = glfw.Key.right,
-            },
-            .negative = .{
-                .name = "Left",
-                .primary = glfw.Key.a,
-                .secondary = glfw.Key.left,
-                .default_primary = glfw.Key.a,
-                .default_secondary = glfw.Key.left,
-            },
+    keys: [4]Key = [_]Key{
+        .{
+            .name = "MovementUp",
+            .primary = glfw.Key.w,
+            .secondary = glfw.Key.up,
+            .default_primary = glfw.Key.w,
+            .default_secondary = glfw.Key.up,
         },
-        .vertical = .{
-            .name = "Vertical",
-            .positive = .{
-                .name = "Up",
-                .primary = glfw.Key.w,
-                .secondary = glfw.Key.up,
-                .default_primary = glfw.Key.w,
-                .default_secondary = glfw.Key.up,
-            },
-            .negative = .{
-                .name = "Down",
-                .primary = glfw.Key.s,
-                .secondary = glfw.Key.down,
-                .default_primary = glfw.Key.s,
-                .default_secondary = glfw.Key.down,
-            },
+        .{
+            .name = "MovementDown",
+            .primary = glfw.Key.s,
+            .secondary = glfw.Key.down,
+            .default_primary = glfw.Key.s,
+            .default_secondary = glfw.Key.down,
+        },
+        .{
+            .name = "MovementRight",
+            .primary = glfw.Key.d,
+            .secondary = glfw.Key.right,
+            .default_primary = glfw.Key.d,
+            .default_secondary = glfw.Key.right,
+        },
+        .{
+            .name = "MovementLeft",
+            .primary = glfw.Key.a,
+            .secondary = glfw.Key.left,
+            .default_primary = glfw.Key.a,
+            .default_secondary = glfw.Key.left,
         },
     },
+
+    pub fn movement (self: Controls) Directional {
+        return .{
+            .name = "Movement",
+            .keys = self.keys[0..4],
+        };
+    } 
+
 };
 
 pub const Key = struct {
@@ -53,40 +55,43 @@ pub const Key = struct {
     secondary: glfw.Key = glfw.Key.unknown,
     default_primary: glfw.Key = glfw.Key.unknown,
     default_secondary: glfw.Key = glfw.Key.unknown,
+    state: bool = false,
+    previous_state: bool = false,
 
-    /// Returns true if the key's primary or secondary bindings are pressed.
-    pub fn pressed(key: Key) bool {
-        const primary = if (key.primary != glfw.Key.unknown) switch (game.state.gctx.window.getKey(key.primary)) {
-            .press => true,
-            else => false,
-        } else false;
-        const secondary = if (key.secondary != glfw.Key.unknown) switch (game.state.gctx.window.getKey(key.secondary)) {
-            .press => true,
-            else => false,
-        } else false;
+    /// Returns true the frame the key was pressed.
+    pub fn pressed (self: MouseButton) bool {
+        return self.state == true and self.state != self.previous_state;
+    }
 
-        return primary or secondary;
+    /// Returns true while the key is pressed down.
+    pub fn down (self: MouseButton) bool {
+        return self.state == true;
+    }
+
+    /// Returns true the frame the key was released.
+    pub fn released (self: MouseButton) bool {
+        return self.state == false and self.state != self.previous_state;
+    }
+
+    /// Returns true while the key is released.
+    pub fn up (self: MouseButton) bool {
+        return self.state == false;
     }
 };
 
-pub const Axis = struct {
-    name: [:0]const u8,
-    positive: Key = .{ .name = "Positive" },
-    negative: Key = .{ .name = "Negative" },
-};
+
 
 pub const Directional = struct {
     name: [:0]const u8,
-    horizontal: Axis = .{ .name = "Horizontal" },
-    vertical: Axis = .{ .name = "Vertical" },
+    keys: []const Key,
 
     /// Returns the current direction of a directional control.
-    pub fn direction(directional: Directional) math.Direction {
+    pub fn direction(self: Directional) math.Direction {
         return math.Direction.write(
-            directional.vertical.positive.pressed(),
-            directional.vertical.negative.pressed(),
-            directional.horizontal.positive.pressed(),
-            directional.horizontal.negative.pressed(),
+            self.keys[0].state,
+            self.keys[1].state,
+            self.keys[2].state,
+            self.keys[3].state,
         );
     }
 };
@@ -94,24 +99,63 @@ pub const Directional = struct {
 pub const MouseButton = struct {
     name: [:0]const u8,
     button: glfw.MouseButton,
+    state: bool = false,
+    previous_state: bool = false,
 
-    pub fn pressed(self: MouseButton) bool {
-        return game.state.window.getMouseButton(self.button) == .press;
+    /// Returns true the frame the mouse button was pressed.
+    pub fn pressed (self: MouseButton) bool {
+        return self.state == true and self.state != self.previous_state;
+    }
+
+    /// Returns true while the mouse button is pressed down.
+    pub fn down (self: MouseButton) bool {
+        return self.state == true;
+    }
+
+    /// Returns true the frame the mouse button was released.
+    pub fn released (self: MouseButton) bool {
+        return self.state == false and self.state != self.previous_state;
+    }
+
+    /// Returns true while the mouse button is released.
+    pub fn up (self: MouseButton) bool {
+        return self.state == false;
     }
 };
 
 pub const Mouse = struct {
     primary: MouseButton = .{ .name = "Primary", .button = glfw.MouseButton.left },
     secondary: MouseButton = .{ .name = "Secondary", .button = glfw.MouseButton.right },
+    scroll: Scroll = .{},
+    position: Position = .{},
 
     pub const Position = struct {
-        x: f32 = 0,
-        y: f32 = 0,
+        x: f32 = 0.0,
+        y: f32 = 0.0,
+
+        /// Returns the screen position.
+        pub fn screen (self:Position) zm.F32x4 {
+            return zm.f32x4(self.x, self.y, 0, 0);
+        }
+
+        /// Returns the world position.
+        pub fn world (self:Position) zm.F32x4 {
+            const fb = game.state.camera.frameBufferMatrix();
+            const position = self.screen();
+            return game.state.camera.screenToWorld(position, fb);
+        }
     };
 
-    pub fn position(self: Mouse) Position {
-        _ = self;
-        const pos = game.state.gctx.window.getCursorPos() catch unreachable;
-        return .{ .x = @floatCast(f32, pos.xpos), .y = @floatCast(f32, pos.ypos) };
-    }
+    pub const Scroll = struct {
+        x: f32 = 0.0,
+        y: f32 = 0.0,
+
+        pub fn up (self: Scroll) bool {
+            return self.y > 0;
+        }
+
+        pub fn down (self: Scroll) bool {
+            return self.y < 0;
+        }
+    };
 };

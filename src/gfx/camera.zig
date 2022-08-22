@@ -2,11 +2,15 @@ const std = @import("std");
 const zm = @import("zmath");
 const zgpu = @import("zgpu");
 const glfw = @import("glfw");
+const game = @import("game");
 
 pub const Camera = struct {
     design_size: zm.F32x4,
     window_size: zm.F32x4,
-    zoom: f32 = 1,
+    zoom: f32 = 1.0,
+    zoom_prev: f32 = 1.0,
+    zoom_next: f32 = 1.0,
+    zoom_progress: f32 = 0.0,
     position: zm.F32x4 = zm.f32x4(0, 0, 0, 0),
     culling_margin: f32 = 256.0,
 
@@ -23,6 +27,8 @@ pub const Camera = struct {
     pub fn setWindow (self: *Camera, window: glfw.Window) void {
         const window_size = window.getSize() catch unreachable;
         self.window_size = zm.f32x4(@intToFloat(f32, window_size.width), @intToFloat(f32, window_size.height), 0, 0);
+        const min_zoom = self.minZoom();
+        if (self.zoom < min_zoom) self.zoom = min_zoom;
     }
 
     /// Use this matrix when drawing to the framebuffer.
@@ -50,5 +56,17 @@ pub const Camera = struct {
         const world = ndc * zm.f32x4(self.window_size[0] / self.zoom, self.window_size[1] / self.zoom, 0, 0) - zm.f32x4(-self.position[0], -self.position[1], 0, 0);
         
         return zm.f32x4(world[0], world[1], 0, 0);
+    }
+
+    /// Returns the minimum zoom needed to render to the window without black bars.
+    pub fn minZoom (self: Camera) f32 {
+        const zoom = zm.ceil(self.window_size / self.design_size);
+        return std.math.max(zoom[0], zoom[1]);
+    }
+
+    /// Returns the maximum zoom allowed for the current window size.
+    pub fn maxZoom (self: Camera) f32 {
+        const min = self.minZoom();
+        return min + game.settings.max_zoom_offset;
     }
 };
