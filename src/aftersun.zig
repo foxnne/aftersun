@@ -288,8 +288,8 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
     flecs.ecs_add_pair(world, player, components.Camera, components.Target);
 
     const debug = flecs.ecs_new(world, null);
-    flecs.ecs_set(world, debug, &components.Position{.x = 0.0, .y = -64.0});
-    flecs.ecs_set(world, debug, &components.Tile{.x = 0, .y = -2});
+    flecs.ecs_set(world, debug, &components.Position{ .x = 0.0, .y = -64.0 });
+    flecs.ecs_set(world, debug, &components.Tile{ .x = 0, .y = -2 });
     flecs.ecs_set(world, debug, &components.SpriteRenderer{
         .index = assets.aftersun_atlas.Ham_0_Layer,
     });
@@ -432,6 +432,11 @@ fn update() void {
         zgui.bulletText("Ambient Z Angle: {d:.4}", .{state.environment.ambientZAngle()});
 
         zgui.bulletText("Movement Input: {s}", .{state.controls.movement().direction().fmt()});
+
+        zgui.bulletText("Scrolling: ", .{});
+        _ = zgui.radioButton("Up", .{ .active = state.controls.mouse.scroll.up() });
+        zgui.sameLine(.{});
+        _ = zgui.radioButton("Down", .{ .active = state.controls.mouse.scroll.down() });
 
         if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Movement)) |direction| {
             zgui.bulletText("Movement Direction: {s}", .{direction.value.fmt()});
