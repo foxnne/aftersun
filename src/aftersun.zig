@@ -103,7 +103,7 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
     const reverse_height_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
     const environment_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
 
-    var camera = gfx.Camera.init(settings.design_size, try gctx.window.getSize(), 2, zm.f32x4(0, 0, 0, 0));
+    var camera = gfx.Camera.init(settings.design_size, try gctx.window.getSize(), zm.f32x4(0, 0, 0, 0));
 
     // Build the default bind group.
     const bind_group_layout_default = gctx.createBindGroupLayout(&.{
@@ -433,7 +433,7 @@ fn update() void {
 
         zgui.bulletText("Movement Input: {s}", .{state.controls.movement().direction().fmt()});
 
-        zgui.bulletText("Scrolling: ", .{});
+        zgui.bulletText("Scrolling: {d}", .{ state.controls.mouse.scroll.y });
         _ = zgui.radioButton("Up", .{ .active = state.controls.mouse.scroll.up() });
         zgui.sameLine(.{});
         _ = zgui.radioButton("Down", .{ .active = state.controls.mouse.scroll.down() });

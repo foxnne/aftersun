@@ -11,26 +11,8 @@ pub fn system() flecs.EcsSystemDesc {
     return desc;
 }
 
-pub fn run(it: *flecs.EcsIter) callconv(.C) void {
-
-    if (game.state.controls.mouse.scroll.up() and game.state.camera.zoom < game.state.camera.maxZoom() and game.state.camera.zoom_progress <= 0.0) {
-        game.state.camera.zoom_progress = 0.0;
-        game.state.camera.zoom_prev = game.state.camera.zoom;
-        game.state.camera.zoom_next = @round(game.state.camera.zoom) + 1.0;
-    }
-
-    if (game.state.controls.mouse.scroll.down() and game.state.camera.zoom > game.state.camera.minZoom() and game.state.camera.zoom_progress <= 0.0) {
-        game.state.camera.zoom_progress = 0.0;
-        game.state.camera.zoom_prev = game.state.camera.zoom;
-        game.state.camera.zoom_next = @round(game.state.camera.zoom) - 1.0;
-    }
-
-    if (game.state.camera.zoom_progress >= 1.0) {
-        game.state.camera.zoom_progress = 0.0;
-        game.state.camera.zoom = game.state.camera.zoom_next;
-        game.state.camera.zoom_prev = game.state.camera.zoom;
-    } else {
-        game.state.camera.zoom_progress += it.delta_time * game.state.camera.zoom;
-        game.state.camera.zoom = game.math.lerp(game.state.camera.zoom_prev, game.state.camera.zoom_next, std.math.clamp(game.state.camera.zoom_progress, 0.0, 1.0));
-    }
+pub fn run(_: *flecs.EcsIter) callconv(.C) void {
+    const scroll = std.math.clamp(game.state.controls.mouse.scroll.y, 0.0, 100.0) / 100.0;
+    const zoom = game.math.lerp(game.state.camera.minZoom(), game.state.camera.maxZoom(), scroll);
+    game.state.camera.zoom = zoom;
 }

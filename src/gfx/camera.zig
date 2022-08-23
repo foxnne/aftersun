@@ -8,16 +8,17 @@ pub const Camera = struct {
     design_size: zm.F32x4,
     window_size: zm.F32x4,
     zoom: f32 = 1.0,
-    zoom_prev: f32 = 1.0,
-    zoom_next: f32 = 1.0,
-    zoom_progress: f32 = 0.0,
     position: zm.F32x4 = zm.f32x4(0, 0, 0, 0),
     culling_margin: f32 = 256.0,
 
-    pub fn init (design_size: zm.F32x4, window_size: glfw.Window.Size, zoom: f32, position: zm.F32x4) Camera {
+    pub fn init (design_size: zm.F32x4, window_size: glfw.Window.Size, position: zm.F32x4) Camera {
+        const w_size = zm.f32x4(@intToFloat(f32, window_size.width), @intToFloat(f32, window_size.height), 0, 0);
+        const zooms = zm.ceil(w_size / design_size);
+        const zoom = std.math.max(zooms[0], zooms[1]) + 1.0; // Initially set the zoom to be 1 step greater than minimum.
+
         return .{
             .design_size = design_size,
-            .window_size = zm.f32x4(@intToFloat(f32, window_size.width), @intToFloat(f32, window_size.height), 0, 0),
+            .window_size = w_size,
             .zoom = zoom,
             .position = position,
         };
@@ -28,7 +29,9 @@ pub const Camera = struct {
         const window_size = window.getSize() catch unreachable;
         self.window_size = zm.f32x4(@intToFloat(f32, window_size.width), @intToFloat(f32, window_size.height), 0, 0);
         const min_zoom = self.minZoom();
+        const max_zoom = self.maxZoom();
         if (self.zoom < min_zoom) self.zoom = min_zoom;
+        if (self.zoom > max_zoom) self.zoom = max_zoom;
     }
 
     /// Use this matrix when drawing to the framebuffer.
@@ -51,7 +54,6 @@ pub const Camera = struct {
     /// Transforms a position from screen-space to world-space.
     /// Remember that in screen-space positive Y is down, and positive Y is up in world-space.
     pub fn screenToWorld (self: Camera, position: zm.F32x4, fb_mat: zm.Mat) zm.F32x4 {
-
         const ndc = zm.mul(fb_mat, zm.f32x4(position[0], -position[1], 0, 0)) / zm.f32x4(self.zoom * 2, self.zoom * 2, 0, 0) + zm.f32x4(-0.5, 0.5, 0, 0);
         const world = ndc * zm.f32x4(self.window_size[0] / self.zoom, self.window_size[1] / self.zoom, 0, 0) - zm.f32x4(-self.position[0], -self.position[1], 0, 0);
         
