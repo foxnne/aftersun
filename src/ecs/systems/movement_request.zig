@@ -32,8 +32,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     };
 
                     const cooldown = switch (input_direction) {
-                        .n, .s, .e, .w => 0.4,
-                        else => 0.4 * game.math.sqrt2,
+                        .n, .s, .e, .w => game.settings.movement_cooldown,
+                        else => game.settings.movement_cooldown * game.math.sqrt2,
                     };
 
                     // ! When setting pairs, the intended data type attached must either be matched with a tag, or first in the pair of components.

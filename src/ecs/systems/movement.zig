@@ -56,8 +56,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                 } else {
                                     // Set the cooldown and request pairs like the movement request system to avoid an extra frame between.
                                     const cooldown = switch (input) {
-                                        .n, .s, .e, .w => 0.4,
-                                        else => 0.4 * game.math.sqrt2,
+                                        .n, .s, .e, .w => game.settings.movement_cooldown,
+                                        else => game.settings.movement_cooldown * game.math.sqrt2,
                                     };
                                     flecs.ecs_set_pair_second(world, entity, components.Request, &components.Movement{ .start = tiles[i], .end = .{
                                         .x = tiles[i].x + @floatToInt(i32, input.x()),

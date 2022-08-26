@@ -11,8 +11,14 @@ pub fn system() flecs.EcsSystemDesc {
     return desc;
 }
 
-pub fn run(_: *flecs.EcsIter) callconv(.C) void {
-    const scroll = std.math.clamp(game.state.controls.mouse.scroll.y, 0.0, 100.0) / 100.0;
-    const zoom = game.math.lerp(game.state.camera.minZoom(), game.state.camera.maxZoom(), scroll);
-    game.state.camera.zoom = zoom;
+pub fn run(it: *flecs.EcsIter) callconv(.C) void {
+    if (game.state.camera.zoom_progress >= 0.0) {
+        game.state.camera.zoom_progress += it.delta_time * game.settings.zoom_speed;
+        if (game.state.camera.zoom_progress >= 1.0) {
+            game.state.camera.zoom_progress = -1.0;
+            game.state.camera.zoom = game.state.camera.zoom_step_next;
+        } else {
+            game.state.camera.zoom = game.math.lerp(game.state.camera.zoom_step, game.state.camera.zoom_step_next, game.state.camera.zoom_progress);
+        }
+    }
 }
