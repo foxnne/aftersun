@@ -12,6 +12,8 @@ pub fn system() flecs.EcsSystemDesc {
 }
 
 pub fn run(it: *flecs.EcsIter) callconv(.C) void {
+    game.input.callbacks.scroll(game.state.gctx.window, 0.0, game.state.controls.zoom().state());
+
     if (game.state.camera.zoom_progress >= 0.0) {
         game.state.camera.zoom_progress += it.delta_time * game.settings.zoom_speed;
         if (game.state.camera.zoom_progress >= 1.0) {

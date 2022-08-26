@@ -14,15 +14,19 @@ pub fn system() flecs.EcsSystemDesc {
 }
 
 pub fn run(it: *flecs.EcsIter) callconv(.C) void {
-    //const world = it.world.?;
+    const world = it.world.?;
 
     while (flecs.ecs_iter_next(it)) {
         var i: usize = 0;
         while (i < it.count) : (i += 1) {
-            //const entity = it.entities[i];
+            const entity = it.entities[i];
 
             if (flecs.ecs_field(it, components.Position, 2)) |positions| {
-                game.state.camera.position = zm.trunc(zm.f32x4(positions[i].x, positions[i].y, 0, 0));
+                const position = positions[i].toF32x4();
+                const movement = if (flecs.ecs_get_pair(world, entity, components.Direction, components.Movement)) |direction| direction.value.f32x4() * zm.f32x4s(20.0) else zm.f32x4s(0.0);
+                const cooldown = if (flecs.ecs_get_pair(world, entity, components.Cooldown, components.Movement)) |cooldown| cooldown.current / cooldown.end else 0.0;
+                const target = position + movement;
+                game.state.camera.position = @trunc(zm.lerp(position, target, cooldown));
             }
         }
     }

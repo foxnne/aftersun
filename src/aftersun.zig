@@ -352,7 +352,7 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
 
         const tree_02 = flecs.ecs_new_entity(world, "Tree02");
         flecs.ecs_set(world, tree_02, &position);
-        flecs.ecs_set(world, tree_02, &components.Tile{ .x = 1, .y = -1, .counter = state.counter.count() });
+        flecs.ecs_set(world, tree_02, &position.toTile(state.counter.count()));
         flecs.ecs_set(world, tree_02, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Oak_0_Trunk });
 
         const leaf_color = math.Color.initBytes(16, 0, 0, 255);
@@ -417,13 +417,8 @@ fn update() void {
             "Average :  {d:.3} ms/frame ({d:.1} fps)",
             .{ state.gctx.stats.average_cpu_time, state.gctx.stats.fps },
         );
-        var x = state.camera.position[0];
-        var y = state.camera.position[1];
-
-        _ = zgui.sliderFloat("Cam x", .{ .v = &x, .min = -1000.0, .max = 1000.0 });
-        _ = zgui.sliderFloat("Cam y", .{ .v = &y, .min = -1000.0, .max = 1000.0 });
+        
         _ = zgui.sliderFloat("Cam zoom", .{ .v = &state.camera.zoom, .min = 0.1, .max = 10 });
-        state.camera.position = zm.f32x4(x, y, 0, 0);
 
         _ = zgui.sliderFloat("Timescale", .{ .v = &state.time.scale, .min = 0.1, .max = 2400.0 });
         zgui.bulletText("Day: {d:.4}, Hour: {d:.4}", .{ state.time.day(), state.time.hour() });
@@ -431,12 +426,7 @@ fn update() void {
         zgui.bulletText("Ambient XY Angle: {d:.4}", .{state.environment.ambientXYAngle()});
         zgui.bulletText("Ambient Z Angle: {d:.4}", .{state.environment.ambientZAngle()});
 
-        zgui.bulletText("Movement Input: {s}", .{state.controls.movement().direction().fmt()});
-
-        zgui.bulletText("Scrolling: {d}", .{ state.controls.mouse.scroll.y });
-        _ = zgui.radioButton("Up", .{ .active = state.controls.mouse.scroll.up() });
-        zgui.sameLine(.{});
-        _ = zgui.radioButton("Down", .{ .active = state.controls.mouse.scroll.down() });
+        zgui.bulletText("Movement Input: {s}", .{state.controls.movement().direction().fmt()});     
 
         if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Movement)) |direction| {
             zgui.bulletText("Movement Direction: {s}", .{direction.value.fmt()});
