@@ -9,7 +9,7 @@ pub const callbacks = @import("callbacks.zig");
 pub const Controls = struct {
     mouse: Mouse = .{},
 
-    keys: [6]Key = [_]Key{
+    keys: [4]Key = [_]Key{
         .{
             .name = "Movement - Up",
             .primary = glfw.Key.w,
@@ -38,20 +38,20 @@ pub const Controls = struct {
             .default_primary = glfw.Key.a,
             .default_secondary = glfw.Key.left,
         },
-        .{
-            .name = "Camera - Zoom In",
-            .primary = glfw.Key.equal,
-            .secondary = glfw.Key.unknown,
-            .default_primary = glfw.Key.equal,
-            .default_secondary = glfw.Key.unknown,
-        },
-        .{
-            .name = "Camera - Zoom Out",
-            .primary = glfw.Key.minus,
-            .secondary = glfw.Key.unknown,
-            .default_primary = glfw.Key.minus,
-            .default_secondary = glfw.Key.unknown,
-        },
+        // .{
+        //     .name = "Camera - Zoom In",
+        //     .primary = glfw.Key.equal,
+        //     .secondary = glfw.Key.unknown,
+        //     .default_primary = glfw.Key.equal,
+        //     .default_secondary = glfw.Key.unknown,
+        // },
+        // .{
+        //     .name = "Camera - Zoom Out",
+        //     .primary = glfw.Key.minus,
+        //     .secondary = glfw.Key.unknown,
+        //     .default_primary = glfw.Key.minus,
+        //     .default_secondary = glfw.Key.unknown,
+        // },
     },
 
     pub fn movement(self: Controls) Directional {
