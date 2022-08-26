@@ -6,14 +6,13 @@ const Builder = std.build.Builder;
 const Target = std.build.Target;
 const Pkg = std.build.Pkg;
 
-const zgpu = @import("src/deps/zig-gamedev/libs/zgpu/build.zig");
-const zmath = @import("src/deps/zig-gamedev/libs/zmath/build.zig");
-const zpool = @import("src/deps/zig-gamedev/libs/zpool/build.zig");
+const zgpu = @import("src/deps/zig-gamedev/zgpu/build.zig");
+const zmath = @import("src/deps/zig-gamedev/zmath/build.zig");
+const zpool = @import("src/deps/zig-gamedev/zpool/build.zig");
 const flecs = @import("src/deps/zig-flecs/build.zig");
 
 const content_dir = "assets/";
 
-//const ShaderCompileStep = @import("src/deps/zia/src/deps/renderkit/build.zig").ShaderCompileStep;
 const ProcessAssetsStep = @import("src/tools/process_assets.zig").ProcessAssetsStep;
 
 pub fn build(b: *Builder) !void {
