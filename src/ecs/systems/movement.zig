@@ -25,26 +25,24 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             if (flecs.ecs_field(it, components.Position, 1)) |positions| {
                 if (flecs.ecs_field(it, components.Tile, 2)) |tiles| {
                     if (flecs.ecs_field(it, components.Movement, 3)) |movements| {
-                        // Go ahead and move the tile first.
+                        // Go ahead and move the tile first, only once so counter is only set on the actual move.
                         if (tiles[i].x != movements[i].end.x or tiles[i].y != movements[i].end.y or tiles[i].z != movements[i].end.z) {
                             tiles[i] = movements[i].end;
                             tiles[i].counter = game.state.counter.count();
                         }
+
                         if (flecs.ecs_field(it, components.Cooldown, 4)) |cooldowns| {
                             // Set position as a lerp between beginning and end tile positions.
                             const t = if (cooldowns[i].end > 0.0) cooldowns[i].current / cooldowns[i].end else 0.0;
 
-                            const start_position = components.Position{ .x = @intToFloat(f32, movements[i].start.x) * game.settings.pixels_per_unit, .y = @intToFloat(f32, movements[i].start.y) * game.settings.pixels_per_unit };
-                            const end_position = components.Position{ .x = @intToFloat(f32, movements[i].end.x) * game.settings.pixels_per_unit, .y = @intToFloat(f32, movements[i].end.y) * game.settings.pixels_per_unit };
-
+                            const start_position = movements[i].start.toPosition();
+                            const end_position = movements[i].end.toPosition();
                             
                             flecs.ecs_set_pair(world, entity, &components.Direction{ .value = game.math.Direction.find(8, end_position.x - start_position.x, end_position.y - start_position.y)}, components.Movement);
 
-                            flecs.ecs_set(world, entity, components.Position{
-                                .x = game.math.lerp(start_position.x, end_position.x, t),
-                                .y = game.math.lerp(start_position.y, end_position.y, t),
-                                .z = positions[i].z,
-                            });
+                            positions[i].x = game.math.lerp(start_position.x, end_position.x, t);
+                            positions[i].y = game.math.lerp(start_position.y, end_position.y, t);
+                            positions[i].z = game.math.lerp(start_position.z, end_position.z, t);
                         } else {
                             if (flecs.ecs_has_id(world, entity, flecs.ecs_id(components.Player))) {
                                 const input = game.state.controls.movement().direction();

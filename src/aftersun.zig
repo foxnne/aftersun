@@ -359,7 +359,7 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
 
         const tree_leaves_01 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree_02);
         flecs.ecs_set(world, tree_leaves_01, &position);
-        flecs.ecs_set(world, tree_leaves_01, &components.Tile{ .x = 1, .y = -1, .counter = state.counter.count() });
+        flecs.ecs_set(world, tree_leaves_01, &position.toTile(state.counter.count()));
         flecs.ecs_set(world, tree_leaves_01, &components.SpriteRenderer{
             .index = assets.aftersun_atlas.Oak_0_Leaves04,
             .color = leaf_color,
@@ -369,7 +369,7 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
 
         const tree_leaves_02 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree_02);
         flecs.ecs_set(world, tree_leaves_02, &position);
-        flecs.ecs_set(world, tree_leaves_02, &components.Tile{ .x = 1, .y = -1, .counter = state.counter.count() });
+        flecs.ecs_set(world, tree_leaves_02, &position.toTile(state.counter.count()));
         flecs.ecs_set(world, tree_leaves_02, &components.SpriteRenderer{
             .index = assets.aftersun_atlas.Oak_0_Leaves03,
             .color = leaf_color,
@@ -379,7 +379,7 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
 
         const tree_leaves_03 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree_02);
         flecs.ecs_set(world, tree_leaves_03, &position);
-        flecs.ecs_set(world, tree_leaves_03, &components.Tile{ .x = 1, .y = -1, .counter = state.counter.count() });
+        flecs.ecs_set(world, tree_leaves_03, &position.toTile(state.counter.count()));
         flecs.ecs_set(world, tree_leaves_03, &components.SpriteRenderer{
             .index = assets.aftersun_atlas.Oak_0_Leaves02,
             .color = leaf_color,
@@ -389,7 +389,7 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
 
         const tree_leaves_04 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree_02);
         flecs.ecs_set(world, tree_leaves_04, &position);
-        flecs.ecs_set(world, tree_leaves_04, &components.Tile{ .x = 1, .y = -1, .counter = state.counter.count() });
+        flecs.ecs_set(world, tree_leaves_04, &position.toTile(state.counter.count()));
         flecs.ecs_set(world, tree_leaves_04, &components.SpriteRenderer{
             .index = assets.aftersun_atlas.Oak_0_Leaves01,
             .color = leaf_color,

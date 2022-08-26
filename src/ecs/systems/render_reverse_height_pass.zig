@@ -39,7 +39,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     renderers[i].order = i; // Set order so height passes can match time
 
                     game.state.batcher.sprite(
-                        zm.f32x4(positions[i].x, positions[i].y + positions[i].z, positions[i].z, 0),
+                        positions[i].toF32x4(),
                         game.state.heightmap,
                         game.state.atlas.sprites[renderers[i].index],
                         .{
@@ -51,9 +51,10 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 }
 
                 if (flecs.ecs_field(it, components.CharacterRenderer, 4)) |renderers| {
+                    const position = positions[i].toF32x4();
                     // Body
                     game.state.batcher.sprite(
-                        zm.f32x4(positions[i].x, positions[i].y + positions[i].z, positions[i].z, 0),
+                        position,
                         game.state.heightmap,
                         game.state.atlas.sprites[renderers[i].body_index],
                         .{
@@ -64,7 +65,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
 
                     // Head
                     game.state.batcher.sprite(
-                        zm.f32x4(positions[i].x, positions[i].y + positions[i].z, positions[i].z, 0),
+                        position,
                         game.state.heightmap,
                         game.state.atlas.sprites[renderers[i].head_index],
                         .{
@@ -75,7 +76,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
 
                     // Bottom
                     game.state.batcher.sprite(
-                        zm.f32x4(positions[i].x, positions[i].y + positions[i].z, positions[i].z, 0),
+                        position,
                         game.state.heightmap,
                         game.state.atlas.sprites[renderers[i].bottom_index],
                         .{
@@ -86,7 +87,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
 
                     // Top
                     game.state.batcher.sprite(
-                        zm.f32x4(positions[i].x, positions[i].y + positions[i].z, positions[i].z, 0),
+                        position,
                         game.state.heightmap,
                         game.state.atlas.sprites[renderers[i].top_index],
                         .{
@@ -97,7 +98,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
 
                     // Hair
                     game.state.batcher.sprite(
-                        zm.f32x4(positions[i].x, positions[i].y + positions[i].z, positions[i].z, 0),
+                        position,
                         game.state.heightmap,
                         game.state.atlas.sprites[renderers[i].hair_index],
                         .{

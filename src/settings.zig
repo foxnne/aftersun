@@ -14,7 +14,7 @@ pub const design_size = zm.f32x4(@intToFloat(f32, design_width), @intToFloat(f32
 pub const max_zoom_offset: f32 = 3.0;
 
 /// How quickly the camera will zoom to the next step.
-pub const zoom_speed: f32 = 3.0;
+pub const zoom_speed: f32 = 2.0;
 
 /// The scroll offset required to trigger a zoom step.
 pub const zoom_scroll_tolerance: f32 = 0.2;

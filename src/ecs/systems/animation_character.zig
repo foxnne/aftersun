@@ -37,8 +37,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
 
                             if (flecs.ecs_has_id(world, entity, flecs.ecs_id(components.Player))) {
                                 const mouse_world = game.state.controls.mouse.position.world();
-                                const player_position: components.Position = if (flecs.ecs_get(world, entity, components.Position)) |position| position.* else .{};
-                                const mouse_vector = mouse_world - zm.f32x4(player_position.x, player_position.y, 0, 0);
+                                const player_position = if (flecs.ecs_get(world, entity, components.Position)) |position| position.toF32x4() else zm.f32x4s(0);
+                                const mouse_vector = mouse_world - player_position;
                                 temp_head_direction = Direction.find(8, mouse_vector[0], mouse_vector[1]);
                             }
 
