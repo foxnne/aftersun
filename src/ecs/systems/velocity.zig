@@ -20,9 +20,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 if (flecs.ecs_field(it, components.Velocity, 2)) |velocities| {
                     const step = it.delta_time * 2.0;
 
-                    const direction_vector = directions[i].value.f32x4();
-                    const target_v_x = direction_vector[0];
-                    const target_v_y = direction_vector[1];
+                    const target_v_x = directions[i].value.x();
+                    const target_v_y = directions[i].value.y();
 
                     if (velocities[i].x > target_v_x) {
                         if (velocities[i].x >= target_v_x + step) {
