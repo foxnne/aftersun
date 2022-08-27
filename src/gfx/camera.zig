@@ -11,7 +11,9 @@ pub const Camera = struct {
     zoom_step: f32 = 1.0,
     zoom_step_next: f32 = 1.0,
     zoom_progress: f32 = -1.0,
-    position: zm.F32x4 = zm.f32x4(0, 0, 0, 0),
+    position: zm.F32x4 = zm.f32x4s(0),
+    tile: zm.F32x4 = zm.f32x4s(0),
+    target_tile: zm.F32x4 = zm.f32x4s(0),
     culling_margin: f32 = 256.0,
 
     pub fn init (design_size: zm.F32x4, window_size: glfw.Window.Size, position: zm.F32x4) Camera {

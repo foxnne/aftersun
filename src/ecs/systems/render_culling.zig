@@ -3,7 +3,6 @@ const zm = @import("zmath");
 const flecs = @import("flecs");
 const game = @import("game");
 const components = game.components;
-const atlas = game.state.atlas;
 
 pub fn system() flecs.EcsSystemDesc {
     var desc = std.mem.zeroes(flecs.EcsSystemDesc);

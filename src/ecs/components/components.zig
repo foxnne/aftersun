@@ -18,9 +18,9 @@ pub const Head = struct {};
 pub const Body = struct {};
 
 pub const Position = struct {
-    x: f32 = 0,
-    y: f32 = 0,
-    z: f32 = 0,
+    x: f32 = 0.0,
+    y: f32 = 0.0,
+    z: f32 = 0.0,
 
     /// Converts the position to a tile coordinates.
     pub fn toTile(self: Position, counter: u64) Tile {
@@ -39,9 +39,9 @@ pub const Position = struct {
 };
 
 pub const Tile = struct {
-    x: i32 = 0,
-    y: i32 = 0,
-    z: i32 = 0,
+    x: i32 = 0.0,
+    y: i32 = 0.0,
+    z: i32 = 0.0,
     counter: u64 = 0,
 
     /// Converts the tile to pixel coordinates.
@@ -54,11 +54,24 @@ pub const Tile = struct {
     }
 };
 
+pub const Velocity = struct {
+    x: f32 = 0.0,
+    y: f32 = 0.0,
+
+    pub fn direction (self: Velocity) game.math.Direction {
+        return game.math.Direction.find(8, self.x, self.y);
+    }
+
+    pub fn toF32x4 (self: Velocity) zm.F32x4 {
+        return zm.f32x4(self.x, self.y, 0.0, 0.0);
+    }
+};
+
 pub const Direction = struct { value: game.math.Direction = .none };
 pub const Rotation = struct { value: f32 = 0 };
 
 pub const Request = struct {};
-pub const Cooldown = struct { current: f32 = -1.0, end: f32 = 0.0 };
+pub const Cooldown = struct { current: f32 = 0.0, end: f32 = 1.0 };
 pub const Movement = struct { start: Tile, end: Tile };
 
 pub const Camera = struct {};

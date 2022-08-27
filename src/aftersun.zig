@@ -426,7 +426,11 @@ fn update() void {
         zgui.bulletText("Ambient XY Angle: {d:.4}", .{state.environment.ambientXYAngle()});
         zgui.bulletText("Ambient Z Angle: {d:.4}", .{state.environment.ambientZAngle()});
 
-        zgui.bulletText("Movement Input: {s}", .{state.controls.movement().direction().fmt()});     
+        zgui.bulletText("Movement Input: {s}", .{state.controls.movement().direction().fmt()}); 
+
+        if (flecs.ecs_get(state.world, state.entities.player, components.Velocity)) |velocity| {
+            zgui.bulletText("Velocity: x: {d} y: {d}", .{ velocity.x, velocity.y });
+        }    
 
         if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Movement)) |direction| {
             zgui.bulletText("Movement Direction: {s}", .{direction.value.fmt()});

@@ -3,7 +3,6 @@ const zm = @import("zmath");
 const flecs = @import("flecs");
 const game = @import("game");
 const components = game.components;
-const atlas = game.state.atlas;
 
 pub fn system() flecs.EcsSystemDesc {
     var desc = std.mem.zeroes(flecs.EcsSystemDesc);
@@ -22,12 +21,11 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
 
             if (flecs.ecs_field(it, components.Cooldown, 1)) |cooldowns| {
 
-                cooldowns[i].current += it.delta_time;
-
                 if (cooldowns[i].current >= cooldowns[i].end) {
                     const pair_id = flecs.ecs_field_id(it, 1);
                     flecs.ecs_remove_id(world, entity, pair_id);
                 }
+                cooldowns[i].current += it.delta_time;
             }
         }
     }
