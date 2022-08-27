@@ -8,7 +8,7 @@ pub fn system() flecs.EcsSystemDesc {
     var desc = std.mem.zeroes(flecs.EcsSystemDesc);
     desc.query.filter.terms[0] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Position) });
     desc.query.filter.terms[1] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Tile) });
-    desc.query.filter.terms[2] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Request, components.Movement), .oper = flecs.EcsOperKind.ecs_optional });
+    desc.query.filter.terms[2] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Request, components.Movement) });
     desc.query.filter.terms[3] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Cooldown, components.Movement), .oper = flecs.EcsOperKind.ecs_optional });
     desc.run = run;
     return desc;
@@ -37,8 +37,6 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             const start_position = movements[i].start.toPosition().toF32x4();
                             const end_position = movements[i].end.toPosition().toF32x4();
                             const difference = end_position - start_position;
-                            const direction = game.math.Direction.find(8, difference[0], difference[1]);
-                            const direction_vector = direction.f32x4();
                             
                             flecs.ecs_set_pair(world, entity, &components.Direction{ .value = game.math.Direction.find(8, difference[0], difference[1])}, components.Movement);
 
@@ -47,13 +45,6 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             positions[i].x = position[0];
                             positions[i].y = position[1];
                             positions[i].z = position[2]; 
-
-                            if (flecs.ecs_get_mut(world, entity, components.Velocity)) |velocity| {
-                                velocity.x = if (direction_vector[0] - velocity.x != 0.0) game.math.lerp(velocity.x, direction_vector[0], t) else direction_vector[0];
-                                velocity.y = if (direction_vector[1] - velocity.y != 0.0) game.math.lerp(velocity.y, direction_vector[1], t) else direction_vector[1];
-                            } else {
-                                flecs.ecs_set(world, entity, &components.Velocity{ .x = direction_vector[0] * t, .y = direction_vector[1] * t });
-                            }
                         } else {
                             if (flecs.ecs_has_id(world, entity, flecs.ecs_id(components.Player))) {
                                 const input = game.state.controls.movement().direction();
@@ -79,16 +70,9 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             } else {
                                 flecs.ecs_remove_pair(world, entity, components.Request, components.Movement);
                                 flecs.ecs_set_pair( world, entity, &components.Direction{ .value = .none }, components.Movement);
-                                flecs.ecs_set(world, entity, &components.Velocity{});
                             }
                         }
-                    } else {
-                        if (flecs.ecs_get_mut(world, entity, components.Velocity)) |velocity| {
-                            const step = it.delta_time * 2;
-                            velocity.x = if (velocity.x > step) velocity.x - step else if (velocity.x > 0.0 and velocity.x < step) velocity.x - velocity.x else if (velocity.x < -step) velocity.x + step else if (velocity.x < 0.0 and velocity.x > -step) velocity.x - velocity.x else 0.0;
-                            velocity.y = if (velocity.y > step) velocity.y - step else if (velocity.y > 0.0 and velocity.y < step) velocity.y - velocity.y else if (velocity.y < -step) velocity.y + step else if (velocity.y < 0.0 and velocity.y > -step) velocity.y - velocity.y else 0.0;
-                        }
-                    }
+                    } 
                 }
             }
         }

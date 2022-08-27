@@ -232,6 +232,8 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
     flecs.ecs_system(world, "MovementRequestSystem", flecs.Constants.EcsOnUpdate, &movement_request);
     var movement = @import("ecs/systems/movement.zig").system();
     flecs.ecs_system(world, "MovementSystem", flecs.Constants.EcsOnUpdate, &movement);
+    var velocity = @import("ecs/systems/velocity.zig").system();
+    flecs.ecs_system(world, "VelocitySystem", flecs.Constants.EcsOnUpdate, &velocity);
 
     // - Camera
     var camera_follow = @import("ecs/systems/camera_follow.zig").system();
@@ -262,6 +264,7 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
     const player = flecs.ecs_new(world, components.Player);
     flecs.ecs_set(world, player, &components.Position{ .x = 0.0, .y = -32.0 });
     flecs.ecs_set(world, player, &components.Tile{ .x = 0, .y = -1, .counter = state.counter.count() });
+    flecs.ecs_set(world, player, &components.Velocity{});
     flecs.ecs_set(world, player, &components.CharacterRenderer{
         .body_index = assets.aftersun_atlas.Idle_SE_0_Body,
         .head_index = assets.aftersun_atlas.Idle_SE_0_Head,

@@ -54,6 +54,8 @@ pub const Tile = struct {
     }
 };
 
+/// Values ramp up from 0.0 to 1.0 when movement starts and back down when movement stops.
+/// Do not use velocity direction to determine when something stops as it will continue past the moment of stopping.
 pub const Velocity = struct {
     x: f32 = 0.0,
     y: f32 = 0.0,
