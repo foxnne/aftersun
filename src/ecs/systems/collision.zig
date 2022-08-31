@@ -42,13 +42,16 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             const entity = it.entities[i];
 
             if (flecs.ecs_field(it, components.Movement, 1)) |movements| {
-                if (flecs.ecs_field(it, components.Tile, 2)) |tiles| {
+                if (flecs.ecs_field(it, components.Tile, 2)) |_| {
                 const target_tile = movements[i].end;
                 const target_cell = target_tile.toCell();
 
                 if (it.ctx) |ctx| {
                     var query = @ptrCast(*flecs.EcsQuery, ctx);
                     var query_it = flecs.ecs_query_iter(world, query);
+                    if (game.state.cells.get(target_cell)) |cell_entity| {
+                        flecs.ecs_query_set_group(&query_it, cell_entity);
+                    }
 
                     while (flecs.ecs_iter_next(&query_it)) {
                         var j: usize = 0;
@@ -59,8 +62,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                         if (query_it.entities[j] != entity) {
                                             if (target_tiles[j].x == target_tile.x and target_tiles[j].y == target_tile.y and target_tiles[j].z == target_tile.z) {
                                                 // Collision.
-                                                flecs.ecs_set_pair_second(world, entity, components.Request, &components.Movement{ .start = tiles[i], .end = tiles[i]});
-                                                //flecs.ecs_remove_pair(world, entity, components.Request, components.Movement);
+                                                //flecs.ecs_set_pair_second(world, entity, components.Request, &components.Movement{ .start = tiles[i], .end = tiles[i]});
+                                                flecs.ecs_remove_pair(world, entity, components.Request, components.Movement);
                                             }
                                         }
                                     }
