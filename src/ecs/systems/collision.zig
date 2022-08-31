@@ -4,6 +4,17 @@ const flecs = @import("flecs");
 const game = @import("game");
 const components = game.components;
 
+
+
+pub fn groupBy(world: ?*flecs.EcsWorld, table: ?*flecs.EcsTable, id: flecs.EcsId, ctx: ?*anyopaque) callconv(.C) flecs.EcsId {
+    _ = ctx;
+    var match: flecs.EcsId = 0;
+    if (flecs.ecs_search(world, table, flecs.ecs_pair(flecs.Constants.EcsWildcard, id), &match) != -1) {
+        return flecs.ecs_pair_first(match);
+    }
+    return 0;
+}
+
 pub fn system(world: *flecs.EcsWorld) flecs.EcsSystemDesc {
     var desc = std.mem.zeroes(flecs.EcsSystemDesc);
     desc.query.filter.terms[0] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Request, components.Movement) });
@@ -15,6 +26,8 @@ pub fn system(world: *flecs.EcsWorld) flecs.EcsSystemDesc {
     ctx_desc.filter.terms[0] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(flecs.Constants.EcsWildcard, components.Cell) });
     ctx_desc.filter.terms[1] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Tile) });
     ctx_desc.filter.terms[2] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Collider) });
+    ctx_desc.group_by = groupBy;
+    ctx_desc.group_by_id = flecs.ecs_id(components.Cell);
     desc.ctx = flecs.ecs_query_init(world, &ctx_desc);
 
     return desc;
