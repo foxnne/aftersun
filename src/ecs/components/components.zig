@@ -33,15 +33,15 @@ pub const Position = struct {
     }
 
     /// Returns the position as a vector.
-    pub fn toF32x4 (self: Position) zm.F32x4 {
+    pub fn toF32x4(self: Position) zm.F32x4 {
         return zm.f32x4(self.x, self.y, self.z, 0.0);
     }
 };
 
 pub const Tile = struct {
-    x: i32 = 0.0,
-    y: i32 = 0.0,
-    z: i32 = 0.0,
+    x: i32 = 0,
+    y: i32 = 0,
+    z: i32 = 0,
     counter: u64 = 0,
 
     /// Converts the tile to pixel coordinates.
@@ -52,6 +52,25 @@ pub const Tile = struct {
             .z = game.math.pixel(self.z),
         };
     }
+
+    pub fn toCell(self: Tile) Cell {
+        return .{
+            .x = @divTrunc(self.x, game.settings.cell_size),
+            .y = @divTrunc(self.y, game.settings.cell_size),
+            .z = @divTrunc(self.z, game.settings.cell_size),
+        };
+    }
+};
+
+pub const Collider = struct {
+    trigger: bool = false,
+};
+
+
+pub const Cell = struct {
+    x: i32 = 0,
+    y: i32 = 0,
+    z: i32 = 0,
 };
 
 /// Values ramp up from 0.0 to 1.0 when movement starts and back down when movement stops.
@@ -60,11 +79,11 @@ pub const Velocity = struct {
     x: f32 = 0.0,
     y: f32 = 0.0,
 
-    pub fn direction (self: Velocity) game.math.Direction {
+    pub fn direction(self: Velocity) game.math.Direction {
         return game.math.Direction.find(8, self.x, self.y);
     }
 
-    pub fn toF32x4 (self: Velocity) zm.F32x4 {
+    pub fn toF32x4(self: Velocity) zm.F32x4 {
         return zm.f32x4(self.x, self.y, 0.0, 0.0);
     }
 };

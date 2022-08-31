@@ -31,3 +31,5 @@ pub const batcher_max_sprites = 1000;
 
 /// The font size used by zgui elements.
 pub const zgui_font_size = 12;
+
+pub const cell_size = 8;

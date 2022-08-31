@@ -41,6 +41,7 @@ pub const GameState = struct {
     time: time.Time = .{},
     environment: environment.Environment = .{},
     counter: Counter = .{},
+    cells: std.AutoArrayHashMap(components.Cell, flecs.EcsEntity),
     pipeline_default: zgpu.RenderPipelineHandle = .{},
     pipeline_diffuse: zgpu.RenderPipelineHandle = .{},
     pipeline_height: zgpu.RenderPipelineHandle = .{},
@@ -178,6 +179,7 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
         .world = world,
         .camera = camera,
         .batcher = batcher,
+        .cells = std.AutoArrayHashMap(components.Cell, flecs.EcsEntity).init(allocator),
         .atlas = atlas,
         .diffusemap = diffusemap,
         .palettemap = palettemap,
@@ -224,46 +226,51 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
     }
 
     // - Cooldown
-    var cooldown = @import("ecs/systems/cooldown.zig").system();
-    flecs.ecs_system(world, "CooldownSystem", flecs.Constants.EcsOnUpdate, &cooldown);
+    var cooldown_system = @import("ecs/systems/cooldown.zig").system();
+    flecs.ecs_system(world, "CooldownSystem", flecs.Constants.EcsOnUpdate, &cooldown_system);
 
     // - Movement
-    var movement_request = @import("ecs/systems/movement_request.zig").system();
-    flecs.ecs_system(world, "MovementRequestSystem", flecs.Constants.EcsOnUpdate, &movement_request);
-    var movement = @import("ecs/systems/movement.zig").system();
-    flecs.ecs_system(world, "MovementSystem", flecs.Constants.EcsOnUpdate, &movement);
-    var velocity = @import("ecs/systems/velocity.zig").system();
-    flecs.ecs_system(world, "VelocitySystem", flecs.Constants.EcsOnUpdate, &velocity);
+    var movement_request_system = @import("ecs/systems/movement_request.zig").system();
+    flecs.ecs_system(world, "MovementRequestSystem", flecs.Constants.EcsOnUpdate, &movement_request_system);
+    var collision_system = @import("ecs/systems/collision.zig").system(world);
+    flecs.ecs_system(world, "CollisionSystem", flecs.Constants.EcsOnUpdate, &collision_system);
+    var movement_system = @import("ecs/systems/movement.zig").system();
+    flecs.ecs_system(world, "MovementSystem", flecs.Constants.EcsOnUpdate, &movement_system);
+    var tile_observer = @import("ecs/systems/tile_observer.zig").observer();
+    _ = flecs.ecs_observer_init(world, &tile_observer);
+    var velocity_system = @import("ecs/systems/velocity.zig").system();
+    flecs.ecs_system(world, "VelocitySystem", flecs.Constants.EcsOnUpdate, &velocity_system);
 
     // - Camera
-    var camera_follow = @import("ecs/systems/camera_follow.zig").system();
-    flecs.ecs_system(world, "CameraFollowSystem", flecs.Constants.EcsOnUpdate, &camera_follow);
-    var camera_zoom = @import("ecs/systems/camera_zoom.zig").system();
-    flecs.ecs_system(world, "CameraZoomSystem", flecs.Constants.EcsOnUpdate, &camera_zoom);
+    var camera_follow_system = @import("ecs/systems/camera_follow.zig").system();
+    flecs.ecs_system(world, "CameraFollowSystem", flecs.Constants.EcsOnUpdate, &camera_follow_system);
+    var camera_zoom_system = @import("ecs/systems/camera_zoom.zig").system();
+    flecs.ecs_system(world, "CameraZoomSystem", flecs.Constants.EcsOnUpdate, &camera_zoom_system);
 
     // - Animation
-    var animation_character = @import("ecs/systems/animation_character.zig").system();
-    flecs.ecs_system(world, "AnimatorCharacterSystem", flecs.Constants.EcsOnUpdate, &animation_character);
-    var animation_sprite = @import("ecs/systems/animation_sprite.zig").system();
-    flecs.ecs_system(world, "AnimatorSpriteSystem", flecs.Constants.EcsOnUpdate, &animation_sprite);
+    var animation_character_system = @import("ecs/systems/animation_character.zig").system();
+    flecs.ecs_system(world, "AnimatorCharacterSystem", flecs.Constants.EcsOnUpdate, &animation_character_system);
+    var animation_sprite_system = @import("ecs/systems/animation_sprite.zig").system();
+    flecs.ecs_system(world, "AnimatorSpriteSystem", flecs.Constants.EcsOnUpdate, &animation_sprite_system);
 
     // - Render
-    var render_culling = @import("ecs/systems/render_culling.zig").system();
-    flecs.ecs_system(world, "RenderCullingSystem", flecs.Constants.EcsPostUpdate, &render_culling);
-    var render_diffuse = @import("ecs/systems/render_diffuse_pass.zig").system();
-    flecs.ecs_system(world, "RenderDiffuseSystem", flecs.Constants.EcsPostUpdate, &render_diffuse);
-    var render_height = @import("ecs/systems/render_height_pass.zig").system();
-    flecs.ecs_system(world, "RenderHeightSystem", flecs.Constants.EcsPostUpdate, &render_height);
-    var render_reverse_height = @import("ecs/systems/render_reverse_height_pass.zig").system();
-    flecs.ecs_system(world, "RenderReverseHeightSystem", flecs.Constants.EcsPostUpdate, &render_reverse_height);
-    var render_environment = @import("ecs/systems/render_environment_pass.zig").system();
-    flecs.ecs_system(world, "RenderEnvironmentSystem", flecs.Constants.EcsPostUpdate, &render_environment);
-    var render_final = @import("ecs/systems/render_final_pass.zig").system();
-    flecs.ecs_system(world, "RenderFinalSystem", flecs.Constants.EcsPostUpdate, &render_final);
+    var render_culling_system = @import("ecs/systems/render_culling.zig").system();
+    flecs.ecs_system(world, "RenderCullingSystem", flecs.Constants.EcsPostUpdate, &render_culling_system);
+    var render_diffuse_system = @import("ecs/systems/render_diffuse_pass.zig").system();
+    flecs.ecs_system(world, "RenderDiffuseSystem", flecs.Constants.EcsPostUpdate, &render_diffuse_system);
+    var render_height_system = @import("ecs/systems/render_height_pass.zig").system();
+    flecs.ecs_system(world, "RenderHeightSystem", flecs.Constants.EcsPostUpdate, &render_height_system);
+    var render_reverse_height_system = @import("ecs/systems/render_reverse_height_pass.zig").system();
+    flecs.ecs_system(world, "RenderReverseHeightSystem", flecs.Constants.EcsPostUpdate, &render_reverse_height_system);
+    var render_environment_system = @import("ecs/systems/render_environment_pass.zig").system();
+    flecs.ecs_system(world, "RenderEnvironmentSystem", flecs.Constants.EcsPostUpdate, &render_environment_system);
+    var render_final_system = @import("ecs/systems/render_final_pass.zig").system();
+    flecs.ecs_system(world, "RenderFinalSystem", flecs.Constants.EcsPostUpdate, &render_final_system);
 
     const player = flecs.ecs_new(world, components.Player);
     flecs.ecs_set(world, player, &components.Position{ .x = 0.0, .y = -32.0 });
     flecs.ecs_set(world, player, &components.Tile{ .x = 0, .y = -1, .counter = state.counter.count() });
+    flecs.ecs_set(world, player, &components.Collider{});
     flecs.ecs_set(world, player, &components.Velocity{});
     flecs.ecs_set(world, player, &components.CharacterRenderer{
         .body_index = assets.aftersun_atlas.Idle_SE_0_Body,
@@ -305,6 +312,7 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
         flecs.ecs_set(world, tree_01, &components.Position{});
         flecs.ecs_set(world, tree_01, &components.Tile{ .counter = state.counter.count() });
         flecs.ecs_set(world, tree_01, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Oak_0_Trunk });
+        flecs.ecs_set(world, tree_01, &components.Collider{});
 
         const leaf_color = math.Color.initBytes(16, 0, 0, 255);
 
@@ -357,6 +365,7 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
         flecs.ecs_set(world, tree_02, &position);
         flecs.ecs_set(world, tree_02, &position.toTile(state.counter.count()));
         flecs.ecs_set(world, tree_02, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Oak_0_Trunk });
+        flecs.ecs_set(world, tree_02, &components.Collider{});
 
         const leaf_color = math.Color.initBytes(16, 0, 0, 255);
 
@@ -406,6 +415,7 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
 
 fn deinit(allocator: std.mem.Allocator) void {
     state.batcher.deinit();
+    state.cells.deinit();
     state.gctx.deinit(allocator);
     allocator.destroy(state);
 }
