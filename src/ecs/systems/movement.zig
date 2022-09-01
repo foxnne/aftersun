@@ -25,14 +25,16 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 if (flecs.ecs_field(it, components.Tile, 2)) |tiles| {
                     if (flecs.ecs_field(it, components.Movement, 3)) |movements| {
                         if (flecs.ecs_field(it, components.Cooldown, 4)) |cooldowns| {
+
                             // Set position as a lerp between beginning and end tile positions.
                             const t = if (cooldowns[i].end > 0.0) cooldowns[i].current / cooldowns[i].end else 0.0;
 
                             const start_position = movements[i].start.toPosition().toF32x4();
                             const end_position = movements[i].end.toPosition().toF32x4();
                             const difference = end_position - start_position;
+                            const direction = game.math.Direction.find(8, difference[0], difference[1]);
 
-                            flecs.ecs_set_pair(world, entity, &components.Direction{ .value = game.math.Direction.find(8, difference[0], difference[1]) }, components.Movement);
+                            flecs.ecs_set_pair(world, entity, &components.Direction{ .value = direction }, components.Movement);
 
                             const position = zm.lerp(start_position, end_position, t);
 
@@ -41,23 +43,11 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             positions[i].z = position[2];
                         } else if (tiles[i].x != movements[i].end.x or tiles[i].y != movements[i].end.y or tiles[i].z != movements[i].end.z) {
                             // Move the tile, only once so counter is only set on the actual move.
-                            const direction = game.math.Direction.find(8, @intToFloat(f32, movements[i].end.x - tiles[i].x), @intToFloat(f32, movements[i].end.y - tiles[i].y));
-
-                            const cooldown = switch (direction) {
-                                .n, .s, .e, .w => game.settings.movement_cooldown,
-                                else => game.settings.movement_cooldown * game.math.sqrt2,
-                            };
-
-                            flecs.ecs_set_pair(world, entity, &components.Cooldown{ .current = 0.0, .end = cooldown }, components.Movement);
-
                             tiles[i] = movements[i].end;
                             tiles[i].counter = game.state.counter.count();
 
                             // Set modified so that observers are triggered.
                             flecs.ecs_modified_id(world, entity, flecs.ecs_id(components.Tile));
-                        } else {
-                            //flecs.ecs_set_pair(world, entity, &components.Direction{}, components.Movement);
-                            flecs.ecs_remove_pair(world, entity, components.Request, components.Movement);
                         }
                     }
                 }

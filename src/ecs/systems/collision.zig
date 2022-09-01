@@ -42,7 +42,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             const entity = it.entities[i];
 
             if (flecs.ecs_field(it, components.Movement, 1)) |movements| {
-                if (flecs.ecs_field(it, components.Tile, 2)) |_| {
+                if (flecs.ecs_field(it, components.Tile, 2)) |tiles| {
                 const target_tile = movements[i].end;
                 const target_cell = target_tile.toCell();
 
@@ -61,9 +61,11 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                     if (flecs.ecs_field(&query_it, components.Tile, 2)) |target_tiles| {
                                         if (query_it.entities[j] != entity) {
                                             if (target_tiles[j].x == target_tile.x and target_tiles[j].y == target_tile.y and target_tiles[j].z == target_tile.z) {
-                                                // Collision.
-                                                //flecs.ecs_set_pair_second(world, entity, components.Request, &components.Movement{ .start = tiles[i], .end = tiles[i]});
-                                                flecs.ecs_remove_pair(world, entity, components.Request, components.Movement);
+                                                // Collision. Set movement request to same tile to prevent extra frames on set/add and 
+                                                // zero movement direction and remove cooldown.
+                                                flecs.ecs_set_pair_second(world, entity, components.Request, &components.Movement{ .start = tiles[i], .end = tiles[i]});
+                                                flecs.ecs_set_pair(world, entity, &components.Direction{}, components.Movement);
+                                                flecs.ecs_remove_pair(world, entity, components.Cooldown, components.Movement);
                                             }
                                         }
                                     }
