@@ -24,26 +24,25 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             const direction = game.state.controls.movement().direction();
             if (flecs.ecs_field(it, components.Tile, 2)) |tiles| {
                 if (direction != .none) {
-                    // Set move request and cooldown.
                     const end_tile = components.Tile{
                         .x = tiles[i].x + @floatToInt(i32, direction.x()),
                         .y = tiles[i].y + @floatToInt(i32, direction.y()),
                     };
-
+                    
+                    // Set move request
                     if (flecs.ecs_field(it, components.Movement, 3)) |movements| {
                         movements[i].start = tiles[i];
                         movements[i].end = end_tile;
                     } else {
-
                         // ! When setting pairs, the intended data type attached must either be matched with a tag, or first in the pair of components.
                         flecs.ecs_set_pair_second(world, entity, components.Request, &components.Movement{ .start = tiles[i], .end = end_tile });
                     }
 
+                    // Set cooldown
                     const cooldown = switch (direction) {
                         .n, .s, .e, .w => game.settings.movement_cooldown,
                         else => game.settings.movement_cooldown * game.math.sqrt2,
                     };
-
                     flecs.ecs_set_pair(world, entity, &components.Cooldown{ .current = 0.0, .end = cooldown }, components.Movement);
                 } else {
                     // Zero movement direction and remove move request.

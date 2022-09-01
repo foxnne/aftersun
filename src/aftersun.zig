@@ -308,11 +308,11 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
 
     // Create first tree
     {
-        const tree_01 = flecs.ecs_new_entity(world, "Tree01");
-        flecs.ecs_set(world, tree_01, &components.Position{});
-        flecs.ecs_set(world, tree_01, &components.Tile{ .counter = state.counter.count() });
-        flecs.ecs_set(world, tree_01, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Oak_0_Trunk });
-        flecs.ecs_set(world, tree_01, &components.Collider{});
+        const tree = flecs.ecs_new_entity(world, "Tree01");
+        flecs.ecs_set(world, tree, &components.Position{});
+        flecs.ecs_set(world, tree, &components.Tile{ .counter = state.counter.count() });
+        flecs.ecs_set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Oak_0_Trunk });
+        flecs.ecs_set(world, tree, &components.Collider{});
 
         const leaf_color = math.Color.initBytes(16, 0, 0, 255);
 
@@ -361,15 +361,15 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
     {
         const position = components.Position{ .x = 64.0, .y = -32.0 };
 
-        const tree_02 = flecs.ecs_new_entity(world, "Tree02");
-        flecs.ecs_set(world, tree_02, &position);
-        flecs.ecs_set(world, tree_02, &position.toTile(state.counter.count()));
-        flecs.ecs_set(world, tree_02, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Oak_0_Trunk });
-        flecs.ecs_set(world, tree_02, &components.Collider{});
+        const tree = flecs.ecs_new_entity(world, "Tree02");
+        flecs.ecs_set(world, tree, &position);
+        flecs.ecs_set(world, tree, &position.toTile(state.counter.count()));
+        flecs.ecs_set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Oak_0_Trunk });
+        flecs.ecs_set(world, tree, &components.Collider{});
 
         const leaf_color = math.Color.initBytes(16, 0, 0, 255);
 
-        const tree_leaves_01 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree_02);
+        const tree_leaves_01 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
         flecs.ecs_set(world, tree_leaves_01, &position);
         flecs.ecs_set(world, tree_leaves_01, &position.toTile(state.counter.count()));
         flecs.ecs_set(world, tree_leaves_01, &components.SpriteRenderer{
@@ -379,7 +379,7 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
             .vert_mode = .top_sway,
         });
 
-        const tree_leaves_02 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree_02);
+        const tree_leaves_02 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
         flecs.ecs_set(world, tree_leaves_02, &position);
         flecs.ecs_set(world, tree_leaves_02, &position.toTile(state.counter.count()));
         flecs.ecs_set(world, tree_leaves_02, &components.SpriteRenderer{
@@ -389,7 +389,7 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
             .vert_mode = .top_sway,
         });
 
-        const tree_leaves_03 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree_02);
+        const tree_leaves_03 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
         flecs.ecs_set(world, tree_leaves_03, &position);
         flecs.ecs_set(world, tree_leaves_03, &position.toTile(state.counter.count()));
         flecs.ecs_set(world, tree_leaves_03, &components.SpriteRenderer{
@@ -399,7 +399,61 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
             .vert_mode = .top_sway,
         });
 
-        const tree_leaves_04 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree_02);
+        const tree_leaves_04 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
+        flecs.ecs_set(world, tree_leaves_04, &position);
+        flecs.ecs_set(world, tree_leaves_04, &position.toTile(state.counter.count()));
+        flecs.ecs_set(world, tree_leaves_04, &components.SpriteRenderer{
+            .index = assets.aftersun_atlas.Oak_0_Leaves01,
+            .color = leaf_color,
+            .frag_mode = .palette,
+            .vert_mode = .top_sway,
+        });
+    }
+
+    // Create third tree
+    {
+        // Make sure its within another cell
+        const position = components.Position{ .x = @intToFloat(f32, settings.cell_size + 2) * 32.0, .y = 0.0 };
+
+        const tree = flecs.ecs_new_entity(world, "Tree03");
+        flecs.ecs_set(world, tree, &position);
+        flecs.ecs_set(world, tree, &position.toTile(state.counter.count()));
+        flecs.ecs_set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Oak_0_Trunk });
+        flecs.ecs_set(world, tree, &components.Collider{});
+
+        const leaf_color = math.Color.initBytes(16, 0, 0, 255);
+
+        const tree_leaves_01 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
+        flecs.ecs_set(world, tree_leaves_01, &position);
+        flecs.ecs_set(world, tree_leaves_01, &position.toTile(state.counter.count()));
+        flecs.ecs_set(world, tree_leaves_01, &components.SpriteRenderer{
+            .index = assets.aftersun_atlas.Oak_0_Leaves04,
+            .color = leaf_color,
+            .frag_mode = .palette,
+            .vert_mode = .top_sway,
+        });
+
+        const tree_leaves_02 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
+        flecs.ecs_set(world, tree_leaves_02, &position);
+        flecs.ecs_set(world, tree_leaves_02, &position.toTile(state.counter.count()));
+        flecs.ecs_set(world, tree_leaves_02, &components.SpriteRenderer{
+            .index = assets.aftersun_atlas.Oak_0_Leaves03,
+            .color = leaf_color,
+            .frag_mode = .palette,
+            .vert_mode = .top_sway,
+        });
+
+        const tree_leaves_03 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
+        flecs.ecs_set(world, tree_leaves_03, &position);
+        flecs.ecs_set(world, tree_leaves_03, &position.toTile(state.counter.count()));
+        flecs.ecs_set(world, tree_leaves_03, &components.SpriteRenderer{
+            .index = assets.aftersun_atlas.Oak_0_Leaves02,
+            .color = leaf_color,
+            .frag_mode = .palette,
+            .vert_mode = .top_sway,
+        });
+
+        const tree_leaves_04 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
         flecs.ecs_set(world, tree_leaves_04, &position);
         flecs.ecs_set(world, tree_leaves_04, &position.toTile(state.counter.count()));
         flecs.ecs_set(world, tree_leaves_04, &components.SpriteRenderer{
@@ -430,7 +484,7 @@ fn update() void {
             "Average :  {d:.3} ms/frame ({d:.1} fps)",
             .{ state.gctx.stats.average_cpu_time, state.gctx.stats.fps },
         );
-        
+
         _ = zgui.sliderFloat("Cam zoom", .{ .v = &state.camera.zoom, .min = 0.1, .max = 10 });
 
         _ = zgui.sliderFloat("Timescale", .{ .v = &state.time.scale, .min = 0.1, .max = 2400.0 });
@@ -439,11 +493,19 @@ fn update() void {
         zgui.bulletText("Ambient XY Angle: {d:.4}", .{state.environment.ambientXYAngle()});
         zgui.bulletText("Ambient Z Angle: {d:.4}", .{state.environment.ambientZAngle()});
 
-        zgui.bulletText("Movement Input: {s}", .{state.controls.movement().direction().fmt()}); 
+        zgui.bulletText("Movement Input: {s}", .{state.controls.movement().direction().fmt()});
 
         if (flecs.ecs_get(state.world, state.entities.player, components.Velocity)) |velocity| {
             zgui.bulletText("Velocity: x: {d} y: {d}", .{ velocity.x, velocity.y });
-        }    
+        }
+
+        if (flecs.ecs_get(state.world, state.entities.player, components.Tile)) |tile| {
+            zgui.bulletText("Tile: x: {d}, y: {d}", .{ tile.x, tile.y });
+        }
+
+        if (flecs.ecs_get_pair(state.world, state.entities.player, components.Cell, flecs.Constants.EcsWildcard)) |cell| {
+            zgui.bulletText("Cell: x: {d}, y: {d}", .{ cell.x, cell.y });
+        }
 
         if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Movement)) |direction| {
             zgui.bulletText("Movement Direction: {s}", .{direction.value.fmt()});

@@ -26,7 +26,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     if (flecs.ecs_field(it, components.Movement, 3)) |movements| {
                         if (flecs.ecs_field(it, components.Cooldown, 4)) |cooldowns| {
 
-                            // Set position as a lerp between beginning and end tile positions.
+                            // Get progress of the lerp using cooldown duration
                             const t = if (cooldowns[i].end > 0.0) cooldowns[i].current / cooldowns[i].end else 0.0;
 
                             const start_position = movements[i].start.toPosition().toF32x4();
@@ -34,14 +34,16 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             const difference = end_position - start_position;
                             const direction = game.math.Direction.find(8, difference[0], difference[1]);
 
+                            // Update movement direction
                             flecs.ecs_set_pair(world, entity, &components.Direction{ .value = direction }, components.Movement);
 
+                            // Update position
                             const position = zm.lerp(start_position, end_position, t);
-
                             positions[i].x = position[0];
                             positions[i].y = position[1];
                             positions[i].z = position[2];
                         } else if (tiles[i].x != movements[i].end.x or tiles[i].y != movements[i].end.y or tiles[i].z != movements[i].end.z) {
+                            // If cooldown is not yet present, but move request is, we are in the frame before cooldown is added.
                             // Move the tile, only once so counter is only set on the actual move.
                             tiles[i] = movements[i].end;
                             tiles[i].counter = game.state.counter.count();
