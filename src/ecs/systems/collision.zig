@@ -61,6 +61,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             if (flecs.ecs_field(&query_it, components.Cell, 1)) |cells| {
                                 if (cells[j].x != target_cell.x or cells[j].y != target_cell.y or cells[j].z != target_cell.z) {
                                     std.log.debug("Iterating cell {any} with entity {d} as relation.", .{ cells[j], cell_entity});
+                                    continue;
                                 }
                             }
                             if (flecs.ecs_field(&query_it, components.Tile, 2)) |target_tiles| {
@@ -77,8 +78,6 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             }
                         }
                     }
-                    //}
-                    //}
                 }
             }
         }

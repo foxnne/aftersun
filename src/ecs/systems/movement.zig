@@ -24,6 +24,15 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             if (flecs.ecs_field(it, components.Position, 1)) |positions| {
                 if (flecs.ecs_field(it, components.Tile, 2)) |tiles| {
                     if (flecs.ecs_field(it, components.Movement, 3)) |movements| {
+                        if (tiles[i].x != movements[i].end.x or tiles[i].y != movements[i].end.y or tiles[i].z != movements[i].end.z) {
+                            // Move the tile, only once so counter is only set on the actual move.
+                            tiles[i] = movements[i].end;
+                            tiles[i].counter = game.state.counter.count();
+
+                            // Set modified so that observers are triggered.
+                            flecs.ecs_modified_id(world, entity, flecs.ecs_id(components.Tile));
+                        }
+
                         if (flecs.ecs_field(it, components.Cooldown, 4)) |cooldowns| {
 
                             // Get progress of the lerp using cooldown duration
@@ -42,14 +51,6 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             positions[i].x = position[0];
                             positions[i].y = position[1];
                             positions[i].z = position[2];
-                        } else if (tiles[i].x != movements[i].end.x or tiles[i].y != movements[i].end.y or tiles[i].z != movements[i].end.z) {
-                            // If cooldown is not yet present, but move request is, we are in the frame before cooldown is added.
-                            // Move the tile, only once so counter is only set on the actual move.
-                            tiles[i] = movements[i].end;
-                            tiles[i].counter = game.state.counter.count();
-
-                            // Set modified so that observers are triggered.
-                            flecs.ecs_modified_id(world, entity, flecs.ecs_id(components.Tile));
                         }
                     }
                 }

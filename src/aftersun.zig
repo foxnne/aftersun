@@ -413,7 +413,7 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
     // Create third tree
     {
         // Make sure its within another cell
-        const position = components.Position{ .x = @intToFloat(f32, settings.cell_size + 2) * 32.0, .y = 0.0 };
+        const position = components.Position{ .x = @intToFloat(f32, settings.cell_size + 2) * settings.pixels_per_unit, .y = 0.0 };
 
         const tree = flecs.ecs_new_entity(world, "Tree03");
         flecs.ecs_set(world, tree, &position);
