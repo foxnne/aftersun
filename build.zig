@@ -45,7 +45,7 @@ fn createExe(b: *Builder, target: std.zig.CrossTarget, name: []const u8, source:
     var exe = b.addExecutable(name, source);
     exe.setBuildMode(b.standardReleaseOptions());
 
-    exe.want_lto = false; 
+    exe.want_lto = false;
     if (b.is_release) {
         if (target.isWindows()) {
             exe.subsystem = .Windows;
@@ -56,15 +56,12 @@ fn createExe(b: *Builder, target: std.zig.CrossTarget, name: []const u8, source:
         }
     }
 
-    const aftersun_pkg = std.build.Pkg {
+    const aftersun_pkg = std.build.Pkg{
         .name = "game",
-        .source = .{ .path = "src/aftersun.zig"},
+        .source = .{ .path = "src/aftersun.zig" },
     };
 
-    const zgpu_options = zgpu.BuildOptionsStep.init(b, .{
-        .dawn = .{ .from_source = false },
-    });
-
+    const zgpu_options = zgpu.BuildOptionsStep.init(b, .{});
     const zgpu_pkg = zgpu.getPkg(&.{ zgpu_options.getPkg(), zpool.pkg });
 
     exe.install();
