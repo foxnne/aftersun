@@ -42,28 +42,16 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             if (flecs.ecs_field(it, components.Movement, 1)) |movements| {
                 const target_tile = movements[i].end;
                 const target_cell = target_tile.toCell();
-                var cell_entity: flecs.EcsEntity = 0;
-
-                
 
                 if (it.ctx) |ctx| {
                     var query = @ptrCast(*flecs.EcsQuery, ctx);
                     var query_it = flecs.ecs_query_iter(world, query);
-                    if (game.state.cells.get(target_cell)) |cell_e| {
-                        cell_entity = cell_e;
-                        flecs.ecs_query_set_group(&query_it, cell_e);
+                    if (game.state.cells.get(target_cell)) |cell_entity| {
+                        flecs.ecs_query_set_group(&query_it, cell_entity);
                     }
-
                     while (flecs.ecs_iter_next(&query_it)) {
                         var j: usize = 0;
                         while (j < query_it.count) : (j += 1) {
-                            // TODO: Verify that the group_by function is working, if so, we can remove the cell check below.
-                            if (flecs.ecs_field(&query_it, components.Cell, 1)) |cells| {
-                                if (cells[j].x != target_cell.x or cells[j].y != target_cell.y or cells[j].z != target_cell.z) {
-                                    std.log.debug("Iterating cell {any} with entity {d} as relation.", .{ cells[j], cell_entity});
-                                    continue;
-                                }
-                            }
                             if (flecs.ecs_field(&query_it, components.Tile, 2)) |target_tiles| {
                                 if (query_it.entities[j] != entity) {
                                     if (target_tiles[j].x == target_tile.x and target_tiles[j].y == target_tile.y and target_tiles[j].z == target_tile.z) {
