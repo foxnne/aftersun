@@ -21,13 +21,13 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
         var i: usize = 0;
         while (i < it.count) : (i += 1) {
             const entity = it.entities[i];
-            const direction = game.state.controls.movement().direction();
+            const direction = game.state.controls.movement();
             if (flecs.ecs_field(it, components.Tile, 2)) |tiles| {
                 if (direction != .none) {
                     const end_tile = components.Tile{
                         .x = tiles[i].x + @floatToInt(i32, direction.x()),
                         .y = tiles[i].y + @floatToInt(i32, direction.y()),
-                    };
+                    };  
                     
                     // Set move request
                     if (flecs.ecs_field(it, components.Movement, 3)) |movements| {

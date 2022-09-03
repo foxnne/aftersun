@@ -6,10 +6,20 @@ const game = @import("game");
 
 pub const callbacks = @import("callbacks.zig");
 
+pub const Keys = enum(usize) {
+    up,
+    down,
+    right,
+    left,
+    zoom_in,
+    zoom_out,
+};
+
 pub const Controls = struct {
     mouse: Mouse = .{},
 
-    keys: [4]Key = [_]Key{
+    /// Holds all rebindable keys.
+    keys: [6]Key = [_]Key{
         .{
             .name = "Movement - Up",
             .primary = glfw.Key.w,
@@ -38,34 +48,35 @@ pub const Controls = struct {
             .default_primary = glfw.Key.a,
             .default_secondary = glfw.Key.left,
         },
-        // .{
-        //     .name = "Camera - Zoom In",
-        //     .primary = glfw.Key.equal,
-        //     .secondary = glfw.Key.unknown,
-        //     .default_primary = glfw.Key.equal,
-        //     .default_secondary = glfw.Key.unknown,
-        // },
-        // .{
-        //     .name = "Camera - Zoom Out",
-        //     .primary = glfw.Key.minus,
-        //     .secondary = glfw.Key.unknown,
-        //     .default_primary = glfw.Key.minus,
-        //     .default_secondary = glfw.Key.unknown,
-        // },
+        .{
+            .name = "Camera - Zoom In",
+            .primary = glfw.Key.equal,
+            .secondary = glfw.Key.unknown,
+            .default_primary = glfw.Key.equal,
+            .default_secondary = glfw.Key.unknown,
+        },
+        .{
+            .name = "Camera - Zoom Out",
+            .primary = glfw.Key.minus,
+            .secondary = glfw.Key.unknown,
+            .default_primary = glfw.Key.minus,
+            .default_secondary = glfw.Key.unknown,
+        },
     },
 
-    pub fn movement(self: Controls) Directional {
-        return .{
-            .name = "Movement",
-            .keys = self.keys[0..4],
-        };
+    /// Returns the current direction of the movement keys.
+    pub fn movement(self: Controls) game.math.Direction {
+        return game.math.Direction.write(
+            self.keys[@enumToInt(Keys.up)].state,
+            self.keys[@enumToInt(Keys.down)].state,
+            self.keys[@enumToInt(Keys.right)].state,
+            self.keys[@enumToInt(Keys.left)].state,
+        );
     }
 
-    pub fn zoom(self: Controls) Axis {
-        return .{
-            .name = "Zoom",
-            .keys = self.keys[4..6],
-        };
+    /// Returns the current axis state of the zoom keys.
+    pub fn zoom(self: Controls) f32 {
+        return if (self.keys[@enumToInt(Keys.zoom_in)].state) 1.0 else if (self.keys[@enumToInt(Keys.zoom_out)].state) -1.0 else 0.0;
     }
 };
 
@@ -96,30 +107,6 @@ pub const Key = struct {
     /// Returns true while the key is released.
     pub fn up(self: MouseButton) bool {
         return self.state == false;
-    }
-};
-
-pub const Axis = struct {
-    name: [:0]const u8,
-    keys: []const Key,
-
-    pub fn state(self: Axis) f32 {
-        return if (self.keys[0].state) 1.0 else if (self.keys[1].state) -1.0 else 0.0;
-    }
-};
-
-pub const Directional = struct {
-    name: [:0]const u8,
-    keys: []const Key,
-
-    /// Returns the current direction of a directional control.
-    pub fn direction(self: Directional) math.Direction {
-        return math.Direction.write(
-            self.keys[0].state,
-            self.keys[1].state,
-            self.keys[2].state,
-            self.keys[3].state,
-        );
     }
 };
 
