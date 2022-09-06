@@ -229,11 +229,15 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
     var cooldown_system = @import("ecs/systems/cooldown.zig").system();
     flecs.ecs_system(world, "CooldownSystem", flecs.Constants.EcsOnUpdate, &cooldown_system);
 
+    // - Input
+    var input_drag = @import("ecs/systems/input_drag.zig").system(world);
+    flecs.ecs_system(world, "InputDragSystem", flecs.Constants.EcsOnUpdate, &input_drag);
+
     // - Movement
     var movement_request_system = @import("ecs/systems/movement_request.zig").system();
     flecs.ecs_system(world, "MovementRequestSystem", flecs.Constants.EcsOnUpdate, &movement_request_system);
-    var collision_system = @import("ecs/systems/collision.zig").system(world);
-    flecs.ecs_system(world, "CollisionSystem", flecs.Constants.EcsOnUpdate, &collision_system);
+    var movement_collision_system = @import("ecs/systems/movement_collision.zig").system(world);
+    flecs.ecs_system(world, "MovementCollisionSystem", flecs.Constants.EcsOnUpdate, &movement_collision_system);
     var movement_system = @import("ecs/systems/movement.zig").system();
     flecs.ecs_system(world, "MovementSystem", flecs.Constants.EcsOnUpdate, &movement_system);
     var tile_observer = @import("ecs/observers/tile.zig").observer();
@@ -300,6 +304,7 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
     const debug = flecs.ecs_new(world, null);
     flecs.ecs_set(world, debug, &components.Position{ .x = 0.0, .y = -64.0 });
     flecs.ecs_set(world, debug, &components.Tile{ .x = 0, .y = -2 });
+    flecs.ecs_add(world, debug, components.Moveable);
     flecs.ecs_set(world, debug, &components.SpriteRenderer{
         .index = assets.aftersun_atlas.Ham_0_Layer,
     });
@@ -500,11 +505,11 @@ fn update() void {
         }
 
         if (flecs.ecs_get(state.world, state.entities.player, components.Tile)) |tile| {
-            zgui.bulletText("Tile: x: {d}, y: {d}", .{ tile.x, tile.y });
+            zgui.bulletText("Tile: x: {d}, y: {d}, z: {d}", .{ tile.x, tile.y, tile.z });
         }
 
         if (flecs.ecs_get_pair(state.world, state.entities.player, components.Cell, flecs.Constants.EcsWildcard)) |cell| {
-            zgui.bulletText("Cell: x: {d}, y: {d}", .{ cell.x, cell.y });
+            zgui.bulletText("Cell: x: {d}, y: {d}, z: {d}", .{ cell.x, cell.y, cell.z });
         }
 
         if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Movement)) |direction| {
@@ -517,6 +522,12 @@ fn update() void {
 
         if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Body)) |direction| {
             zgui.bulletText("Body Direction: {s}", .{direction.value.fmt()});
+        }
+
+        if (flecs.ecs_get_mut(state.world, state.entities.player, components.Position)) |position| {
+            var z = position.z;
+            _ = zgui.sliderFloat("Height", .{ .v = &z, .min = 0.0, .max = 128.0 });
+            position.z = z;
         }
 
         if (flecs.ecs_get_mut(state.world, state.entities.player, components.CharacterAnimator)) |animator| {
@@ -595,6 +606,7 @@ pub fn main() !void {
     window.setCursorPosCallback(input.callbacks.cursor);
     window.setScrollCallback(input.callbacks.scroll);
     window.setKeyCallback(input.callbacks.key);
+    window.setMouseButtonCallback(input.callbacks.button);
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();

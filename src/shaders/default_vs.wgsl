@@ -16,7 +16,7 @@ struct VertexOut {
     @location(3) data: vec3<f32>
 ) -> VertexOut {
     var output: VertexOut;
-    output.position_clip = vec4(position, 1.0) * uniforms.mvp;
+    output.position_clip = vec4(position.xy, 0.0, 1.0) * uniforms.mvp;
     output.uv = uv;
     output.color = color;
     output.data = data;

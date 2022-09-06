@@ -24,7 +24,6 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
         var i: usize = 0;
         while (i < it.count) : (i += 1) {
             const entity = it.entities[i];
-
             if (flecs.ecs_field(it, components.CharacterAnimator, 1)) |animators| {
                 if (flecs.ecs_field(it, components.CharacterRenderer, 2)) |renderers| {
                     if (flecs.ecs_field(it, components.Direction, 4)) |head_directions| {

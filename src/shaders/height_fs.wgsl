@@ -8,7 +8,7 @@
 ) -> @location(0) vec4<f32> {
     let height_sample = textureSample(height, height_sampler, uv);
     let vert_height =  position.z;
-    let true_height = height_sample.r * 255.0 + vert_height;
+    let true_height = (height_sample.r * 255.0) + vert_height;
     let g_height = floor(true_height / 255.0) / 255.0;
     let r_height = (true_height - (g_height * 255.0)) / 255.0;
     return vec4(r_height, g_height, 0.0, height_sample.a);

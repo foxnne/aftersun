@@ -50,7 +50,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             const position = zm.lerp(start_position, end_position, t);
                             positions[i].x = position[0];
                             positions[i].y = position[1];
-                            positions[i].z = position[2];
+                            positions[i].z = if (movements[i].curve == .sin) @sin(std.math.pi * t) * 10 else position[2];
                         }
                     }
                 }

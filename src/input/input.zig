@@ -3,6 +3,7 @@ const zm = @import("zmath");
 const glfw = @import("glfw");
 const math = @import("../math/math.zig");
 const game = @import("game");
+const components = game.components;
 
 pub const callbacks = @import("callbacks.zig");
 
@@ -137,26 +138,39 @@ pub const MouseButton = struct {
     }
 };
 
+pub const MousePosition = struct {
+    x: f32 = 0.0,
+    y: f32 = 0.0,
+
+    /// Returns the screen position.
+    pub fn screen(self: MousePosition) zm.F32x4 {
+        return zm.f32x4(self.x, self.y, 0, 0);
+    }
+
+    /// Returns the world position.
+    pub fn world(self: MousePosition) zm.F32x4 {
+        const fb = game.state.camera.frameBufferMatrix();
+        const position = self.screen();
+        return game.state.camera.screenToWorld(position, fb);
+    }
+
+    /// Returns the world position as a Tile component.
+    pub fn tile(self: MousePosition) components.Tile {
+        const world_position = self.world();
+        return .{
+            .x = game.math.tile(world_position[0]),
+            .y = game.math.tile(world_position[1]),
+        };
+    }
+};
+
 pub const Mouse = struct {
     primary: MouseButton = .{ .name = "Primary", .button = glfw.MouseButton.left },
     secondary: MouseButton = .{ .name = "Secondary", .button = glfw.MouseButton.right },
-    position: Position = .{},
-    previous_position: Position = .{},
-
-    pub const Position = struct {
-        x: f32 = 0.0,
-        y: f32 = 0.0,
-
-        /// Returns the screen position.
-        pub fn screen(self: Position) zm.F32x4 {
-            return zm.f32x4(self.x, self.y, 0, 0);
-        }
-
-        /// Returns the world position.
-        pub fn world(self: Position) zm.F32x4 {
-            const fb = game.state.camera.frameBufferMatrix();
-            const position = self.screen();
-            return game.state.camera.screenToWorld(position, fb);
-        }
-    };
+    position: MousePosition = .{},
+    previous_position: MousePosition = .{},
+    primary_down: ?components.Tile = null,
+    primary_up: ?components.Tile = null,
+    secondary_down: ?components.Tile = null,
+    secondary_up: ?components.Tile = null,
 };

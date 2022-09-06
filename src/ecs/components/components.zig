@@ -66,7 +66,6 @@ pub const Collider = struct {
     trigger: bool = false,
 };
 
-
 pub const Cell = struct {
     x: i32 = 0,
     y: i32 = 0,
@@ -93,7 +92,18 @@ pub const Rotation = struct { value: f32 = 0 };
 
 pub const Request = struct {};
 pub const Cooldown = struct { current: f32 = 0.0, end: f32 = 1.0 };
-pub const Movement = struct { start: Tile, end: Tile };
+pub const Movement = struct {
+    start: Tile,
+    end: Tile,
+    curve: Curve = .linear,
+
+    pub const Curve = enum {
+        linear,
+        sin,
+    };
+};
+pub const Drag = struct { start: Tile, end: Tile };
+pub const Moveable = struct {};
 
 pub const Camera = struct {};
 pub const Target = struct {};

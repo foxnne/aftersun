@@ -25,7 +25,6 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     flecs.ecs_remove_pair(world, entity, components.Cell, flecs.Constants.EcsWildcard);
                     flecs.ecs_set_pair(world, entity, &cell, cell_entity);
                 } else {
-                    std.log.debug("Cell entity created! {any}", .{cell});
                     const cell_entity = flecs.ecs_new_id(world);
                     flecs.ecs_set(world, cell_entity, &cell);
                     game.state.cells.put(cell, cell_entity) catch unreachable;

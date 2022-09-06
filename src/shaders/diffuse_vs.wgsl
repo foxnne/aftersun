@@ -32,7 +32,7 @@ struct VertexOut {
         }
     }
     
-    output.position_clip = vec4(pos, 1.0) * uniforms.mvp;
+    output.position_clip = vec4(pos.xy, 0.0, 1.0) * uniforms.mvp;
     output.position = pos;
     output.uv = uv;
     output.color = color;

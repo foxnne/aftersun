@@ -34,12 +34,14 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
         while (i < it.count) : (i += 1) {
             if (flecs.ecs_field(it, components.Position, 1)) |positions| {
                 const rotation = if (flecs.ecs_field(it, components.Rotation, 2)) |rotations| rotations[i].value else 0.0;
+                var position = positions[i].toF32x4();
+                position[1] += position[2];
 
                 if (flecs.ecs_field(it, components.SpriteRenderer, 3)) |renderers| {
                     renderers[i].order = i; // Set order so height passes can match time
 
                     game.state.batcher.sprite(
-                        positions[i].toF32x4(),
+                        position,
                         game.state.heightmap,
                         game.state.atlas.sprites[renderers[i].index],
                         .{
@@ -51,7 +53,6 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 }
 
                 if (flecs.ecs_field(it, components.CharacterRenderer, 4)) |renderers| {
-                    const position = positions[i].toF32x4();
                     // Body
                     game.state.batcher.sprite(
                         position,
