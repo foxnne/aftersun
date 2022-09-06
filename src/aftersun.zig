@@ -42,6 +42,7 @@ pub const GameState = struct {
     environment: environment.Environment = .{},
     counter: Counter = .{},
     cells: std.AutoArrayHashMap(components.Cell, flecs.EcsEntity),
+    output_channel: Channel = .final,
     pipeline_default: zgpu.RenderPipelineHandle = .{},
     pipeline_diffuse: zgpu.RenderPipelineHandle = .{},
     pipeline_height: zgpu.RenderPipelineHandle = .{},
@@ -61,6 +62,14 @@ pub const GameState = struct {
     reverse_height_output: gfx.Texture,
     environment_output: gfx.Texture,
     atlas: gfx.Atlas,
+};
+
+pub const Channel = enum(i32) {
+    final,
+    diffuse,
+    height,
+    reverse_height,
+    environment,
 };
 
 /// Holds global entities.
@@ -145,6 +154,7 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
         .{ .binding = 2, .sampler_handle = heightmap.sampler_handle },
     });
 
+    // Build the environment bind group.
     const bind_group_layout_environment = gctx.createBindGroupLayout(&.{
         zgpu.bglBuffer(0, .{ .vertex = true, .fragment = true }, .uniform, true, 0),
         zgpu.bglTexture(1, .{ .fragment = true }, .float, .tvdim_2d, false),
@@ -154,7 +164,6 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
     });
     defer gctx.releaseResource(bind_group_layout_environment);
 
-    // Build the environment bind group.
     const EnvironmentUniforms = @import("ecs/systems/render_environment_pass.zig").EnvironmentUniforms;
     const bind_group_environment = gctx.createBindGroup(bind_group_layout_environment, &[_]zgpu.BindGroupEntryInfo{
         .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(EnvironmentUniforms) },
@@ -165,12 +174,30 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
     });
 
     // Build the final bind group.
-    const bind_group_final = gctx.createBindGroup(bind_group_layout_diffuse, &[_]zgpu.BindGroupEntryInfo{
-        .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(gfx.Uniforms) },
+    const bind_group_layout_final = gctx.createBindGroupLayout(&.{
+        zgpu.bglBuffer(0, .{ .vertex = true, .fragment = true }, .uniform, true, 0),
+        zgpu.bglTexture(1, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.bglSampler(2, .{ .fragment = true }, .filtering),
+        zgpu.bglTexture(3, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.bglSampler(4, .{ .fragment = true }, .filtering),
+        zgpu.bglTexture(5, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.bglSampler(6, .{ .fragment = true }, .filtering),
+        zgpu.bglTexture(7, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.bglSampler(8, .{ .fragment = true }, .filtering),
+    });
+    defer gctx.releaseResource(bind_group_layout_diffuse);
+
+    const FinalUniforms = @import("ecs/systems/render_final_pass.zig").FinalUniforms;
+    const bind_group_final = gctx.createBindGroup(bind_group_layout_final, &[_]zgpu.BindGroupEntryInfo{
+        .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(FinalUniforms) },
         .{ .binding = 1, .texture_view_handle = diffuse_output.view_handle },
         .{ .binding = 2, .sampler_handle = diffuse_output.sampler_handle },
         .{ .binding = 3, .texture_view_handle = environment_output.view_handle },
         .{ .binding = 4, .sampler_handle = environment_output.sampler_handle },
+        .{ .binding = 5, .texture_view_handle = height_output.view_handle },
+        .{ .binding = 6, .sampler_handle = height_output.sampler_handle },
+        .{ .binding = 7, .texture_view_handle = reverse_height_output.view_handle },
+        .{ .binding = 8, .sampler_handle = reverse_height_output.sampler_handle },
     });
 
     state = try allocator.create(GameState);
@@ -218,9 +245,9 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
             .fragment_shader = shaders.environment_fs,
         }, &state.pipeline_environment);
 
-        // (Async) Create environment render pipeline.
-        gfx.utils.createPipelineAsync(allocator, bind_group_layout_diffuse, .{
-            .vertex_shader = shaders.default_vs,
+        // (Async) Create final render pipeline.
+        gfx.utils.createPipelineAsync(allocator, bind_group_layout_final, .{
+            .vertex_shader = shaders.final_vs,
             .fragment_shader = shaders.final_fs,
         }, &state.pipeline_final);
     }
@@ -489,6 +516,14 @@ fn update() void {
             "Average :  {d:.3} ms/frame ({d:.1} fps)",
             .{ state.gctx.stats.average_cpu_time, state.gctx.stats.fps },
         );
+
+        zgui.bulletText("Channel:", .{});
+        if (zgui.radioButton("Final", .{ .active = state.output_channel == .final })) state.output_channel = .final;
+        zgui.sameLine(.{});
+        if (zgui.radioButton("Diffuse", .{ .active = state.output_channel == .diffuse })) state.output_channel = .diffuse;
+        if (zgui.radioButton("Height", .{ .active = state.output_channel == .height })) state.output_channel = .height;
+        zgui.sameLine(.{});
+        if (zgui.radioButton("Reverse_height", .{ .active = state.output_channel == .reverse_height })) state.output_channel = .reverse_height;
 
         _ = zgui.sliderFloat("Cam zoom", .{ .v = &state.camera.zoom, .min = 0.1, .max = 10 });
 

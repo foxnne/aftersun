@@ -11,11 +11,16 @@ pub fn system() flecs.EcsSystemDesc {
     return desc;
 }
 
+pub const FinalUniforms = extern struct {
+    mvp: zm.Mat,
+    output_channel: i32 = 0,
+};
+
 pub fn callback(it: *flecs.EcsIter) callconv(.C) void {
 
     if (it.count > 0) return;
 
-    const uniforms = gfx.Uniforms{ .mvp = zm.transpose(game.state.camera.frameBufferMatrix())};
+    const uniforms = FinalUniforms{ .mvp = zm.transpose(game.state.camera.frameBufferMatrix()), .output_channel = @enumToInt(game.state.output_channel)};
 
     game.state.batcher.begin(.{
         .pipeline_handle = game.state.pipeline_final,
