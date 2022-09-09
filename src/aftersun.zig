@@ -257,12 +257,12 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
     flecs.ecs_system(world, "CooldownSystem", flecs.Constants.EcsOnUpdate, &cooldown_system);
 
     // - Input
-    var input_drag = @import("ecs/systems/input_drag.zig").system(world);
-    flecs.ecs_system(world, "InputDragSystem", flecs.Constants.EcsOnUpdate, &input_drag);
-
-    // - Movement
+    var movement_drag_system = @import("ecs/systems/input_drag.zig").system(world);
+    flecs.ecs_system(world, "MovementDragSystem", flecs.Constants.EcsOnUpdate, &movement_drag_system);
     var movement_request_system = @import("ecs/systems/movement_request.zig").system();
     flecs.ecs_system(world, "MovementRequestSystem", flecs.Constants.EcsOnUpdate, &movement_request_system);
+
+    // - Movement
     var movement_collision_system = @import("ecs/systems/movement_collision.zig").system(world);
     flecs.ecs_system(world, "MovementCollisionSystem", flecs.Constants.EcsOnUpdate, &movement_collision_system);
     var movement_system = @import("ecs/systems/movement.zig").system();

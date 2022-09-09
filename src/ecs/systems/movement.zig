@@ -51,6 +51,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             positions[i].x = position[0];
                             positions[i].y = position[1];
                             positions[i].z = if (movements[i].curve == .sin) @sin(std.math.pi * t) * 10 else position[2];
+                        } else {
+                            flecs.ecs_remove_pair(world, entity, components.Request, components.Movement);
                         }
                     }
                 }

@@ -54,7 +54,6 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                     flecs.ecs_query_set_group(&query_it, cell_entity);
                                 }
 
-                                
                                 while (flecs.ecs_iter_next(&query_it)) {
                                     var j: usize = 0;
                                     while (j < query_it.count) : (j += 1) {
@@ -70,10 +69,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                                         .n, .s, .e, .w => game.settings.movement_cooldown / 2,
                                                         else => game.settings.movement_cooldown / 2 * game.math.sqrt2,
                                                     };
-
                                                     flecs.ecs_set_pair_second(world, query_it.entities[j], components.Request, &components.Movement{ .start = drags[i].start, .end = drags[i].end, .curve = .sin });
                                                     flecs.ecs_set_pair(world, query_it.entities[j], &components.Cooldown{ .end = cooldown }, components.Movement);
-                                                    
                                                 }
 
                                                 break :find;
@@ -85,11 +82,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                         }
                     }
                 }
-
-                flecs.ecs_remove_pair(world, entity, components.Request, components.Drag);
             }
-
-            
+            flecs.ecs_remove_pair(world, entity, components.Request, components.Drag);
         }
     }
 }
