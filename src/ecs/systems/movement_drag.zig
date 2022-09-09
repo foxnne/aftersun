@@ -42,7 +42,6 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             find: {
                 if (flecs.ecs_field(it, components.Tile, 2)) |tiles| {
                     if (flecs.ecs_field(it, components.Drag, 3)) |drags| {
-                        const start_cell = drags[i].start.toCell();
                         const dist_x = std.math.absInt(drags[i].start.x - tiles[i].x) catch unreachable;
                         const dist_y = std.math.absInt(drags[i].start.y - tiles[i].y) catch unreachable;
 
@@ -50,7 +49,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             if (it.ctx) |ctx| {
                                 var query = @ptrCast(*flecs.EcsQuery, ctx);
                                 var query_it = flecs.ecs_query_iter(world, query);
-                                if (game.state.cells.get(start_cell)) |cell_entity| {
+                                if (game.state.cells.get(drags[i].start.toCell())) |cell_entity| {
                                     flecs.ecs_query_set_group(&query_it, cell_entity);
                                 }
 
