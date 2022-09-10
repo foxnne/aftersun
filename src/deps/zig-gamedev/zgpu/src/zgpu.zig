@@ -1,18 +1,14 @@
 //--------------------------------------------------------------------------------------------------
 // zgpu v0.2
 //
-// This library uses [mach-glfw bindings](https://github.com/hexops/mach-glfw) and
-// build script from [mach-gpu-dawn](https://github.com/hexops/mach-gpu-dawn).
-//
 // `zgpu` is a cross-platform (Windows/Linux/macOS) graphics layer built on top of wgpu API (Dawn).
 //--------------------------------------------------------------------------------------------------
 const std = @import("std");
 const math = std.math;
 const assert = std.debug.assert;
-const glfw = @import("glfw");
+const glfw = @import("zglfw");
 const wgsl = @import("common_wgsl.zig");
 pub const wgpu = @import("wgpu.zig");
-pub const zgui = @import("zgui.zig");
 
 pub const GraphicsContext = struct {
     pub const swapchain_format = wgpu.TextureFormat.bgra8_unorm;
@@ -148,14 +144,14 @@ pub const GraphicsContext = struct {
         const surface = createSurfaceForWindow(instance, window);
         errdefer surface.release();
 
-        const framebuffer_size = try window.getFramebufferSize();
+        const framebuffer_size = window.getFramebufferSize();
 
         const swapchain_descriptor = wgpu.SwapChainDescriptor{
             .label = "main window swap chain",
             .usage = .{ .render_attachment = true },
             .format = swapchain_format,
-            .width = framebuffer_size.width,
-            .height = framebuffer_size.height,
+            .width = @intCast(u32, framebuffer_size.w),
+            .height = @intCast(u32, framebuffer_size.h),
             .present_mode = .fifo,
             .implementation = 0,
         };
@@ -390,12 +386,12 @@ pub const GraphicsContext = struct {
     } {
         gctx.swapchain.present();
 
-        const fb_size = gctx.window.getFramebufferSize() catch unreachable;
-        if (gctx.swapchain_descriptor.width != fb_size.width or
-            gctx.swapchain_descriptor.height != fb_size.height)
+        const fb_size = gctx.window.getFramebufferSize();
+        if (gctx.swapchain_descriptor.width != fb_size.w or
+            gctx.swapchain_descriptor.height != fb_size.h)
         {
-            gctx.swapchain_descriptor.width = fb_size.width;
-            gctx.swapchain_descriptor.height = fb_size.height;
+            gctx.swapchain_descriptor.width = @intCast(u32, fb_size.w);
+            gctx.swapchain_descriptor.height = @intCast(u32, fb_size.h);
             gctx.swapchain.release();
 
             gctx.swapchain = gctx.device.createSwapChain(gctx.surface, gctx.swapchain_descriptor);
@@ -1355,7 +1351,7 @@ fn ResourcePool(comptime Info: type, comptime Resource: type) type {
 }
 
 pub fn checkSystem(comptime content_dir: []const u8) !void {
-    const local = struct {
+    const doSystemCheck = (struct {
         fn impl() error{ GraphicsApiUnavailable, InvalidDataFiles }!void {
             // TODO: On Windows we should check if DirectX 12 is supported (Windows 10+).
             // On Linux we require Vulkan support.
@@ -1385,15 +1381,9 @@ pub fn checkSystem(comptime content_dir: []const u8) !void {
                 }
             }
         }
+    }).impl;
 
-        fn errorCallbackGlfw(error_code: glfw.Error, description: [:0]const u8) void {
-            std.debug.print("glfw: {}: {s}\n", .{ error_code, description });
-        }
-    };
-
-    glfw.setErrorCallback(local.errorCallbackGlfw);
-
-    local.impl() catch |err| switch (err) {
+    doSystemCheck() catch |err| switch (err) {
         error.GraphicsApiUnavailable => {
             std.debug.print(
                 \\
@@ -1463,183 +1453,10 @@ const FrameStats = struct {
     }
 };
 
-pub const gui = struct {
-    pub var want_capture_mouse: bool = false;
-    pub var want_capture_keyboard: bool = false;
-
-    /// This call will install GLFW callbacks to handle GUI interactions.
-    /// Those callbacks will chain-call user's previously installed callbacks, if any.
-    /// This means that custom user's callbacks need to be installed *before* calling zgpu.gui.init().
-    pub fn init(
-        window: glfw.Window,
-        device: wgpu.Device,
-        comptime content_dir: []const u8,
-        comptime font_name: []const u8,
-        font_size: f32,
-    ) void {
-        zgui.init();
-
-        if (!ImGui_ImplGlfw_InitForOther(window.handle, true)) {
-            unreachable;
-        }
-
-        if (font_name.len > 1) {
-            _ = zgui.io.addFontFromFile(content_dir ++ font_name ++ "\x00", font_size);
-        }
-
-        if (!ImGui_ImplWGPU_Init(
-            device,
-            1, // Number of `frames in flight`. One is enough because Dawn creates staging buffers internally.
-            @enumToInt(GraphicsContext.swapchain_format),
-        )) {
-            unreachable;
-        }
-
-        zgui.io.setIniFilename(content_dir ++ "imgui.ini");
-    }
-
-    pub fn deinit() void {
-        ImGui_ImplWGPU_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
-        zgui.deinit();
-    }
-
-    pub fn newFrame(fb_width: u32, fb_height: u32) void {
-        // (when reading from the io.WantCaptureMouse, io.WantCaptureKeyboard flags to dispatch your inputs, it is
-        //  generally easier and more correct to use their state BEFORE calling NewFrame(). See FAQ for details!)
-        want_capture_mouse = zgui.io.getWantCaptureMouse();
-        want_capture_keyboard = zgui.io.getWantCaptureKeyboard();
-
-        ImGui_ImplWGPU_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-
-        zgui.io.setDisplaySize(@intToFloat(f32, fb_width), @intToFloat(f32, fb_height));
-        zgui.io.setDisplayFramebufferScale(1.0, 1.0);
-
-        zgui.newFrame();
-    }
-
-    pub fn draw(pass: wgpu.RenderPassEncoder) void {
-        zgui.render();
-        ImGui_ImplWGPU_RenderDrawData(zgui.getDrawData(), pass);
-    }
-
-    // Those functions are defined in `imgui_impl_glfw.cpp` and 'imgui_impl_wgpu.cpp`
-    // (they include few custom changes).
-    extern fn ImGui_ImplGlfw_InitForOther(window: *const anyopaque, install_callbacks: bool) bool;
-    extern fn ImGui_ImplGlfw_NewFrame() void;
-    extern fn ImGui_ImplGlfw_Shutdown() void;
-    extern fn ImGui_ImplWGPU_Init(device: *const anyopaque, num_frames_in_flight: u32, rt_format: u32) bool;
-    extern fn ImGui_ImplWGPU_NewFrame() void;
-    extern fn ImGui_ImplWGPU_RenderDrawData(draw_data: *const anyopaque, pass_encoder: *const anyopaque) void;
-    extern fn ImGui_ImplWGPU_Shutdown() void;
-};
-
-pub const stbi = struct {
-    pub fn Image(comptime ChannelType: type) type {
-        return struct {
-            const Self = @This();
-
-            data: []ChannelType,
-            width: u32,
-            height: u32,
-            bytes_per_row: u32,
-            channels_in_memory: u32,
-            channels_in_file: u32,
-
-            pub fn init(
-                filename: [*:0]const u8,
-                desired_channels: u32,
-            ) !Self {
-                var x: c_int = undefined;
-                var y: c_int = undefined;
-                var ch: c_int = undefined;
-                var data = switch (ChannelType) {
-                    u8 => stbi_load(filename, &x, &y, &ch, @intCast(c_int, desired_channels)),
-                    f16 => @ptrCast(?[*]f16, stbi_loadf(filename, &x, &y, &ch, @intCast(c_int, desired_channels))),
-                    f32 => stbi_loadf(filename, &x, &y, &ch, @intCast(c_int, desired_channels)),
-                    else => @compileError("[zgpu] stbi.Image: ChannelType can be u8, f16 or f32."),
-                };
-                if (data == null)
-                    return error.StbiLoadFailed;
-
-                const channels_in_memory = if (desired_channels == 0) @intCast(u32, ch) else desired_channels;
-                const width = @intCast(u32, x);
-                const height = @intCast(u32, y);
-
-                if (ChannelType == f16) {
-                    var data_f32 = @ptrCast([*]f32, data.?);
-                    const num = width * height * channels_in_memory;
-                    var i: u32 = 0;
-                    while (i < num) : (i += 1) {
-                        data.?[i] = @floatCast(f16, data_f32[i]);
-                    }
-                }
-
-                return Self{
-                    .data = data.?[0 .. width * height * channels_in_memory],
-                    .width = width,
-                    .height = height,
-                    .bytes_per_row = width * channels_in_memory * @sizeOf(ChannelType),
-                    .channels_in_memory = channels_in_memory,
-                    .channels_in_file = @intCast(u32, ch),
-                };
-            }
-
-            pub fn deinit(image: *Self) void {
-                stbi_image_free(image.data.ptr);
-                image.* = undefined;
-            }
-        };
-    }
-
-    pub const hdrToLdrScale = stbi_hdr_to_ldr_scale;
-    pub const hdrToLdrGamma = stbi_hdr_to_ldr_gamma;
-    pub const ldrToHdrScale = stbi_ldr_to_hdr_scale;
-    pub const ldrToHdrGamma = stbi_ldr_to_hdr_gamma;
-
-    pub fn isHdr(filename: [*:0]const u8) bool {
-        return stbi_is_hdr(filename) == 1;
-    }
-
-    pub fn setFlipVerticallyOnLoad(should_flip: bool) void {
-        stbi_set_flip_vertically_on_load(if (should_flip) 1 else 0);
-    }
-
-    extern fn stbi_load(
-        filename: [*:0]const u8,
-        x: *c_int,
-        y: *c_int,
-        channels_in_file: *c_int,
-        desired_channels: c_int,
-    ) ?[*]u8;
-
-    extern fn stbi_loadf(
-        filename: [*:0]const u8,
-        x: *c_int,
-        y: *c_int,
-        channels_in_file: *c_int,
-        desired_channels: c_int,
-    ) ?[*]f32;
-
-    extern fn stbi_image_free(image_data: ?*anyopaque) void;
-
-    extern fn stbi_hdr_to_ldr_scale(scale: f32) void;
-    extern fn stbi_hdr_to_ldr_gamma(gamma: f32) void;
-    extern fn stbi_ldr_to_hdr_scale(scale: f32) void;
-    extern fn stbi_ldr_to_hdr_gamma(gamma: f32) void;
-
-    extern fn stbi_is_hdr(filename: [*:0]const u8) c_int;
-    extern fn stbi_set_flip_vertically_on_load(flag_true_if_should_flip: c_int) void;
-};
-
 const SurfaceDescriptorTag = enum {
     metal_layer,
     windows_hwnd,
-    windows_core_window,
-    windows_swap_chain_panel,
     xlib,
-    canvas_html_selector,
 };
 
 const SurfaceDescriptor = union(SurfaceDescriptorTag) {
@@ -1652,55 +1469,30 @@ const SurfaceDescriptor = union(SurfaceDescriptorTag) {
         hinstance: *anyopaque,
         hwnd: *anyopaque,
     },
-    windows_core_window: struct {
-        label: ?[*:0]const u8 = null,
-        core_window: *anyopaque,
-    },
-    windows_swap_chain_panel: struct {
-        label: ?[*:0]const u8 = null,
-        swap_chain_panel: *anyopaque,
-    },
     xlib: struct {
         label: ?[*:0]const u8 = null,
         display: *anyopaque,
         window: u32,
     },
-    canvas_html_selector: struct {
-        label: ?[*:0]const u8 = null,
-        selector: [*:0]const u8,
-    },
 };
 
-fn detectGLFWOptions() glfw.BackendOptions {
-    const target = @import("builtin").target;
-    if (target.isDarwin()) return .{ .cocoa = true };
-    return switch (target.os.tag) {
-        .windows => .{ .win32 = true },
-        .linux => .{ .x11 = true },
-        else => .{},
-    };
-}
+pub fn createSurfaceForWindow(instance: wgpu.Instance, window: glfw.Window) wgpu.Surface {
+    const os_tag = @import("builtin").target.os.tag;
 
-pub fn createSurfaceForWindow(
-    instance: wgpu.Instance,
-    window: glfw.Window,
-) wgpu.Surface {
-    comptime var glfw_options = detectGLFWOptions();
-    const glfw_native = glfw.Native();
-    const descriptor = if (glfw_options.win32) SurfaceDescriptor{
+    const descriptor = if (os_tag == .windows) SurfaceDescriptor{
         .windows_hwnd = .{
             .label = "basic surface",
             .hinstance = std.os.windows.kernel32.GetModuleHandleW(null).?,
-            .hwnd = glfw_native.getWin32Window(window),
+            .hwnd = glfw.getWin32Window(window) catch unreachable,
         },
-    } else if (glfw_options.x11) SurfaceDescriptor{
+    } else if (os_tag == .linux) SurfaceDescriptor{
         .xlib = .{
             .label = "basic surface",
-            .display = glfw_native.getX11Display(),
-            .window = glfw_native.getX11Window(window),
+            .display = glfw.getX11Display() catch unreachable,
+            .window = glfw.getX11Window(window) catch unreachable,
         },
-    } else if (glfw_options.cocoa) blk: {
-        const ns_window = glfw_native.getCocoaWindow(window);
+    } else if (os_tag == .macos) blk: {
+        const ns_window = glfw.getCocoaWindow(window) catch unreachable;
         const ns_view = msgSend(ns_window, "contentView", .{}, *anyopaque); // [nsWindow contentView]
 
         // Create a CAMetalLayer that covers the whole window that will be passed to CreateSurface.
@@ -1719,15 +1511,8 @@ pub fn createSurfaceForWindow(
                 .layer = layer.?,
             },
         };
-    } else if (glfw_options.wayland) {
-        // bugs.chromium.org/p/dawn/issues/detail?id=1246&q=surface&can=2
-        @panic("Dawn does not yet have Wayland support");
     } else unreachable;
 
-    return createSurface(instance, descriptor);
-}
-
-fn createSurface(instance: wgpu.Instance, descriptor: SurfaceDescriptor) wgpu.Surface {
     return switch (descriptor) {
         .metal_layer => |src| blk: {
             var desc: wgpu.SurfaceDescriptorFromMetalLayer = undefined;
@@ -1750,42 +1535,12 @@ fn createSurface(instance: wgpu.Instance, descriptor: SurfaceDescriptor) wgpu.Su
                 .label = if (src.label) |l| l else null,
             });
         },
-        .windows_core_window => |src| blk: {
-            var desc: wgpu.SurfaceDescriptorFromWindowsCoreWindow = undefined;
-            desc.chain.next = null;
-            desc.chain.struct_type = .surface_descriptor_from_windows_core_window;
-            desc.core_window = src.core_window;
-            break :blk instance.createSurface(.{
-                .next_in_chain = @ptrCast(*const wgpu.ChainedStruct, &desc),
-                .label = if (src.label) |l| l else null,
-            });
-        },
-        .windows_swap_chain_panel => |src| blk: {
-            var desc: wgpu.SurfaceDescriptorFromWindowsSwapChainPanel = undefined;
-            desc.chain.next = null;
-            desc.chain.struct_type = .surface_descriptor_from_windows_swap_chain_panel;
-            desc.swap_chain_panel = src.swap_chain_panel;
-            break :blk instance.createSurface(.{
-                .next_in_chain = @ptrCast(*const wgpu.ChainedStruct, &desc),
-                .label = if (src.label) |l| l else null,
-            });
-        },
         .xlib => |src| blk: {
             var desc: wgpu.SurfaceDescriptorFromXlibWindow = undefined;
             desc.chain.next = null;
             desc.chain.struct_type = .surface_descriptor_from_xlib_window;
             desc.display = src.display;
             desc.window = src.window;
-            break :blk instance.createSurface(.{
-                .next_in_chain = @ptrCast(*const wgpu.ChainedStruct, &desc),
-                .label = if (src.label) |l| l else null,
-            });
-        },
-        .canvas_html_selector => |src| blk: {
-            var desc: wgpu.SurfaceDescriptorFromCanvasHTMLSelector = undefined;
-            desc.chain.next = null;
-            desc.chain.struct_type = .surface_descriptor_from_canvas_html_selector;
-            desc.selector = src.selector;
             break :blk instance.createSurface(.{
                 .next_in_chain = @ptrCast(*const wgpu.ChainedStruct, &desc),
                 .label = if (src.label) |l| l else null,
@@ -1829,7 +1584,12 @@ fn msgSend(obj: anytype, sel_name: [:0]const u8, args: anytype, comptime ReturnT
     } else switch (args_meta.len) {
         0 => *const fn (@TypeOf(obj), objc.SEL) callconv(.C) ReturnType,
         1 => *const fn (@TypeOf(obj), objc.SEL, args_meta[0].field_type) callconv(.C) ReturnType,
-        2 => *const fn (@TypeOf(obj), objc.SEL, args_meta[0].field_type, args_meta[1].field_type) callconv(.C) ReturnType,
+        2 => *const fn (
+            @TypeOf(obj),
+            objc.SEL,
+            args_meta[0].field_type,
+            args_meta[1].field_type,
+        ) callconv(.C) ReturnType,
         3 => *const fn (
             @TypeOf(obj),
             objc.SEL,

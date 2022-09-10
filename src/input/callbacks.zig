@@ -1,23 +1,24 @@
 const std = @import("std");
-const glfw = @import("glfw");
+const zglfw = @import("zglfw");
 const game = @import("game");
 const input = @import("input.zig");
 const zgpu = @import("zgpu");
+const zgui = @import("zgui");
 
 const flecs = @import("flecs");
 const components = game.components;
 
-pub fn cursor(window: glfw.Window, x: f64, y: f64) void {
+pub fn cursor(window: zglfw.Window, x: f64, y: f64) void {
     const scale_factor = scale_factor: {
-        const cs = window.getContentScale() catch unreachable;
-        break :scale_factor std.math.max(cs.x_scale, cs.y_scale);
+        const cs = window.getContentScale();
+        break :scale_factor std.math.max(cs.x, cs.y);
     };
     game.state.controls.mouse.position.x = @floatCast(f32, x / scale_factor);
     game.state.controls.mouse.position.y = @floatCast(f32, y / scale_factor);
 }
 
-pub fn scroll(_: glfw.Window, _: f64, y: f64) void {
-    if (zgpu.zgui.io.getWantCaptureMouse()) return;
+pub fn scroll(_: zglfw.Window, _: f64, y: f64) void {
+    if (zgui.io.getWantCaptureMouse()) return;
 
     if (y > game.settings.zoom_scroll_tolerance and game.state.camera.zoom_progress < 0.0) {
         const max_zoom = game.state.camera.maxZoom();
@@ -37,7 +38,7 @@ pub fn scroll(_: glfw.Window, _: f64, y: f64) void {
     }
 }
 
-pub fn button(_: glfw.Window, glfw_button: glfw.MouseButton, action: glfw.Action, _: glfw.Mods) void {
+pub fn button(_: zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Action, _: zglfw.Mods) void {
     //if (zgpu.zgui.io.getWantCaptureMouse()) return;
 
     const tile = game.state.controls.mouse.position.tile();
@@ -86,8 +87,8 @@ pub fn button(_: glfw.Window, glfw_button: glfw.MouseButton, action: glfw.Action
     }
 }
 
-pub fn key(_: glfw.Window, glfw_key: glfw.Key, _: i32, action: glfw.Action, _: glfw.Mods) void {
-    if (zgpu.zgui.io.getWantCaptureKeyboard()) return;
+pub fn key(_: zglfw.Window, glfw_key: zglfw.Key, _: i32, action: zglfw.Action, _: zglfw.Mods) void {
+    if (zgui.io.getWantCaptureKeyboard()) return;
     for (game.state.controls.keys) |*k| {
         if (k.primary == glfw_key or k.secondary == glfw_key) {
             k.previous_state = k.state;

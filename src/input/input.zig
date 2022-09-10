@@ -1,6 +1,6 @@
 const std = @import("std");
 const zm = @import("zmath");
-const glfw = @import("glfw");
+const zglfw = @import("zglfw");
 const math = @import("../math/math.zig");
 const game = @import("game");
 const components = game.components;
@@ -23,45 +23,45 @@ pub const Controls = struct {
     keys: [6]Key = [_]Key{
         .{
             .name = "Movement - Up",
-            .primary = glfw.Key.w,
-            .secondary = glfw.Key.up,
-            .default_primary = glfw.Key.w,
-            .default_secondary = glfw.Key.up,
+            .primary = zglfw.Key.w,
+            .secondary = zglfw.Key.up,
+            .default_primary = zglfw.Key.w,
+            .default_secondary = zglfw.Key.up,
         },
         .{
             .name = "Movement - Down",
-            .primary = glfw.Key.s,
-            .secondary = glfw.Key.down,
-            .default_primary = glfw.Key.s,
-            .default_secondary = glfw.Key.down,
+            .primary = zglfw.Key.s,
+            .secondary = zglfw.Key.down,
+            .default_primary = zglfw.Key.s,
+            .default_secondary = zglfw.Key.down,
         },
         .{
             .name = "Movement - Right",
-            .primary = glfw.Key.d,
-            .secondary = glfw.Key.right,
-            .default_primary = glfw.Key.d,
-            .default_secondary = glfw.Key.right,
+            .primary = zglfw.Key.d,
+            .secondary = zglfw.Key.right,
+            .default_primary = zglfw.Key.d,
+            .default_secondary = zglfw.Key.right,
         },
         .{
             .name = "Movement - Left",
-            .primary = glfw.Key.a,
-            .secondary = glfw.Key.left,
-            .default_primary = glfw.Key.a,
-            .default_secondary = glfw.Key.left,
+            .primary = zglfw.Key.a,
+            .secondary = zglfw.Key.left,
+            .default_primary = zglfw.Key.a,
+            .default_secondary = zglfw.Key.left,
         },
         .{
             .name = "Camera - Zoom In",
-            .primary = glfw.Key.equal,
-            .secondary = glfw.Key.unknown,
-            .default_primary = glfw.Key.equal,
-            .default_secondary = glfw.Key.unknown,
+            .primary = zglfw.Key.equal,
+            .secondary = zglfw.Key.unknown,
+            .default_primary = zglfw.Key.equal,
+            .default_secondary = zglfw.Key.unknown,
         },
         .{
             .name = "Camera - Zoom Out",
-            .primary = glfw.Key.minus,
-            .secondary = glfw.Key.unknown,
-            .default_primary = glfw.Key.minus,
-            .default_secondary = glfw.Key.unknown,
+            .primary = zglfw.Key.minus,
+            .secondary = zglfw.Key.unknown,
+            .default_primary = zglfw.Key.minus,
+            .default_secondary = zglfw.Key.unknown,
         },
     },
 
@@ -83,10 +83,10 @@ pub const Controls = struct {
 
 pub const Key = struct {
     name: [:0]const u8,
-    primary: glfw.Key = glfw.Key.unknown,
-    secondary: glfw.Key = glfw.Key.unknown,
-    default_primary: glfw.Key = glfw.Key.unknown,
-    default_secondary: glfw.Key = glfw.Key.unknown,
+    primary: zglfw.Key = zglfw.Key.unknown,
+    secondary: zglfw.Key = zglfw.Key.unknown,
+    default_primary: zglfw.Key = zglfw.Key.unknown,
+    default_secondary: zglfw.Key = zglfw.Key.unknown,
     state: bool = false,
     previous_state: bool = false,
 
@@ -113,7 +113,7 @@ pub const Key = struct {
 
 pub const MouseButton = struct {
     name: [:0]const u8,
-    button: glfw.MouseButton,
+    button: zglfw.MouseButton,
     state: bool = false,
     previous_state: bool = false,
 
@@ -165,8 +165,8 @@ pub const MousePosition = struct {
 };
 
 pub const Mouse = struct {
-    primary: MouseButton = .{ .name = "Primary", .button = glfw.MouseButton.left },
-    secondary: MouseButton = .{ .name = "Secondary", .button = glfw.MouseButton.right },
+    primary: MouseButton = .{ .name = "Primary", .button = zglfw.MouseButton.left },
+    secondary: MouseButton = .{ .name = "Secondary", .button = zglfw.MouseButton.right },
     position: MousePosition = .{},
     previous_position: MousePosition = .{},
     primary_down: ?components.Tile = null,

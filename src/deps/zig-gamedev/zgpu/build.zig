@@ -1,63 +1,10 @@
 const std = @import("std");
-const glfw = @import("libs/mach-glfw/build.zig");
 
-pub const BuildOptions = struct {
-    use_imgui: bool = true,
-    use_stb_image: bool = true,
-
-    glfw: glfw.Options = .{},
-    dawn: DawnOptions = .{},
-};
-
-pub const BuildOptionsStep = struct {
-    options: BuildOptions,
-    step: *std.build.OptionsStep,
-
-    pub fn init(b: *std.build.Builder, options: BuildOptions) BuildOptionsStep {
-        const bos = .{
-            .options = options,
-            .step = b.addOptions(),
-        };
-        return bos;
-    }
-
-    pub fn getPkg(bos: BuildOptionsStep) std.build.Pkg {
-        return bos.step.getPackage("zgpu_options");
-    }
-
-    fn addTo(bos: BuildOptionsStep, target_step: *std.build.LibExeObjStep) void {
-        target_step.addOptions("zgpu_options", bos.step);
-    }
-};
-
-pub fn link(exe: *std.build.LibExeObjStep, bos: BuildOptionsStep) void {
-    bos.addTo(exe);
-
-    // When user links with `zgpu` we automatically inject dependency to `glfw`.
-    exe.addPackage(glfw.pkg);
-
-    glfw.link(exe.builder, exe, bos.options.glfw);
-    dawnLink(exe.builder, exe, bos.options.dawn);
+pub fn link(exe: *std.build.LibExeObjStep) void {
+    linkDawn(exe);
 
     exe.addIncludeDir(thisDir() ++ "/src");
     exe.addCSourceFile(thisDir() ++ "/src/dawn.cpp", &.{"-std=c++17"});
-
-    if (bos.options.use_imgui) {
-        exe.addCSourceFile(thisDir() ++ "/src/zgui.cpp", &.{""});
-
-        exe.addIncludeDir(thisDir() ++ "/libs");
-        exe.addCSourceFile(thisDir() ++ "/libs/imgui/imgui.cpp", &.{""});
-        exe.addCSourceFile(thisDir() ++ "/libs/imgui/imgui_widgets.cpp", &.{""});
-        exe.addCSourceFile(thisDir() ++ "/libs/imgui/imgui_tables.cpp", &.{""});
-        exe.addCSourceFile(thisDir() ++ "/libs/imgui/imgui_draw.cpp", &.{""});
-        exe.addCSourceFile(thisDir() ++ "/libs/imgui/imgui_demo.cpp", &.{""});
-        exe.addCSourceFile(thisDir() ++ "/libs/imgui/imgui_impl_glfw.cpp", &.{""});
-        exe.addCSourceFile(thisDir() ++ "/libs/imgui/imgui_impl_wgpu.cpp", &.{""});
-    }
-
-    if (bos.options.use_stb_image) {
-        exe.addCSourceFile(thisDir() ++ "/libs/stb/stb_image.c", &.{"-std=c99"});
-    }
 }
 
 pub fn buildTests(
@@ -68,27 +15,15 @@ pub fn buildTests(
     const tests = b.addTest(thisDir() ++ "/src/zgpu.zig");
     tests.setBuildMode(build_mode);
     tests.setTarget(target);
-    link(tests, BuildOptionsStep.init(b, .{}));
+    link(tests);
     return tests;
 }
 
 pub fn getPkg(dependencies: []const std.build.Pkg) std.build.Pkg {
-    const static = struct {
-        var deps: [8]std.build.Pkg = undefined;
-    };
-    std.debug.assert(dependencies.len < static.deps.len);
-
-    // Copy `dependencies` to a static memory.
-    for (dependencies) |dep, i| {
-        static.deps[i] = dep;
-    }
-    // When user links with `zgpu` we automatically inject dependency to `glfw`.
-    static.deps[dependencies.len] = glfw.pkg;
-
     return .{
         .name = "zgpu",
         .source = .{ .path = thisDir() ++ "/src/zgpu.zig" },
-        .dependencies = static.deps[0 .. dependencies.len + 1],
+        .dependencies = dependencies,
     };
 }
 
@@ -106,24 +41,23 @@ const DawnOptions = struct {
     vulkan: ?bool = null,
     binary_version: []const u8 = "release-777728f",
 
-    fn detectDefaults(self: DawnOptions, target: std.Target) DawnOptions {
+    fn init(target: std.Target) DawnOptions {
         const tag = target.os.tag;
-        var options = self;
-        if (options.d3d12 == null) options.d3d12 = tag == .windows;
-        if (options.metal == null) options.metal = tag == .macos;
-        if (options.vulkan == null) options.vulkan = tag == .linux;
-
+        var options = DawnOptions{};
+        options.d3d12 = (tag == .windows);
+        options.metal = (tag == .macos);
+        options.vulkan = (tag == .linux);
         return options;
     }
 };
 
-fn dawnLink(b: *std.build.Builder, step: *std.build.LibExeObjStep, options: DawnOptions) void {
+fn linkDawn(exe: *std.build.LibExeObjStep) void {
     const target = (std.zig.system.NativeTargetInfo.detect(
-        b.allocator,
-        step.target,
+        exe.builder.allocator,
+        exe.target,
     ) catch unreachable).target;
-    const opt = options.detectDefaults(target);
-    linkFromBinary(b, step, opt);
+    const options = DawnOptions.init(target);
+    linkFromBinary(exe.builder, exe, options);
 }
 
 fn linkFromBinary(b: *std.build.Builder, step: *std.build.LibExeObjStep, options: DawnOptions) void {

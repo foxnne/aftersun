@@ -1,8 +1,8 @@
 const std = @import("std");
 const glfw = @import("glfw");
 const zgpu = @import("zgpu");
+const zstbi = @import("zstbi");
 const wgpu = zgpu.wgpu;
-const zgui = zgpu.zgui;
 const zm = @import("zmath");
 
 const game = @import("game");
@@ -49,7 +49,7 @@ pub const Texture = struct {
     }
 
     pub fn initFromFile(gctx: *zgpu.GraphicsContext, file: [*:0]const u8, options: Texture.SamplerOptions) !Texture {
-        var image = try zgpu.stbi.Image(u8).init(file, 4);
+        var image = try zstbi.Image(u8).init(file, 4);
         defer image.deinit();
 
         const handle = gctx.createTexture(.{

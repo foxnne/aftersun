@@ -1,8 +1,9 @@
 const std = @import("std");
-const glfw = @import("glfw");
+const zglfw = @import("zglfw");
 const zgpu = @import("zgpu");
 const wgpu = zgpu.wgpu;
-const zgui = zgpu.zgui;
+const zgui = @import("zgui");
+const zstbi = @import("zstbi");
 const zm = @import("zmath");
 const flecs = @import("flecs");
 
@@ -92,7 +93,7 @@ fn register(world: *flecs.EcsWorld, comptime T: type) void {
     }
 }
 
-fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
+fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     const world = flecs.ecs_init().?;
     register(world, components);
 
@@ -113,7 +114,8 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
     const reverse_height_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
     const environment_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
 
-    var camera = gfx.Camera.init(settings.design_size, try gctx.window.getSize(), zm.f32x4(0, 0, 0, 0));
+    const window_size = gctx.window.getSize();
+    var camera = gfx.Camera.init(settings.design_size, .{ .w = window_size.w, .h = window_size.h }, zm.f32x4(0, 0, 0, 0));
 
     // Build the default bind group.
     const bind_group_layout_default = gctx.createBindGroupLayout(&.{
@@ -330,11 +332,19 @@ fn init(allocator: std.mem.Allocator, window: glfw.Window) !*GameState {
 
     const debug = flecs.ecs_new(world, null);
     flecs.ecs_set(world, debug, &components.Position{ .x = 0.0, .y = -64.0 });
-    flecs.ecs_set(world, debug, &components.Tile{ .x = 0, .y = -2 });
+    flecs.ecs_set(world, debug, &components.Tile{ .x = 0, .y = -2, .counter = state.counter.count()});
     flecs.ecs_add(world, debug, components.Moveable);
     flecs.ecs_set(world, debug, &components.SpriteRenderer{
         .index = assets.aftersun_atlas.Ham_0_Layer,
     });
+
+    const ham = flecs.ecs_new(world, null);
+    flecs.ecs_set(world, ham, &components.Position{ .x = 0.0, .y = -96.0 });
+    flecs.ecs_set(world, ham, &components.Tile{ .x = 0, .y = -3, .counter = state.counter.count()});
+    flecs.ecs_add(world, ham, components.Moveable);
+    flecs.ecs_set(world, ham, &components.SpriteRenderer{
+        .index = assets.aftersun_atlas.Ham_1_Layer,
+    }); 
 
     state.entities = .{ .player = player, .debug = debug };
 
@@ -509,7 +519,7 @@ fn deinit(allocator: std.mem.Allocator) void {
 fn update() void {
     _ = flecs.ecs_progress(state.world, 0);
 
-    zgpu.gui.newFrame(state.gctx.swapchain_descriptor.width, state.gctx.swapchain_descriptor.height);
+    zgui.backend.newFrame(state.gctx.swapchain_descriptor.width, state.gctx.swapchain_descriptor.height);
 
     if (zgui.begin("Game Settings", .{})) {
         zgui.bulletText(
@@ -520,10 +530,11 @@ fn update() void {
         zgui.bulletText("Channel:", .{});
         if (zgui.radioButton("Final", .{ .active = state.output_channel == .final })) state.output_channel = .final;
         zgui.sameLine(.{});
-        if (zgui.radioButton("Diffuse", .{ .active = state.output_channel == .diffuse })) state.output_channel = .diffuse;
-        if (zgui.radioButton("Height", .{ .active = state.output_channel == .height })) state.output_channel = .height;
+        if (zgui.radioButton("Diffusemap", .{ .active = state.output_channel == .diffuse })) state.output_channel = .diffuse;
+        if (zgui.radioButton("Heightmap", .{ .active = state.output_channel == .height })) state.output_channel = .height;
         zgui.sameLine(.{});
-        if (zgui.radioButton("Reverse_height", .{ .active = state.output_channel == .reverse_height })) state.output_channel = .reverse_height;
+        if (zgui.radioButton("Reverse Heighmap", .{ .active = state.output_channel == .reverse_height })) state.output_channel = .reverse_height;
+        if (zgui.radioButton("Environmentmap", .{ .active = state.output_channel == .environment })) state.output_channel = .environment;
 
         _ = zgui.sliderFloat("Cam zoom", .{ .v = &state.camera.zoom, .min = 0.1, .max = 10 });
 
@@ -609,7 +620,7 @@ fn draw() void {
             pass.release();
         }
 
-        zgpu.gui.draw(pass);
+        zgui.backend.draw(pass);
     }
 
     const batcher_commands = state.batcher.finish() catch unreachable;
@@ -626,21 +637,26 @@ fn draw() void {
 }
 
 pub fn main() !void {
-    try glfw.init(.{});
-    defer glfw.terminate();
+    try zglfw.init();
+    defer zglfw.terminate();
+
+    // zgpu.checkSystem("assets/") catch {
+    //     // In case of error zgpu.checkSystem() will print error message.
+    //     return;
+    // };
 
     // Create window
-    const window = try glfw.Window.create(settings.design_width, settings.design_height, name, null, null, .{
-        .client_api = .no_api,
-        .cocoa_retina_framebuffer = true,
-    });
+    zglfw.defaultWindowHints();
+    zglfw.windowHint(.cocoa_retina_framebuffer, 1);
+    zglfw.windowHint(.client_api, 0);
+    const window = try zglfw.createWindow(settings.design_width, settings.design_height, name, null, null);
     defer window.destroy();
-    try window.setSizeLimits(.{ .width = 400, .height = 400 }, .{ .width = null, .height = null });
+    window.setSizeLimits(400, 400, -1, -1);
 
     // Set callbacks
     window.setCursorPosCallback(input.callbacks.cursor);
     window.setScrollCallback(input.callbacks.scroll);
-    window.setKeyCallback(input.callbacks.key);
+    //window.setKeyCallback(input.callbacks.key);
     window.setMouseButtonCallback(input.callbacks.button);
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -652,15 +668,20 @@ pub fn main() !void {
     defer deinit(allocator);
 
     const scale_factor = scale_factor: {
-        const cs = try window.getContentScale();
-        break :scale_factor std.math.max(cs.x_scale, cs.y_scale);
+        const cs = window.getContentScale();
+        break :scale_factor std.math.max(cs.x, cs.y);
     };
 
-    zgpu.gui.init(window, state.gctx.device, "assets/", "fonts/CozetteVector.ttf", settings.zgui_font_size * scale_factor);
-    defer zgpu.gui.deinit();
+    zgui.init();
+    defer zgui.deinit();
+
+    _ = zgui.io.addFontFromFile("assets/fonts/CozetteVector.ttf", settings.zgui_font_size * scale_factor);
+
+    zgui.backend.init(window, state.gctx.device, @enumToInt(zgpu.GraphicsContext.swapchain_format));
+
 
     while (!window.shouldClose()) {
-        try glfw.pollEvents();
+        zglfw.pollEvents();
         update();
         draw();
     }

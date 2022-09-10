@@ -9,6 +9,9 @@ const Pkg = std.build.Pkg;
 const zgpu = @import("src/deps/zig-gamedev/zgpu/build.zig");
 const zmath = @import("src/deps/zig-gamedev/zmath/build.zig");
 const zpool = @import("src/deps/zig-gamedev/zpool/build.zig");
+const zglfw = @import("src/deps/zig-gamedev/zglfw/build.zig");
+const zstbi = @import("src/deps/zig-gamedev/zstbi/build.zig");
+const zgui = @import("src/deps/zig-gamedev/zgui/build.zig");
 const flecs = @import("src/deps/zig-flecs/build.zig");
 
 const content_dir = "assets/";
@@ -61,8 +64,8 @@ fn createExe(b: *Builder, target: std.zig.CrossTarget, name: []const u8, source:
         .source = .{ .path = "src/aftersun.zig" },
     };
 
-    const zgpu_options = zgpu.BuildOptionsStep.init(b, .{});
-    const zgpu_pkg = zgpu.getPkg(&.{ zgpu_options.getPkg(), zpool.pkg });
+    const zgpu_pkg = zgpu.getPkg(&.{ zpool.pkg, zglfw.pkg });
+    const zgui_pkg = zgui.getPkg(&.{ zglfw.pkg });
 
     exe.install();
 
@@ -72,10 +75,16 @@ fn createExe(b: *Builder, target: std.zig.CrossTarget, name: []const u8, source:
     exe_step.dependOn(&run_cmd.step);
     exe.addPackage(aftersun_pkg);
     exe.addPackage(zgpu_pkg);
+    exe.addPackage(zglfw.pkg);
+    exe.addPackage(zgui_pkg);
+    exe.addPackage(zstbi.pkg);
     exe.addPackage(zmath.pkg);
-    exe.addPackage(flecs.getPkg());
+    exe.addPackage(flecs.pkg);
 
-    zgpu.link(exe, zgpu_options);
+    zgpu.link(exe);
+    zglfw.link(exe);
+    zstbi.link(exe);
+    zgui.link(exe);
     flecs.link(exe, target);
 
     return exe;
