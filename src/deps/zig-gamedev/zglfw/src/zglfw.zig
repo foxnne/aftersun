@@ -320,6 +320,40 @@ pub const Window = *opaque {
     }
     extern fn glfwGetWindowSize(window: Window, width: *i32, height: *i32) void;
 
+    pub fn setKeyCallback(window: Window, comptime callback: ?fn (window: Window, key: Key, scancode: i32, action: Action, mods: Mods) void) void {
+        if (callback) |user_callback| {
+            const CWrapper = struct {
+                pub fn keyCallbackWrapper(handle: Window, key: c_int, scancode: c_int, action: c_int, mods: c_int) callconv(.C) void {
+                    @call(.{ .modifier = .always_inline }, user_callback, .{
+                        handle,
+                        @intToEnum(Key, @intCast(i32, key)),
+                        @intCast(i32, scancode),
+                        @intToEnum(Action, @intCast(i32, action)),
+                        Mods.fromInt(mods),
+                    });
+                }
+            };
+
+            glfwSetKeyCallback(window, CWrapper.keyCallbackWrapper);
+        } else {
+            glfwSetKeyCallback(window, null);
+        }
+    }
+    const KeyCallback = if (builtin.zig_backend == .stage1) fn (
+        window: Window,
+        key: c_int,
+        scancode: c_int,
+        action: c_int,
+        mods: c_int,
+    ) callconv(.C) void else *const fn (
+        window: Window,
+        key: c_int,
+        scancode: c_int,
+        action: c_int,
+        mods: c_int,
+    ) callconv(.C) void;
+    extern fn glfwSetKeyCallback(window: Window, callback: ?KeyCallback) void;
+
     pub fn setMouseButtonCallback(window: Window, comptime callback: ?fn (window: Window, button: MouseButton, action: Action, mods: Mods) void) void {
         if (callback) |user_callback| {
             const CWrapper = struct {
@@ -340,14 +374,14 @@ pub const Window = *opaque {
     }
     const MouseButtonCallback = if (builtin.zig_backend == .stage1) fn (
         window: Window,
-        button: MouseButton,
-        action: Action,
-        mods: Mods,
+        button: c_int,
+        action: c_int,
+        mods: c_int,
     ) callconv(.C) void else *const fn (
         window: Window,
-        button: MouseButton,
-        action: Action,
-        mods: Mods,
+        button: c_int,
+        action: c_int,
+        mods: c_int,
     ) callconv(.C) void;
     extern fn glfwSetMouseButtonCallback(window: Window, callback: ?MouseButtonCallback) void;
 

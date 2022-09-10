@@ -656,7 +656,7 @@ pub fn main() !void {
     // Set callbacks
     window.setCursorPosCallback(input.callbacks.cursor);
     window.setScrollCallback(input.callbacks.scroll);
-    //window.setKeyCallback(input.callbacks.key);
+    window.setKeyCallback(input.callbacks.key);
     window.setMouseButtonCallback(input.callbacks.button);
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
