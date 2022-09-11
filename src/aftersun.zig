@@ -270,7 +270,7 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     var movement_system = @import("ecs/systems/movement.zig").system();
     flecs.ecs_system(world, "MovementSystem", flecs.Constants.EcsOnUpdate, &movement_system);
     var tile_observer = @import("ecs/observers/tile.zig").observer();
-    _ = flecs.ecs_observer_init(world, &tile_observer);
+    flecs.ecs_observer(world, "TileObserver", &tile_observer);
     var velocity_system = @import("ecs/systems/velocity.zig").system();
     flecs.ecs_system(world, "VelocitySystem", flecs.Constants.EcsOnUpdate, &velocity_system);
 
