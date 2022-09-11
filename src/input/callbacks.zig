@@ -38,7 +38,7 @@ pub fn scroll(_: zglfw.Window, _: f64, y: f64) void {
     }
 }
 
-pub fn button(window: zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Action, _: zglfw.Mods) void {
+pub fn button(_: zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Action, _: zglfw.Mods) void {
     if (zgui.io.getWantCaptureMouse()) return;
 
     const tile = game.state.controls.mouse.position.tile();
