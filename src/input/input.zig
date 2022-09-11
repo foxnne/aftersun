@@ -168,7 +168,6 @@ pub const Mouse = struct {
     primary: MouseButton = .{ .name = "Primary", .button = zglfw.MouseButton.left },
     secondary: MouseButton = .{ .name = "Secondary", .button = zglfw.MouseButton.right },
     position: MousePosition = .{},
-    previous_position: MousePosition = .{},
     primary_down: ?components.Tile = null,
     primary_up: ?components.Tile = null,
     secondary_down: ?components.Tile = null,

@@ -38,8 +38,8 @@ pub fn scroll(_: zglfw.Window, _: f64, y: f64) void {
     }
 }
 
-pub fn button(_: zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Action, _: zglfw.Mods) void {
-    //if (zgpu.zgui.io.getWantCaptureMouse()) return;
+pub fn button(window: zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Action, _: zglfw.Mods) void {
+    if (zgui.io.getWantCaptureMouse()) return;
 
     const tile = game.state.controls.mouse.position.tile();
 
@@ -83,7 +83,7 @@ pub fn button(_: zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Act
             }
             game.state.controls.mouse.primary_up = null;
             game.state.controls.mouse.primary_down = null;
-        }
+        } 
     }
 }
 

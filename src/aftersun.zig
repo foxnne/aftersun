@@ -659,11 +659,6 @@ pub fn main() !void {
     try zglfw.init();
     defer zglfw.terminate();
 
-    // zgpu.checkSystem("assets/") catch {
-    //     // In case of error zgpu.checkSystem() will print error message.
-    //     return;
-    // };
-
     // Create window
     zglfw.defaultWindowHints();
     zglfw.windowHint(.cocoa_retina_framebuffer, 1);
@@ -694,7 +689,9 @@ pub fn main() !void {
     zgui.init();
     defer zgui.deinit();
 
-    _ = zgui.io.addFontFromFile("assets/fonts/CozetteVector.ttf", settings.zgui_font_size * scale_factor);
+    zgui.io.setIniFilename(assets.root ++ "imgui.ini");
+
+    _ = zgui.io.addFontFromFile(assets.root ++ "fonts/CozetteVector.ttf", settings.zgui_font_size * scale_factor);
 
     zgui.backend.init(window, state.gctx.device, @enumToInt(zgpu.GraphicsContext.swapchain_format));
 
