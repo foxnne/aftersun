@@ -7,7 +7,7 @@ const zstbi = @import("zstbi");
 const zm = @import("zmath");
 const flecs = @import("flecs");
 
-pub const name: [*:0]const u8 = @typeName(@This());
+pub const name: [*:0]const u8 = @typeName(@This())[std.mem.lastIndexOf(u8, @typeName(@This()), ".").? + 1..];
 pub const settings = @import("settings.zig");
 
 pub const assets = @import("assets.zig");
@@ -24,7 +24,7 @@ pub const input = @import("input/input.zig");
 pub const time = @import("time/time.zig");
 pub const environment = @import("time/environment.zig");
 
-pub const Counter = @import("tools/counter.zig").Counter;
+const Counter = @import("tools/counter.zig").Counter;
 
 // TODO: Find somewhere to keep track of the characters outfit and choices.
 var top: u32 = 1;

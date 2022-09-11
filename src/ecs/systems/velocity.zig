@@ -18,7 +18,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
         while (i < it.count) : (i += 1) {
             if (flecs.ecs_field(it, components.Direction, 1)) |directions| {
                 if (flecs.ecs_field(it, components.Velocity, 2)) |velocities| {
-                    const step = it.delta_time * 2.0;
+                    const step = it.delta_time * game.settings.camera_follow_speed;
 
                     const target_v_x = directions[i].value.x();
                     const target_v_y = directions[i].value.y();

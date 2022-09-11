@@ -32,4 +32,8 @@ pub const batcher_max_sprites = 1000;
 /// The font size used by zgui elements.
 pub const zgui_font_size = 12;
 
+/// Size of a square game cell in tiles wide/tall.
 pub const cell_size = 8;
+
+/// Speed at which the camera will lerp to new velocity.
+pub const camera_follow_speed = 1.5;
