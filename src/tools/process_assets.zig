@@ -39,13 +39,16 @@ pub const ProcessAssetsStep = struct {
                 var assets_array_list = std.ArrayList(u8).init(self.builder.allocator);
                 var assets_writer = assets_array_list.writer();
 
-                // disclaimer
+                // Disclaimer
                 try assets_writer.writeAll("// This is a generated file, do not edit.\n");
 
-                // top level assets declarations
+                // Top level assets declarations.
                 try assets_writer.writeAll("const std = @import(\"std\");\n\n");
 
-                // iterate all files
+                // Add root assets location as const.
+                try assets_writer.print("pub const root = \"{s}/\";\n\n", .{ root });
+
+                // Iterate all files
                 for (files) |file| {
                     const ext = std.fs.path.extension(file);
                     const base = std.fs.path.basename(file);
@@ -55,14 +58,14 @@ pub const ProcessAssetsStep = struct {
                     var path_fixed = try self.builder.allocator.alloc(u8, file.len);
                     _ = std.mem.replace(u8, file, "\\", "/", path_fixed);
 
-                    // pngs
+                    // Pngs
                     if (std.mem.eql(u8, ext, ".png")) {
                         try assets_writer.print("pub const {s}{s} = struct {{\n", .{ name, "_png" });
                         try assets_writer.print("  pub const path = \"{s}\";\n", .{path_fixed});
                         try assets_writer.print("}};\n\n", .{});
                     }
 
-                    // atlases
+                    // Atlases
                     if (std.mem.eql(u8, ext, ".atlas")) {
                         try assets_writer.print("pub const {s}{s} = struct {{\n", .{ name, "_atlas" });
                         try assets_writer.print("  pub const path = \"{s}\";\n", .{path_fixed});
@@ -79,15 +82,15 @@ pub const ProcessAssetsStep = struct {
 
                         try assets_writer.print("}};\n\n", .{});
 
-                        // write an animations file if animations are present in the atlas
+                        // Write an animations file if animations are present in the atlas
                         if (atlas.animations.len > 0) {
                             var animations_array_list = std.ArrayList(u8).init(self.builder.allocator);
                             var animations_writer = animations_array_list.writer();
 
-                            // disclaimer
+                            // Disclaimer
                             try animations_writer.writeAll("// This is a generated file, do not edit.\n");
 
-                            // top level animations declarations
+                            // Top level animations declarations
                             try animations_writer.writeAll("const std = @import(\"std\");\n");
                             try animations_writer.writeAll("const assets = @import(\"assets.zig\");\n\n");
 

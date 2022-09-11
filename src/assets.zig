@@ -1,6 +1,8 @@
 // This is a generated file, do not edit.
 const std = @import("std");
 
+pub const root = "assets/";
+
 pub const aftersun_png = struct {
   pub const path = "assets/images/aftersun.png";
 };
