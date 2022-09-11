@@ -7,7 +7,7 @@ const zstbi = @import("zstbi");
 const zm = @import("zmath");
 const flecs = @import("flecs");
 
-pub const name: [*:0]const u8 = @typeName(@This())[std.mem.lastIndexOf(u8, @typeName(@This()), ".").? + 1..];
+pub const name: [*:0]const u8 = @typeName(@This())[std.mem.lastIndexOf(u8, @typeName(@This()), ".").? + 1 ..];
 pub const settings = @import("settings.zig");
 
 pub const assets = @import("assets.zig");
@@ -592,19 +592,24 @@ fn update() void {
 
         if (flecs.ecs_get_mut(state.world, state.entities.player, components.CharacterAnimator)) |animator| {
             zgui.bulletText("Player Clothing:", .{});
-            if (zgui.radioButton("TopF01", .{ .active = top == 0 })) top = 0;
+            if (zgui.radioButton("TopF01", .{ .active = top == 0 })) {
+                top = 0;
+                animator.top_set = animation_sets.top_f_01;
+            }
             zgui.sameLine(.{});
-            if (zgui.radioButton("TopF02", .{ .active = top == 1 })) top = 1;
-
-            if (top == 0) animator.top_set = animation_sets.top_f_01;
-            if (top == 1) animator.top_set = animation_sets.top_f_02;
-
-            if (zgui.radioButton("BottomF01", .{ .active = bottom == 0 })) bottom = 0;
+            if (zgui.radioButton("TopF02", .{ .active = top == 1 })) {
+                top = 1;
+                animator.top_set = animation_sets.top_f_02;
+            }
+            if (zgui.radioButton("BottomF01", .{ .active = bottom == 0 })) {
+                bottom = 0;
+                animator.bottom_set = animation_sets.bottom_f_01;
+            }
             zgui.sameLine(.{});
-            if (zgui.radioButton("BottomF02", .{ .active = bottom == 1 })) bottom = 1;
-
-            if (bottom == 0) animator.bottom_set = animation_sets.bottom_f_01;
-            if (bottom == 1) animator.bottom_set = animation_sets.bottom_f_02;
+            if (zgui.radioButton("BottomF02", .{ .active = bottom == 1 })) {
+                bottom = 1;
+                animator.bottom_set = animation_sets.bottom_f_02;
+            }
         }
     }
     zgui.end();
