@@ -95,5 +95,5 @@ fn orderBy(_: flecs.EcsEntity, c1: ?*const anyopaque, _: flecs.EcsEntity, c2: ?*
     const tile_1 = flecs.ecs_cast(components.Tile, c1);
     const tile_2 = flecs.ecs_cast(components.Tile, c2);
 
-    return @intCast(c_int, @boolToInt(tile_1.counter < tile_2.counter)) - @intCast(c_int, @boolToInt(tile_1.counter > tile_2.counter));
+    return @intCast(c_int, @boolToInt(tile_1.counter > tile_2.counter)) - @intCast(c_int, @boolToInt(tile_1.counter < tile_2.counter));
 }
