@@ -332,7 +332,7 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
 
     const debug = flecs.ecs_new(world, null);
     flecs.ecs_set(world, debug, &components.Position{ .x = 0.0, .y = -64.0 });
-    flecs.ecs_set(world, debug, &components.Tile{ .x = 0, .y = -2, .counter = state.counter.count()});
+    flecs.ecs_set(world, debug, &components.Tile{ .x = 0, .y = -2, .counter = state.counter.count() });
     flecs.ecs_add(world, debug, components.Moveable);
     flecs.ecs_set(world, debug, &components.SpriteRenderer{
         .index = assets.aftersun_atlas.Ham_0_Layer,
@@ -340,13 +340,27 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
 
     const ham = flecs.ecs_new(world, null);
     flecs.ecs_set(world, ham, &components.Position{ .x = 0.0, .y = -96.0 });
-    flecs.ecs_set(world, ham, &components.Tile{ .x = 0, .y = -3, .counter = state.counter.count()});
+    flecs.ecs_set(world, ham, &components.Tile{ .x = 0, .y = -3, .counter = state.counter.count() });
     flecs.ecs_add(world, ham, components.Moveable);
     flecs.ecs_set(world, ham, &components.SpriteRenderer{
         .index = assets.aftersun_atlas.Ham_1_Layer,
-    }); 
+    });
 
     state.entities = .{ .player = player, .debug = debug };
+
+    // Create campfire
+    {
+        const campfire = flecs.ecs_new_entity(world, "Campfire");
+        flecs.ecs_set(world, campfire, &components.Position{ .x = 32.0, .y = -64.0 });
+        flecs.ecs_set(world, campfire, &components.Tile{ .x = 1, .y = -2, .counter = state.counter.count() });
+        flecs.ecs_set(world, campfire, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Campfire_0_Layer_0 });
+        flecs.ecs_set(world, campfire, &components.SpriteAnimator{
+            .state = .play,
+            .animation = &animations.Campfire_Layer_0,
+            .fps = 16,
+        });
+        flecs.ecs_set(world, campfire, &components.Collider{ .trigger = true });
+    }
 
     // Create first tree
     {
@@ -678,7 +692,6 @@ pub fn main() !void {
     _ = zgui.io.addFontFromFile("assets/fonts/CozetteVector.ttf", settings.zgui_font_size * scale_factor);
 
     zgui.backend.init(window, state.gctx.device, @enumToInt(zgpu.GraphicsContext.swapchain_format));
-
 
     while (!window.shouldClose()) {
         zglfw.pollEvents();

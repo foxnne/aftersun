@@ -32,7 +32,6 @@ pub fn system(world: *flecs.EcsWorld) flecs.EcsSystemDesc {
 }
 
 pub fn run(it: *flecs.EcsIter) callconv(.C) void {
-
     const world = it.world.?;
 
     while (flecs.ecs_iter_next(it)) {
@@ -54,14 +53,18 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             while (flecs.ecs_iter_next(&query_it)) {
                                 var j: usize = 0;
                                 while (j < query_it.count) : (j += 1) {
-                                    if (flecs.ecs_field(&query_it, components.Tile, 2)) |collisions| {
+                                    if (flecs.ecs_field(&query_it, components.Tile, 2)) |potential_collisions| {
                                         if (query_it.entities[j] != entity) {
-                                            if (collisions[j].x == movements[i].end.x and collisions[j].y == movements[i].end.y and collisions[j].z == movements[i].end.z) {
-                                                // Collision. Set movement request to same tile to prevent extra frames on set/add and
-                                                // zero movement direction.
-                                                movements[i].end = tiles[i];
-                                                flecs.ecs_set_pair(world, entity, &components.Direction{}, components.Movement);
-                                                break;
+                                            if (potential_collisions[j].x == movements[i].end.x and potential_collisions[j].y == movements[i].end.y and potential_collisions[j].z == movements[i].end.z) {
+                                                if (flecs.ecs_field(&query_it, components.Collider, 3)) |colliders| {
+                                                    if (colliders[i].trigger) {} else {
+                                                        // Collision. Set movement request to same tile to prevent extra frames on set/add and
+                                                        // zero movement direction.
+                                                        movements[i].end = tiles[i];
+                                                        flecs.ecs_set_pair(world, entity, &components.Direction{}, components.Movement);
+                                                        break;
+                                                    }
+                                                }
                                             }
                                         }
                                     }
