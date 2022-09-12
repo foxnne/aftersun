@@ -17,6 +17,7 @@ pub const animation_sets = @import("animation_sets.zig");
 
 pub const components = @import("ecs/components/components.zig");
 
+
 pub const fs = @import("tools/fs.zig");
 pub const math = @import("math/math.zig");
 pub const gfx = @import("gfx/gfx.zig");
@@ -25,6 +26,7 @@ pub const time = @import("time/time.zig");
 pub const environment = @import("time/environment.zig");
 
 const Counter = @import("tools/counter.zig").Counter;
+const Prefabs = @import("ecs/prefabs/prefabs.zig");
 
 // TODO: Find somewhere to keep track of the characters outfit and choices.
 var top: u32 = 1;
@@ -37,6 +39,7 @@ pub const GameState = struct {
     gctx: *zgpu.GraphicsContext,
     world: *flecs.EcsWorld,
     entities: Entities = undefined,
+    prefabs: Prefabs,
     camera: gfx.Camera,
     controls: input.Controls = .{},
     time: time.Time = .{},
@@ -96,6 +99,7 @@ fn register(world: *flecs.EcsWorld, comptime T: type) void {
 fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     const world = flecs.ecs_init().?;
     register(world, components);
+    const prefabs = Prefabs.init(world);
 
     const gctx = try zgpu.GraphicsContext.init(allocator, window);
 
@@ -206,6 +210,7 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     state.* = .{
         .gctx = gctx,
         .world = world,
+        .prefabs = prefabs,
         .camera = camera,
         .batcher = batcher,
         .cells = std.AutoArrayHashMap(components.Cell, flecs.EcsEntity).init(allocator),
@@ -331,20 +336,15 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     flecs.ecs_add_pair(world, player, components.Camera, components.Target);
 
     const debug = flecs.ecs_new(world, null);
+    flecs.ecs_add_pair(world, debug, flecs.Constants.EcsIsA, state.prefabs.ham);
     flecs.ecs_set(world, debug, &components.Position{ .x = 0.0, .y = -64.0 });
     flecs.ecs_set(world, debug, &components.Tile{ .x = 0, .y = -2, .counter = state.counter.count() });
-    flecs.ecs_add(world, debug, components.Moveable);
-    flecs.ecs_set(world, debug, &components.SpriteRenderer{
-        .index = assets.aftersun_atlas.Ham_0_Layer,
-    });
+    
 
     const ham = flecs.ecs_new(world, null);
+    flecs.ecs_add_pair(world, ham, flecs.Constants.EcsIsA, state.prefabs.ham);
     flecs.ecs_set(world, ham, &components.Position{ .x = 0.0, .y = -96.0 });
     flecs.ecs_set(world, ham, &components.Tile{ .x = 0, .y = -3, .counter = state.counter.count() });
-    flecs.ecs_add(world, ham, components.Moveable);
-    flecs.ecs_set(world, ham, &components.SpriteRenderer{
-        .index = assets.aftersun_atlas.Ham_1_Layer,
-    });
 
     state.entities = .{ .player = player, .debug = debug };
 
