@@ -104,6 +104,7 @@ pub const Movement = struct {
 };
 pub const Drag = struct { start: Tile, end: Tile };
 pub const Moveable = struct {};
+pub const Stackable = struct {};
 
 pub const Camera = struct {};
 pub const Target = struct {};
