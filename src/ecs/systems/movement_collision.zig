@@ -77,6 +77,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                                     }
                                                 }
 
+                                                // TODO: Only stack with the top object, we need to ensure that this doesn't affect items covered by other items.
                                                 // Handle stacking, movement can trigger stacks to combine.
                                                 if (flecs.ecs_field(it, components.Stack, 4)) |stacks| {
                                                     if (flecs.ecs_field(&query_it, components.Stack, 4)) |other_stacks| {
