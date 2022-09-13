@@ -5,12 +5,17 @@ const flecs = @import("flecs");
 
 const sprites = @import("sprites.zig");
 const characters = @import("characters.zig");
+const stacks = @import("stacks.zig");
 
 pub const SpriteRenderer = sprites.SpriteRenderer;
 pub const SpriteAnimator = sprites.SpriteAnimator;
 
 pub const CharacterRenderer = characters.CharacterRenderer;
 pub const CharacterAnimator = characters.CharacterAnimator;
+
+pub const Stack = stacks.Stack;
+pub const StackAnimator = stacks.StackAnimator;
+pub const StackRequest = stacks.StackRequest;
 
 pub const Visible = struct {};
 pub const Player = struct {};
@@ -102,9 +107,15 @@ pub const Movement = struct {
         sin,
     };
 };
-pub const Drag = struct { start: Tile, end: Tile };
+pub const Drag = struct {
+    start: Tile,
+    end: Tile,
+    modifier: Modifier = .all,
+
+    pub const Modifier = enum { all, half, one };
+};
 pub const Moveable = struct {};
-pub const Stack = struct { count: u32 = 1 };
+pub const WaitForRemove = struct { target: flecs.EcsEntity };
 
 pub const Camera = struct {};
 pub const Target = struct {};

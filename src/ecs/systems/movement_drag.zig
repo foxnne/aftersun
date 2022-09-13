@@ -23,6 +23,7 @@ pub fn system(world: *flecs.EcsWorld) flecs.EcsSystemDesc {
     var ctx_desc = std.mem.zeroes(flecs.EcsQueryDesc);
     ctx_desc.filter.terms[0] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Cell, flecs.Constants.EcsWildcard) });
     ctx_desc.filter.terms[1] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Tile) });
+    ctx_desc.filter.terms[2] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Stack), .oper = flecs.EcsOperKind.ecs_optional });
     ctx_desc.group_by = groupBy;
     ctx_desc.group_by_id = flecs.ecs_id(components.Cell);
     ctx_desc.order_by = orderBy;
@@ -79,8 +80,28 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                 .n, .s, .e, .w => game.settings.movement_cooldown / 2,
                                 else => game.settings.movement_cooldown / 2 * game.math.sqrt2,
                             };
-                            flecs.ecs_set_pair_second(world, target, components.Request, &components.Movement{ .start = drags[i].start, .end = drags[i].end, .curve = .sin });
-                            flecs.ecs_set_pair(world, target, &components.Cooldown{ .end = cooldown }, components.Movement);
+
+                            if (flecs.ecs_get_mut(world, target, components.Stack)) |stack| {
+                                const count = switch (drags[i].modifier) {
+                                    .all => stack.count,
+                                    .half => if (stack.count > 1) @divTrunc(stack.count, 2) else stack.count,
+                                    .one => 1,
+                                };
+                                if (count < stack.count) {
+                                    const clone = flecs.ecs_new(world, null);
+                                    _ = flecs.ecs_clone(world, clone, target, true);
+                                    flecs.ecs_set(world, clone, &components.Stack{ .count = count, .max = stack.max });
+                                    flecs.ecs_set(world, target, &components.Stack{ .count = stack.count - count, .max = stack.max });
+                                    flecs.ecs_set_pair_second(world, clone, components.Request, &components.Movement{ .start = drags[i].start, .end = drags[i].end, .curve = .sin });
+                                    flecs.ecs_set_pair(world, clone, &components.Cooldown{ .end = cooldown }, components.Movement);
+                                } else {
+                                    flecs.ecs_set_pair_second(world, target, components.Request, &components.Movement{ .start = drags[i].start, .end = drags[i].end, .curve = .sin });
+                                    flecs.ecs_set_pair(world, target, &components.Cooldown{ .end = cooldown }, components.Movement);
+                                }
+                            } else {
+                                flecs.ecs_set_pair_second(world, target, components.Request, &components.Movement{ .start = drags[i].start, .end = drags[i].end, .curve = .sin });
+                                flecs.ecs_set_pair(world, target, &components.Cooldown{ .end = cooldown }, components.Movement);
+                            }
                         }
                     }
 

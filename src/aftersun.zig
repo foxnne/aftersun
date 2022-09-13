@@ -274,10 +274,18 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     flecs.ecs_system(world, "MovementCollisionSystem", flecs.Constants.EcsOnUpdate, &movement_collision_system);
     var movement_system = @import("ecs/systems/movement.zig").system();
     flecs.ecs_system(world, "MovementSystem", flecs.Constants.EcsOnUpdate, &movement_system);
-    var tile_observer = @import("ecs/observers/tile.zig").observer();
-    flecs.ecs_observer(world, "TileObserver", &tile_observer);
     var velocity_system = @import("ecs/systems/velocity.zig").system();
     flecs.ecs_system(world, "VelocitySystem", flecs.Constants.EcsOnUpdate, &velocity_system);
+
+    // - Other
+    var stack_system = @import("ecs/systems/stack.zig").system();
+    flecs.ecs_system(world, "StackSystem", flecs.Constants.EcsOnUpdate, &stack_system);
+
+    // - Observers
+    var tile_observer = @import("ecs/observers/tile.zig").observer();
+    flecs.ecs_observer(world, "TileObserver", &tile_observer);
+    var stack_observer = @import("ecs/observers/stack.zig").observer();
+    flecs.ecs_observer(world, "StackObserver", &stack_observer);
 
     // - Camera
     var camera_follow_system = @import("ecs/systems/camera_follow.zig").system();
@@ -345,6 +353,7 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     flecs.ecs_add_pair(world, ham, flecs.Constants.EcsIsA, state.prefabs.ham);
     flecs.ecs_set(world, ham, &components.Position{ .x = 0.0, .y = -96.0 });
     flecs.ecs_set(world, ham, &components.Tile{ .x = 0, .y = -3, .counter = state.counter.count() });
+    flecs.ecs_set(world, ham, &components.Stack{ .count = 3, .max = 5 });
 
     state.entities = .{ .player = player, .debug = debug };
 

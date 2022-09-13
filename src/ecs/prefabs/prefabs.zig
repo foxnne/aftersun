@@ -10,7 +10,7 @@ item: flecs.EcsEntity = 0,
 stackable: flecs.EcsEntity = 0,
 ham: flecs.EcsEntity = 0,
 
-pub fn init (world: *flecs.EcsWorld) Prefabs {
+pub fn init(world: *flecs.EcsWorld) Prefabs {
     var prefabs: Prefabs = .{};
 
     prefabs.item = flecs.ecs_new_prefab(world, "item");
@@ -24,15 +24,19 @@ pub fn init (world: *flecs.EcsWorld) Prefabs {
 
     prefabs.stackable = flecs.ecs_new_prefab(world, "stackable");
     flecs.ecs_add_pair(world, prefabs.stackable, flecs.Constants.EcsIsA, prefabs.item);
-    flecs.ecs_add(world, prefabs.stackable, components.Stack);
+    flecs.ecs_set(world, prefabs.stackable, &components.Stack{ .max = 100 });
     flecs.ecs_override(world, prefabs.stackable, components.Stack);
 
     prefabs.ham = flecs.ecs_new_prefab(world, "ham");
     flecs.ecs_add_pair(world, prefabs.ham, flecs.Constants.EcsIsA, prefabs.stackable);
+    flecs.ecs_set(world, prefabs.ham, &components.Stack{ .max = 5 });
+    flecs.ecs_set(world, prefabs.ham, &components.StackAnimator{
+        .animation = &game.animations.Ham_Layer,
+        .counts = &[_]usize{ 1, 2, 3, 4, 5 },
+    });
     flecs.ecs_set(world, prefabs.ham, &components.SpriteRenderer{
         .index = game.assets.aftersun_atlas.Ham_0_Layer,
     });
 
     return prefabs;
-    
 }
