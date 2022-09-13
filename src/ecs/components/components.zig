@@ -15,7 +15,6 @@ pub const CharacterAnimator = characters.CharacterAnimator;
 
 pub const Stack = stacks.Stack;
 pub const StackAnimator = stacks.StackAnimator;
-pub const StackRequest = stacks.StackRequest;
 
 pub const Visible = struct {};
 pub const Player = struct {};
@@ -96,6 +95,7 @@ pub const Direction = struct { value: game.math.Direction = .none };
 pub const Rotation = struct { value: f32 = 0 };
 
 pub const Request = struct {};
+pub const RequestZero = struct { target: flecs.EcsEntity };
 pub const Cooldown = struct { current: f32 = 0.0, end: f32 = 1.0 };
 pub const Movement = struct {
     start: Tile,

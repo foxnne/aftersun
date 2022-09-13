@@ -9,5 +9,3 @@ pub const StackAnimator = struct {
     animation: []usize,
     counts: []const usize,
 };
-
-pub const StackRequest = struct { first: flecs.EcsEntity, second: flecs.EcsEntity };

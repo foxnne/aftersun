@@ -55,7 +55,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             while (flecs.ecs_iter_next(&query_it)) {
                                 var j: usize = 0;
                                 while (j < query_it.count) : (j += 1) {
-                                    const target = query_it.entities[j];
+                                    const other = query_it.entities[j];
                                     if (flecs.ecs_field(&query_it, components.Tile, 2)) |potential_collisions| {
                                         if (query_it.entities[j] != entity) {
                                             if (potential_collisions[j].x == movements[i].end.x and potential_collisions[j].y == movements[i].end.y and potential_collisions[j].z == movements[i].end.z) {
@@ -82,17 +82,14 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                                     if (flecs.ecs_field(&query_it, components.Stack, 4)) |other_stacks| {
                                                         if (stacks[i].count + other_stacks[j].count <= stacks[i].max) {
                                                             const prefab = flecs.ecs_get_target(world, entity, flecs.Constants.EcsIsA, 0);
-                                                            const other_prefab = flecs.ecs_get_target(world, target, flecs.Constants.EcsIsA, 0);
+                                                            const other_prefab = flecs.ecs_get_target(world, other, flecs.Constants.EcsIsA, 0);
                                                             if (prefab == other_prefab) {
                                                                 flecs.ecs_set_pair_second(world, entity, components.Request, &components.Stack{
                                                                     .count = stacks[i].count + other_stacks[j].count,
                                                                     .max = stacks[i].max,
                                                                 });
-                                                                flecs.ecs_set_pair(world, target, components.WaitForRemove{ .target = entity }, flecs.ecs_pair(components.Cooldown, components.Movement));
-                                                                flecs.ecs_set_pair_second(world, target, components.Request, &components.Stack{
-                                                                    .count = 0,
-                                                                    .max = other_stacks[i].max,
-                                                                });
+
+                                                                flecs.ecs_set_pair(world, entity, &components.RequestZero{ .target = other}, components.Stack);
                                                             }
                                                         }
                                                     }
