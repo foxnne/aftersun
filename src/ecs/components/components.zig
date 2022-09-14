@@ -95,7 +95,7 @@ pub const Direction = struct { value: game.math.Direction = .none };
 pub const Rotation = struct { value: f32 = 0 };
 
 pub const Request = struct {};
-pub const RequestZero = struct { target: flecs.EcsEntity };
+pub const RequestOther = struct { target: flecs.EcsEntity };
 pub const Cooldown = struct { current: f32 = 0.0, end: f32 = 1.0 };
 pub const Movement = struct {
     start: Tile,
