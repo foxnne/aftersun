@@ -586,8 +586,6 @@ fn update() void {
         if (zgui.radioButton("Reverse Heighmap", .{ .active = state.output_channel == .reverse_height })) state.output_channel = .reverse_height;
         if (zgui.radioButton("Environmentmap", .{ .active = state.output_channel == .environment })) state.output_channel = .environment;
 
-        _ = zgui.sliderFloat("Cam zoom", .{ .v = &state.camera.zoom, .min = 0.1, .max = 10 });
-
         _ = zgui.sliderFloat("Timescale", .{ .v = &state.time.scale, .min = 0.1, .max = 2400.0 });
         zgui.bulletText("Day: {d:.4}, Hour: {d:.4}", .{ state.time.day(), state.time.hour() });
         zgui.bulletText("Phase: {s}, Next Phase: {s}", .{ state.environment.phase().name, state.environment.nextPhase().name });

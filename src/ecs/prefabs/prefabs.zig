@@ -11,11 +11,24 @@ _stackable: flecs.EcsEntity = 0,
 ham: flecs.EcsEntity = 0,
 cooked_ham: flecs.EcsEntity = 0,
 apple: flecs.EcsEntity = 0,
+torch: flecs.EcsEntity = 0,
+
+pub fn get(self: Prefabs, index: usize) flecs.EcsEntity {
+    return switch (index) {
+        0 => self._item,
+        1 => self._stackable,
+        2 => self.ham,
+        3 => self.cooked_ham,
+        4 => self.apple,
+        5 => self.torch,
+        else => unreachable,
+    };
+}
 
 pub fn init(world: *flecs.EcsWorld) Prefabs {
     var prefabs: Prefabs = .{};
 
-    prefabs._item = flecs.ecs_new_prefab(world, "item");
+    prefabs._item = flecs.ecs_new_prefab(world, "item_prefab");
     flecs.ecs_add(world, prefabs._item, components.Position);
     flecs.ecs_override(world, prefabs._item, components.Position);
     flecs.ecs_add(world, prefabs._item, components.Tile);
@@ -24,12 +37,12 @@ pub fn init(world: *flecs.EcsWorld) Prefabs {
     flecs.ecs_add(world, prefabs._item, components.SpriteRenderer);
     flecs.ecs_override(world, prefabs._item, components.SpriteRenderer);
 
-    prefabs._stackable = flecs.ecs_new_prefab(world, "stackable");
+    prefabs._stackable = flecs.ecs_new_prefab(world, "stackable_prefab");
     flecs.ecs_add_pair(world, prefabs._stackable, flecs.Constants.EcsIsA, prefabs._item);
     flecs.ecs_set(world, prefabs._stackable, &components.Stack{ .max = 100 });
     flecs.ecs_override(world, prefabs._stackable, components.Stack);
 
-    prefabs.ham = flecs.ecs_new_prefab(world, "ham");
+    prefabs.ham = flecs.ecs_new_prefab(world, "ham_prefab");
     flecs.ecs_add_pair(world, prefabs.ham, flecs.Constants.EcsIsA, prefabs._stackable);
     flecs.ecs_set(world, prefabs.ham, &components.Stack{ .max = 5 });
     flecs.ecs_set(world, prefabs.ham, &components.StackAnimator{
@@ -40,7 +53,7 @@ pub fn init(world: *flecs.EcsWorld) Prefabs {
         .index = game.assets.aftersun_atlas.Ham_0_Layer,
     });
 
-    prefabs.cooked_ham = flecs.ecs_new_prefab(world, "cooked_ham");
+    prefabs.cooked_ham = flecs.ecs_new_prefab(world, "cooked_ham_prefab");
     flecs.ecs_add_pair(world, prefabs.cooked_ham, flecs.Constants.EcsIsA, prefabs._stackable);
     flecs.ecs_set(world, prefabs.cooked_ham, &components.Stack{ .max = 5 });
     flecs.ecs_set(world, prefabs.cooked_ham, &components.StackAnimator{
@@ -51,7 +64,7 @@ pub fn init(world: *flecs.EcsWorld) Prefabs {
         .index = game.assets.aftersun_atlas.Cooked_Ham_0_Layer,
     });
 
-    prefabs.apple = flecs.ecs_new_prefab(world, "apple");
+    prefabs.apple = flecs.ecs_new_prefab(world, "apple_prefab");
     flecs.ecs_add_pair(world, prefabs.apple, flecs.Constants.EcsIsA, prefabs._stackable);
     flecs.ecs_set(world, prefabs.apple, &components.Stack{ .max = 5 });
     flecs.ecs_set(world, prefabs.apple, &components.StackAnimator{
@@ -62,16 +75,16 @@ pub fn init(world: *flecs.EcsWorld) Prefabs {
         .index = game.assets.aftersun_atlas.Apple_0_Layer,
     });
 
-    return prefabs;
-}
+    prefabs.torch = flecs.ecs_new_prefab(world, "torch_prefab");
+    flecs.ecs_add_pair(world, prefabs.torch, flecs.Constants.EcsIsA, prefabs._item);
+    flecs.ecs_set(world, prefabs.torch, &components.SpriteAnimator{
+        .animation = &game.animations.Torch_Flame_Layer,
+        .state = .play,
+        .fps = 16,
+    });
+    flecs.ecs_set(world, prefabs.torch, &components.SpriteRenderer{
+        .index = game.assets.aftersun_atlas.Torch_Flame_0_Layer,
+    });
 
-pub fn get(self: Prefabs, index: usize) flecs.EcsEntity {
-    return switch (index) {
-        0 => self._item,
-        1 => self._stackable,
-        2 => self.ham,
-        3 => self.cooked_ham,
-        4 => self.apple,
-        else => unreachable,
-    };
+    return prefabs;
 }
