@@ -538,38 +538,35 @@ fn deinit(allocator: std.mem.Allocator) void {
 }
 
 fn update() void {
-    _ = flecs.ecs_progress(state.world, 0);
-
     zgui.backend.newFrame(state.gctx.swapchain_descriptor.width, state.gctx.swapchain_descriptor.height);
 
-    //zgui.showDemoWindow(null);
+    _ = flecs.ecs_progress(state.world, 0);
+
+    zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.window_rounding, .v = 5.0 });
 
     if (zgui.begin("Prefabs", .{})) {
         const prefab_names = std.meta.fieldNames(Prefabs);
-        for (prefab_names) |n,i| {
-
+        for (prefab_names) |n, i| {
             if (std.mem.indexOf(u8, n, "_")) |delimiter| {
                 if (delimiter == 0) continue;
             }
-            zgui.bulletText("{s}", .{n});
 
-            if (zgui.isItemClicked(.left)) {
+            if (zgui.button(zgui.formatZ("{s}", .{n}), .{})) {
                 if (flecs.ecs_get(state.world, state.entities.player, components.Tile)) |tile| {
                     if (flecs.ecs_get(state.world, state.entities.player, components.Position)) |position| {
                         const new = flecs.ecs_new_w_pair(state.world, flecs.Constants.EcsIsA, state.prefabs.get(i));
                         flecs.ecs_set(state.world, new, position);
                         const end = tile.*;
-                        const start: components.Tile = .{ .x = end.x, .y = end.y, .z = end.z + 1};
+                        const start: components.Tile = .{ .x = end.x, .y = end.y, .z = end.z + 1 };
                         flecs.ecs_set(state.world, new, start);
                         flecs.ecs_set_pair_second(state.world, new, components.Request, &components.Movement{ .start = start, .end = end, .curve = .sin });
-                        flecs.ecs_set_pair(state.world, new, &components.Cooldown{ .end = settings.movement_cooldown / 2}, components.Movement);
+                        flecs.ecs_set_pair(state.world, new, &components.Cooldown{ .end = settings.movement_cooldown / 2 }, components.Movement);
                     }
                 }
             }
         }
-
-        zgui.end();
     }
+    zgui.end();
 
     if (zgui.begin("Game Settings", .{})) {
         zgui.bulletText(
@@ -647,6 +644,8 @@ fn update() void {
         }
     }
     zgui.end();
+
+    zgui.popStyleVar(.{ .count = 1});
 }
 
 fn draw() void {
