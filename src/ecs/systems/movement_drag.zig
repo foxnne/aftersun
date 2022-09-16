@@ -70,6 +70,9 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             }
                         }
 
+                        // TODO: Figure out why multiple items on top of one another seems to have unpredictable selection order.
+                        // The top element (highest counter) should always be the target.
+
                         if (target_entity) |target| {
                             if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Moveable))) {
                                 const direction = game.math.Direction.find(8, @intToFloat(f32, drags[i].end.x - drags[i].start.x), @intToFloat(f32, drags[i].end.y - drags[i].start.y));
