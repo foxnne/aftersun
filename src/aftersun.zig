@@ -17,7 +17,6 @@ pub const animation_sets = @import("animation_sets.zig");
 
 pub const components = @import("ecs/components/components.zig");
 
-
 pub const fs = @import("tools/fs.zig");
 pub const math = @import("math/math.zig");
 pub const gfx = @import("gfx/gfx.zig");
@@ -347,7 +346,6 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     flecs.ecs_add_pair(world, debug, flecs.Constants.EcsIsA, state.prefabs.ham);
     flecs.ecs_set(world, debug, &components.Position{ .x = 0.0, .y = -64.0 });
     flecs.ecs_set(world, debug, &components.Tile{ .x = 0, .y = -2, .counter = state.counter.count() });
-    
 
     const ham = flecs.ecs_new(world, null);
     flecs.ecs_add_pair(world, ham, flecs.Constants.EcsIsA, state.prefabs.ham);
@@ -543,6 +541,32 @@ fn update() void {
     _ = flecs.ecs_progress(state.world, 0);
 
     zgui.backend.newFrame(state.gctx.swapchain_descriptor.width, state.gctx.swapchain_descriptor.height);
+
+    //zgui.showDemoWindow(null);
+
+    if (zgui.begin("Prefabs", .{})) {
+        const prefab_names = std.meta.fieldNames(Prefabs);
+        for (prefab_names) |n,i| {
+
+            if (std.mem.indexOf(u8, n, "_")) |delimiter| {
+                if (delimiter == 0) continue;
+            }
+            zgui.bulletText("{s}", .{n});
+
+            if (zgui.isItemClicked(.left)) {
+                if (flecs.ecs_get(state.world, state.entities.player, components.Tile)) |tile| {
+                    if (flecs.ecs_get(state.world, state.entities.player, components.Position)) |position| {
+                        const new = flecs.ecs_new_w_pair(state.world, flecs.Constants.EcsIsA, state.prefabs.get(i));
+                        flecs.ecs_set(state.world, new, position);
+                        flecs.ecs_set(state.world, new, tile);
+                        flecs.ecs_set_pair_second(state.world, new, components.Request, &components.Movement{ .start = tile.*, .end = tile.*, .curve = .sin });
+                    }
+                }
+            }
+        }
+
+        zgui.end();
+    }
 
     if (zgui.begin("Game Settings", .{})) {
         zgui.bulletText(
