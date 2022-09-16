@@ -85,6 +85,7 @@ pub fn init(world: *flecs.EcsWorld) Prefabs {
     flecs.ecs_set(world, prefabs.torch, &components.SpriteRenderer{
         .index = game.assets.aftersun_atlas.Torch_Flame_0_Layer,
     });
+    flecs.ecs_override(world, prefabs.torch, components.SpriteAnimator);
 
     return prefabs;
 }
