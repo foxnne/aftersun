@@ -62,16 +62,15 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                             continue;
 
                                         if (start_tiles[j].x == drags[i].start.x and start_tiles[j].y == drags[i].start.y and start_tiles[j].z == drags[i].start.z) {
-                                            if (start_tiles[j].counter > counter) counter = start_tiles[j].counter;
-                                            target_entity = query_it.entities[j];
+                                            if (start_tiles[j].counter > counter) {
+                                                counter = start_tiles[j].counter;
+                                                target_entity = query_it.entities[j];
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-
-                        // TODO: Figure out why multiple items on top of one another seems to have unpredictable selection order.
-                        // The top element (highest counter) should always be the target.
 
                         if (target_entity) |target| {
                             if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Moveable))) {
