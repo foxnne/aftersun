@@ -558,8 +558,10 @@ fn update() void {
                     if (flecs.ecs_get(state.world, state.entities.player, components.Position)) |position| {
                         const new = flecs.ecs_new_w_pair(state.world, flecs.Constants.EcsIsA, state.prefabs.get(i));
                         flecs.ecs_set(state.world, new, position);
-                        flecs.ecs_set(state.world, new, tile);
-                        flecs.ecs_set_pair_second(state.world, new, components.Request, &components.Movement{ .start = tile.*, .end = tile.*, .curve = .sin });
+                        const end = tile.*;
+                        const start: components.Tile = .{ .x = end.x, .y = end.y, .z = end.z + 1};
+                        flecs.ecs_set(state.world, new, start);
+                        flecs.ecs_set_pair_second(state.world, new, components.Request, &components.Movement{ .start = start, .end = end, .curve = .sin });
                         flecs.ecs_set_pair(state.world, new, &components.Cooldown{ .end = settings.movement_cooldown / 2}, components.Movement);
                     }
                 }
