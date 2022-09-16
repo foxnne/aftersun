@@ -116,6 +116,8 @@ pub const MouseButton = struct {
     button: zglfw.MouseButton,
     state: bool = false,
     previous_state: bool = false,
+    down_tile: ?components.Tile = null,
+    up_tile: ?components.Tile = null,
 
     /// Returns true the frame the mouse button was pressed.
     pub fn pressed(self: MouseButton) bool {
@@ -168,8 +170,5 @@ pub const Mouse = struct {
     primary: MouseButton = .{ .name = "Primary", .button = zglfw.MouseButton.left },
     secondary: MouseButton = .{ .name = "Secondary", .button = zglfw.MouseButton.right },
     position: MousePosition = .{},
-    primary_down: ?components.Tile = null,
-    primary_up: ?components.Tile = null,
-    secondary_down: ?components.Tile = null,
-    secondary_up: ?components.Tile = null,
+    tile: components.Tile = .{},
 };
