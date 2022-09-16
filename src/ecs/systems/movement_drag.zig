@@ -39,15 +39,14 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
         var i: usize = 0;
         while (i < it.count) : (i += 1) {
             const entity = it.entities[i];
-            var target_entity: ?flecs.EcsEntity = null;
-            var counter: u64 = 0;
-
             if (flecs.ecs_field(it, components.Tile, 2)) |tiles| {
                 if (flecs.ecs_field(it, components.Drag, 3)) |drags| {
                     const dist_x = std.math.absInt(drags[i].start.x - tiles[i].x) catch unreachable;
                     const dist_y = std.math.absInt(drags[i].start.y - tiles[i].y) catch unreachable;
 
                     if (dist_x <= 1 and dist_y <= 1 and drags[i].start.z == tiles[i].z) {
+                        var target_entity: ?flecs.EcsEntity = null;
+                        var counter: u64 = 0;
                         if (it.ctx) |ctx| {
                             var query = @ptrCast(*flecs.EcsQuery, ctx);
                             var query_it = flecs.ecs_query_iter(world, query);
@@ -70,37 +69,37 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                 }
                             }
                         }
-                    }
 
-                    if (target_entity) |target| {
-                        if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Moveable))) {
-                            const direction = game.math.Direction.find(8, @intToFloat(f32, drags[i].end.x - drags[i].start.x), @intToFloat(f32, drags[i].end.y - drags[i].start.y));
+                        if (target_entity) |target| {
+                            if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Moveable))) {
+                                const direction = game.math.Direction.find(8, @intToFloat(f32, drags[i].end.x - drags[i].start.x), @intToFloat(f32, drags[i].end.y - drags[i].start.y));
 
-                            const cooldown = switch (direction) {
-                                .n, .s, .e, .w => game.settings.movement_cooldown / 2,
-                                else => game.settings.movement_cooldown / 2 * game.math.sqrt2,
-                            };
-
-                            if (flecs.ecs_get_mut(world, target, components.Stack)) |stack| {
-                                const count = switch (drags[i].modifier) {
-                                    .all => stack.count,
-                                    .half => if (stack.count > 1) @divTrunc(stack.count, 2) else stack.count,
-                                    .one => 1,
+                                const cooldown = switch (direction) {
+                                    .n, .s, .e, .w => game.settings.movement_cooldown / 2,
+                                    else => game.settings.movement_cooldown / 2 * game.math.sqrt2,
                                 };
-                                if (count < stack.count) {
-                                    const clone = flecs.ecs_new(world, null);
-                                    _ = flecs.ecs_clone(world, clone, target, true);
-                                    flecs.ecs_set(world, clone, &components.Stack{ .count = count, .max = stack.max });
-                                    flecs.ecs_set(world, target, &components.Stack{ .count = stack.count - count, .max = stack.max });
-                                    flecs.ecs_set_pair_second(world, clone, components.Request, &components.Movement{ .start = drags[i].start, .end = drags[i].end, .curve = .sin });
-                                    flecs.ecs_set_pair(world, clone, &components.Cooldown{ .end = cooldown }, components.Movement);
+
+                                if (flecs.ecs_get(world, target, components.Stack)) |stack| {
+                                    const count = switch (drags[i].modifier) {
+                                        .all => stack.count,
+                                        .half => if (stack.count > 1) @divTrunc(stack.count, 2) else stack.count,
+                                        .one => 1,
+                                    };
+                                    if (count < stack.count) {
+                                        const clone = flecs.ecs_new(world, null);
+                                        _ = flecs.ecs_clone(world, clone, target, true);
+                                        flecs.ecs_set(world, clone, &components.Stack{ .count = count, .max = stack.max });
+                                        flecs.ecs_set(world, target, &components.Stack{ .count = stack.count - count, .max = stack.max });
+                                        flecs.ecs_set_pair_second(world, clone, components.Request, &components.Movement{ .start = drags[i].start, .end = drags[i].end, .curve = .sin });
+                                        flecs.ecs_set_pair(world, clone, &components.Cooldown{ .end = cooldown }, components.Movement);
+                                    } else {
+                                        flecs.ecs_set_pair_second(world, target, components.Request, &components.Movement{ .start = drags[i].start, .end = drags[i].end, .curve = .sin });
+                                        flecs.ecs_set_pair(world, target, &components.Cooldown{ .end = cooldown }, components.Movement);
+                                    }
                                 } else {
                                     flecs.ecs_set_pair_second(world, target, components.Request, &components.Movement{ .start = drags[i].start, .end = drags[i].end, .curve = .sin });
                                     flecs.ecs_set_pair(world, target, &components.Cooldown{ .end = cooldown }, components.Movement);
                                 }
-                            } else {
-                                flecs.ecs_set_pair_second(world, target, components.Request, &components.Movement{ .start = drags[i].start, .end = drags[i].end, .curve = .sin });
-                                flecs.ecs_set_pair(world, target, &components.Cooldown{ .end = cooldown }, components.Movement);
                             }
                         }
                     }

@@ -97,7 +97,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                                     .max = stacks[i].max,
                                                 });
 
-                                                flecs.ecs_set_pair(world, entity, &components.RequestOther{ .target = other }, components.Stack);
+                                                flecs.ecs_set_pair(world, entity, &components.RequestZeroOther{ .target = other }, components.Stack);
                                             }
                                         }
                                     }
