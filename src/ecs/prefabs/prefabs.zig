@@ -9,6 +9,7 @@ const Prefabs = @This();
 _item: flecs.EcsEntity = 0,
 _stackable: flecs.EcsEntity = 0,
 ham: flecs.EcsEntity = 0,
+cooked_ham: flecs.EcsEntity = 0,
 apple: flecs.EcsEntity = 0,
 
 pub fn init(world: *flecs.EcsWorld) Prefabs {
@@ -39,6 +40,17 @@ pub fn init(world: *flecs.EcsWorld) Prefabs {
         .index = game.assets.aftersun_atlas.Ham_0_Layer,
     });
 
+    prefabs.cooked_ham = flecs.ecs_new_prefab(world, "cooked_ham");
+    flecs.ecs_add_pair(world, prefabs.cooked_ham, flecs.Constants.EcsIsA, prefabs._stackable);
+    flecs.ecs_set(world, prefabs.cooked_ham, &components.Stack{ .max = 5 });
+    flecs.ecs_set(world, prefabs.cooked_ham, &components.StackAnimator{
+        .animation = &game.animations.Cooked_Ham_Layer,
+        .counts = &[_]usize{ 1, 2, 3, 4, 5 },
+    });
+    flecs.ecs_set(world, prefabs.cooked_ham, &components.SpriteRenderer{
+        .index = game.assets.aftersun_atlas.Cooked_Ham_0_Layer,
+    });
+
     prefabs.apple = flecs.ecs_new_prefab(world, "apple");
     flecs.ecs_add_pair(world, prefabs.apple, flecs.Constants.EcsIsA, prefabs._stackable);
     flecs.ecs_set(world, prefabs.apple, &components.Stack{ .max = 5 });
@@ -58,7 +70,8 @@ pub fn get(self: Prefabs, index: usize) flecs.EcsEntity {
         0 => self._item,
         1 => self._stackable,
         2 => self.ham,
-        3 => self.apple,
+        3 => self.cooked_ham,
+        4 => self.apple,
         else => unreachable,
     };
 }

@@ -560,6 +560,7 @@ fn update() void {
                         flecs.ecs_set(state.world, new, position);
                         flecs.ecs_set(state.world, new, tile);
                         flecs.ecs_set_pair_second(state.world, new, components.Request, &components.Movement{ .start = tile.*, .end = tile.*, .curve = .sin });
+                        flecs.ecs_set_pair(state.world, new, &components.Cooldown{ .end = settings.movement_cooldown / 2}, components.Movement);
                     }
                 }
             }
