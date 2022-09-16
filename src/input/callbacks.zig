@@ -87,6 +87,14 @@ pub fn button(_: zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Act
             game.state.controls.mouse.primary.up_tile = null;
         } 
     }
+
+    if (game.state.controls.mouse.secondary.down_tile) |down| {
+        if (game.state.controls.mouse.secondary.up_tile) |up| {
+            
+            game.state.controls.mouse.secondary.down_tile = null;
+            game.state.controls.mouse.secondary.up_tile = null;
+        } 
+    }
 }
 
 pub fn key(_: zglfw.Window, glfw_key: zglfw.Key, _: i32, action: zglfw.Action, _: zglfw.Mods) void {
