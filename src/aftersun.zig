@@ -577,11 +577,11 @@ fn update() void {
         zgui.bulletText("Channel:", .{});
         if (zgui.radioButton("Final", .{ .active = state.output_channel == .final })) state.output_channel = .final;
         zgui.sameLine(.{});
-        if (zgui.radioButton("Diffusemap", .{ .active = state.output_channel == .diffuse })) state.output_channel = .diffuse;
-        if (zgui.radioButton("Heightmap", .{ .active = state.output_channel == .height })) state.output_channel = .height;
+        if (zgui.radioButton("Diffuse", .{ .active = state.output_channel == .diffuse })) state.output_channel = .diffuse;
+        if (zgui.radioButton("Height##1", .{ .active = state.output_channel == .height })) state.output_channel = .height;
         zgui.sameLine(.{});
-        if (zgui.radioButton("Reverse Heighmap", .{ .active = state.output_channel == .reverse_height })) state.output_channel = .reverse_height;
-        if (zgui.radioButton("Environmentmap", .{ .active = state.output_channel == .environment })) state.output_channel = .environment;
+        if (zgui.radioButton("Reverse Height", .{ .active = state.output_channel == .reverse_height })) state.output_channel = .reverse_height;
+        if (zgui.radioButton("Environment", .{ .active = state.output_channel == .environment })) state.output_channel = .environment;
 
         _ = zgui.sliderFloat("Timescale", .{ .v = &state.time.scale, .min = 0.1, .max = 2400.0 });
         zgui.bulletText("Day: {d:.4}, Hour: {d:.4}", .{ state.time.day(), state.time.hour() });
@@ -617,7 +617,7 @@ fn update() void {
 
         if (flecs.ecs_get_mut(state.world, state.entities.player, components.Position)) |position| {
             var z = position.z;
-            _ = zgui.sliderFloat("Height", .{ .v = &z, .min = 0.0, .max = 128.0 });
+            _ = zgui.sliderFloat("Height##2", .{ .v = &z, .min = 0.0, .max = 128.0 });
             position.z = z;
         }
 
