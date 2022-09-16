@@ -25,7 +25,6 @@ pub fn system(world: *flecs.EcsWorld) flecs.EcsSystemDesc {
     ctx_desc.filter.terms[0] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Cell, flecs.Constants.EcsWildcard) });
     ctx_desc.filter.terms[1] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Tile) });
     ctx_desc.filter.terms[2] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Collider), .oper = flecs.EcsOperKind.ecs_optional });
-    ctx_desc.filter.terms[3] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Stack), .oper = flecs.EcsOperKind.ecs_optional });
     ctx_desc.group_by = groupBy;
     ctx_desc.group_by_id = flecs.ecs_id(components.Cell);
     desc.ctx = flecs.ecs_query_init(world, &ctx_desc);
@@ -52,13 +51,19 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             if (game.state.cells.get(movements[i].end.toCell())) |cell_entity| {
                                 flecs.ecs_query_set_group(&query_it, cell_entity);
                             }
+                            var top_entity: ?flecs.EcsEntity = null;
+                            var top_counter: u64 = 0;
                             while (flecs.ecs_iter_next(&query_it)) {
                                 var j: usize = 0;
                                 while (j < query_it.count) : (j += 1) {
-                                    const other = query_it.entities[j];
                                     if (flecs.ecs_field(&query_it, components.Tile, 2)) |potential_collisions| {
                                         if (query_it.entities[j] != entity) {
                                             if (potential_collisions[j].x == movements[i].end.x and potential_collisions[j].y == movements[i].end.y and potential_collisions[j].z == movements[i].end.z) {
+                                                if (potential_collisions[j].counter > top_counter) {
+                                                    top_counter = potential_collisions[j].counter;
+                                                    top_entity = query_it.entities[j];
+                                                }
+
                                                 if (flecs.ecs_field(&query_it, components.Collider, 3)) |collisions| {
                                                     if (collisions[j].trigger) {
                                                         // TODO: Handle triggers and what they attach to the entity moving into the trigger.
@@ -70,31 +75,29 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                                                 // zero movement direction.
                                                                 movements[i].end = tiles[i];
                                                                 flecs.ecs_set_pair(world, entity, &components.Direction{}, components.Movement);
-                                                                flecs.ecs_iter_fini(&query_it);
-                                                                break;
                                                             }
                                                         }
                                                     }
                                                 }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if (top_entity) |other| {
+                                // Handle stacking, movement can trigger stacks to combine.
+                                if (flecs.ecs_field(it, components.Stack, 4)) |stacks| {
+                                    if (flecs.ecs_get(world, other, components.Stack)) |other_stack| {
+                                        if (stacks[i].count + other_stack.count <= stacks[i].max) {
+                                            const prefab = flecs.ecs_get_target(world, entity, flecs.Constants.EcsIsA, 0);
+                                            const other_prefab = flecs.ecs_get_target(world, other, flecs.Constants.EcsIsA, 0);
+                                            if (prefab == other_prefab) {
+                                                flecs.ecs_set_pair_second(world, entity, components.Request, &components.Stack{
+                                                    .count = stacks[i].count + other_stack.count,
+                                                    .max = stacks[i].max,
+                                                });
 
-                                                // TODO: Only stack with the top object, we need to ensure that this doesn't affect items covered by other items.
-                                                // Handle stacking, movement can trigger stacks to combine.
-                                                if (flecs.ecs_field(it, components.Stack, 4)) |stacks| {
-                                                    if (flecs.ecs_field(&query_it, components.Stack, 4)) |other_stacks| {
-                                                        if (stacks[i].count + other_stacks[j].count <= stacks[i].max) {
-                                                            const prefab = flecs.ecs_get_target(world, entity, flecs.Constants.EcsIsA, 0);
-                                                            const other_prefab = flecs.ecs_get_target(world, other, flecs.Constants.EcsIsA, 0);
-                                                            if (prefab == other_prefab) {
-                                                                flecs.ecs_set_pair_second(world, entity, components.Request, &components.Stack{
-                                                                    .count = stacks[i].count + other_stacks[j].count,
-                                                                    .max = stacks[i].max,
-                                                                });
-
-                                                                flecs.ecs_set_pair(world, entity, &components.RequestOther{ .target = other}, components.Stack);
-                                                            }
-                                                        }
-                                                    }
-                                                }
+                                                flecs.ecs_set_pair(world, entity, &components.RequestOther{ .target = other }, components.Stack);
                                             }
                                         }
                                     }
