@@ -8,17 +8,17 @@ const zgui = @import("zgui");
 const flecs = @import("flecs");
 const components = game.components;
 
-pub fn cursor(window: zglfw.Window, x: f64, y: f64) void {
+pub fn cursor(window: zglfw.Window, x: f64, y: f64) callconv(.C) void {
     const scale_factor = scale_factor: {
         const cs = window.getContentScale();
-        break :scale_factor std.math.max(cs.x, cs.y);
+        break :scale_factor std.math.max(cs[0], cs[1]);
     };
     game.state.controls.mouse.position.x = @floatCast(f32, x / scale_factor);
     game.state.controls.mouse.position.y = @floatCast(f32, y / scale_factor);
     game.state.controls.mouse.tile = game.state.controls.mouse.position.tile();
 }
 
-pub fn scroll(_: zglfw.Window, _: f64, y: f64) void {
+pub fn scroll(_: zglfw.Window, _: f64, y: f64) callconv(.C) void {
     if (zgui.io.getWantCaptureMouse()) return;
 
     if (y > game.settings.zoom_scroll_tolerance and game.state.camera.zoom_progress < 0.0) {
@@ -39,7 +39,7 @@ pub fn scroll(_: zglfw.Window, _: f64, y: f64) void {
     }
 }
 
-pub fn button(_: zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Action, mods: zglfw.Mods) void {
+pub fn button(_: zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Action, mods: zglfw.Mods) callconv(.C) void {
     if (zgui.io.getWantCaptureMouse()) return;
 
     const tile = game.state.controls.mouse.tile;
@@ -97,7 +97,7 @@ pub fn button(_: zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Act
     }
 }
 
-pub fn key(_: zglfw.Window, glfw_key: zglfw.Key, _: i32, action: zglfw.Action, _: zglfw.Mods) void {
+pub fn key(_: zglfw.Window, glfw_key: zglfw.Key, _: i32, action: zglfw.Action, _: zglfw.Mods) callconv(.C) void {
     if (zgui.io.getWantCaptureKeyboard()) return;
     for (game.state.controls.keys) |*k| {
         if (k.primary == glfw_key or k.secondary == glfw_key) {

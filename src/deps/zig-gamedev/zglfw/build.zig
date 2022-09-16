@@ -22,12 +22,10 @@ pub const pkg = std.build.Pkg{
 
 pub fn link(exe: *std.build.LibExeObjStep) void {
     exe.addIncludeDir(thisDir() ++ "/libs/glfw/include");
-    exe.linkLibC();
+    exe.linkSystemLibraryName("c");
     system_sdk.include(exe.builder, exe, .{});
 
-    const target = (std.zig.system.NativeTargetInfo.detect(
-        exe.target,
-    ) catch unreachable).target;
+    const target = (std.zig.system.NativeTargetInfo.detect(exe.target) catch unreachable).target;
 
     const src_dir = thisDir() ++ "/libs/glfw/src/";
 
@@ -83,8 +81,6 @@ pub fn link(exe: *std.build.LibExeObjStep) void {
         },
         else => {
             // We assume Linux (X11)
-            exe.target.abi = .gnu;
-            exe.setTarget(exe.target);
             exe.linkSystemLibraryName("X11");
             exe.linkSystemLibraryName("xcb");
             exe.linkSystemLibraryName("Xau");

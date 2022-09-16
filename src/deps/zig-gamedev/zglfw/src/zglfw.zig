@@ -179,18 +179,14 @@ pub const Key = enum(i32) {
     menu = 348,
 };
 
-pub const Mods = packed struct {
+pub const Mods = packed struct(i32) {
     shift: bool = false,
     control: bool = false,
     alt: bool = false,
     super: bool = false,
     caps_lock: bool = false,
     num_lock: bool = false,
-    _padding: u2 = 0,
-
-    pub fn fromInt(flags: c_int) Mods {
-        return @bitCast(Mods, @intCast(u8, flags));
-    }
+    _padding: i26 = 0,
 };
 //--------------------------------------------------------------------------------------------------
 //
@@ -234,11 +230,11 @@ extern fn glfwGetError(description: ?*?[*:0]const u8) i32;
 //
 //--------------------------------------------------------------------------------------------------
 pub const Monitor = *opaque {
-    pub fn getPos(monitor: Monitor) struct { x: i32, y: i32 } {
+    pub fn getPos(monitor: Monitor) [2]i32 {
         var xpos: i32 = 0;
         var ypos: i32 = 0;
         glfwGetMonitorPos(monitor, &xpos, &ypos);
-        return .{ .x = xpos, .y = ypos };
+        return .{ xpos, ypos };
     }
     extern fn glfwGetMonitorPos(monitor: Monitor, xpos: *i32, ypos: *i32) void;
 };
@@ -282,11 +278,11 @@ pub const Window = *opaque {
         maxheight: i32,
     ) void;
 
-    pub fn getContentScale(window: Window) struct { x: f32, y: f32 } {
+    pub fn getContentScale(window: Window) [2]f32 {
         var xscale: f32 = 0.0;
         var yscale: f32 = 0.0;
         glfwGetWindowContentScale(window, &xscale, &yscale);
-        return .{ .x = xscale, .y = yscale };
+        return .{ xscale, yscale };
     }
     extern fn glfwGetWindowContentScale(window: Window, xscale: *f32, yscale: *f32) void;
 
@@ -296,150 +292,63 @@ pub const Window = *opaque {
     pub const getMouseButton = glfwGetMouseButton;
     extern fn glfwGetMouseButton(window: Window, button: MouseButton) Action;
 
-    pub fn getCursorPos(window: Window) struct { x: f64, y: f64 } {
+    pub fn getCursorPos(window: Window) [2]f64 {
         var xpos: f64 = 0.0;
         var ypos: f64 = 0.0;
         glfwGetCursorPos(window, &xpos, &ypos);
-        return .{ .x = xpos, .y = ypos };
+        return .{ xpos, ypos };
     }
     extern fn glfwGetCursorPos(window: Window, xpos: *f64, ypos: *f64) void;
 
-    pub fn getFramebufferSize(window: Window) struct { w: i32, h: i32 } {
+    pub fn getFramebufferSize(window: Window) [2]i32 {
         var width: i32 = 0.0;
         var height: i32 = 0.0;
         glfwGetFramebufferSize(window, &width, &height);
-        return .{ .w = width, .h = height };
+        return .{ width, height };
     }
     extern fn glfwGetFramebufferSize(window: Window, width: *i32, height: *i32) void;
 
-    pub fn getSize(window: Window) struct { w: i32, h: i32 } {
+    pub fn getSize(window: Window) [2]i32 {
         var width: i32 = 0.0;
         var height: i32 = 0.0;
         glfwGetWindowSize(window, &width, &height);
-        return .{ .w = width, .h = height };
+        return .{ width, height };
     }
     extern fn glfwGetWindowSize(window: Window, width: *i32, height: *i32) void;
 
-    pub fn setKeyCallback(window: Window, comptime callback: ?fn (window: Window, key: Key, scancode: i32, action: Action, mods: Mods) void) void {
-        if (callback) |user_callback| {
-            const CWrapper = struct {
-                pub fn keyCallbackWrapper(handle: Window, key: c_int, scancode: c_int, action: c_int, mods: c_int) callconv(.C) void {
-                    @call(.{ .modifier = .always_inline }, user_callback, .{
-                        handle,
-                        @intToEnum(Key, @intCast(i32, key)),
-                        @intCast(i32, scancode),
-                        @intToEnum(Action, @intCast(i32, action)),
-                        Mods.fromInt(mods),
-                    });
-                }
-            };
+    pub const setKeyCallback = glfwSetKeyCallback;
+    extern fn glfwSetKeyCallback(
+        window: Window,
+        callback: ?*const fn (
+            window: Window,
+            key: Key,
+            scancode: i32,
+            action: Action,
+            mods: Mods,
+        ) callconv(.C) void,
+    ) void;
 
-            glfwSetKeyCallback(window, CWrapper.keyCallbackWrapper);
-        } else {
-            glfwSetKeyCallback(window, null);
-        }
-    }
-    const KeyCallback = if (builtin.zig_backend == .stage1) fn (
+    pub const setMouseButtonCallback = glfwSetMouseButtonCallback;
+    extern fn glfwSetMouseButtonCallback(
         window: Window,
-        key: c_int,
-        scancode: c_int,
-        action: c_int,
-        mods: c_int,
-    ) callconv(.C) void else *const fn (
-        window: Window,
-        key: c_int,
-        scancode: c_int,
-        action: c_int,
-        mods: c_int,
-    ) callconv(.C) void;
-    extern fn glfwSetKeyCallback(window: Window, callback: ?KeyCallback) void;
+        callback: ?*const fn (window: Window, button: MouseButton, action: Action, mods: Mods) callconv(.C) void,
+    ) void;
 
-    pub fn setMouseButtonCallback(window: Window, comptime callback: ?fn (window: Window, button: MouseButton, action: Action, mods: Mods) void) void {
-        if (callback) |user_callback| {
-            const CWrapper = struct {
-                pub fn mouseButtonCallbackWrapper(handle: Window, button: c_int, action: c_int, mods: c_int) callconv(.C) void {
-                    @call(.{ .modifier = .always_inline }, user_callback, .{
-                        handle,
-                        @intToEnum(MouseButton, @intCast(i32, button)),
-                        @intToEnum(Action, @intCast(i32, action)),
-                        Mods.fromInt(mods),
-                    });
-                }
-            };
+    pub const setCursorPosCallback = glfwSetCursorPosCallback;
+    extern fn glfwSetCursorPosCallback(
+        window: Window,
+        callback: ?*const fn (Window, xpos: f64, ypos: f64) callconv(.C) void,
+    ) void;
 
-            glfwSetMouseButtonCallback(window, CWrapper.mouseButtonCallbackWrapper);
-        } else {
-            glfwSetMouseButtonCallback(window, null);
-        }
-    }
-    const MouseButtonCallback = if (builtin.zig_backend == .stage1) fn (
+    pub const setScrollCallback = glfwSetScrollCallback;
+    extern fn glfwSetScrollCallback(
         window: Window,
-        button: c_int,
-        action: c_int,
-        mods: c_int,
-    ) callconv(.C) void else *const fn (
-        window: Window,
-        button: c_int,
-        action: c_int,
-        mods: c_int,
-    ) callconv(.C) void;
-    extern fn glfwSetMouseButtonCallback(window: Window, callback: ?MouseButtonCallback) void;
-
-    pub fn setCursorPosCallback(window: Window, comptime callback: ?fn (window: Window, xpos: f64, ypos: f64) void) void {
-        if (callback) |user_callback| {
-            const CWrapper = struct {
-                pub fn cursorPosCallbackWrapper(handle: Window, xpos: f64, ypos: f64) callconv(.C) void {
-                    @call(.{ .modifier = .always_inline }, user_callback, .{
-                        handle,
-                        xpos,
-                        ypos,
-                    });
-                }
-            };
-
-            glfwSetCursorPosCallback(window, CWrapper.cursorPosCallbackWrapper);
-        } else {
-            glfwSetCursorPosCallback(window, null);
-        }
-    }
-    const CursorPosCallback = if (builtin.zig_backend == .stage1) fn (
-        window: Window,
-        xpos: f64,
-        ypos: f64,
-    ) callconv(.C) void else *const fn (
-        window: Window,
-        xpos: f64,
-        ypos: f64,
-    ) callconv(.C) void;
-    extern fn glfwSetCursorPosCallback(window: Window, callback: ?CursorPosCallback) void;
-
-    pub fn setScrollCallback(window: Window, comptime callback: ?fn (window: Window, xoffset: f64, yoffset: f64) void) void {
-        if (callback) |user_callback| {
-            const CWrapper = struct {
-                pub fn scrollCallbackWrapper(handle: Window, xoffset: f64, yoffset: f64) callconv(.C) void {
-                    @call(.{ .modifier = .always_inline }, user_callback, .{
-                        handle,
-                        xoffset,
-                        yoffset,
-                    });
-                }
-            };
-
-            glfwSetScrollCallback(window, CWrapper.scrollCallbackWrapper);
-        } else {
-            glfwSetScrollCallback(window, null);
-        }
-    }
-    const ScrollCallback = if (builtin.zig_backend == .stage1) fn (
-        window: Window,
-        xoffset: f64,
-        yoffset: f64,
-    ) callconv(.C) void else *const fn (
-        window: Window,
-        xoffset: f64,
-        yoffset: f64,
-    ) callconv(.C) void;
-    extern fn glfwSetScrollCallback(window: Window, callback: ?ScrollCallback) void;
+        callback: ?*const fn (
+            window: Window,
+            xoffset: f64,
+            yoffset: f64,
+        ) callconv(.C) void,
+    ) void;
 };
 
 pub fn createWindow(
@@ -521,6 +430,33 @@ extern fn glfwGetCocoaWindow(window: Window) ?*anyopaque;
 //--------------------------------------------------------------------------------------------------
 const expect = std.testing.expect;
 
+fn cursorPosCallback(window: Window, xpos: f64, ypos: f64) callconv(.C) void {
+    _ = window;
+    _ = xpos;
+    _ = ypos;
+}
+
+fn mouseButtonCallback(window: Window, button: MouseButton, action: Action, mods: Mods) callconv(.C) void {
+    _ = window;
+    _ = button;
+    _ = action;
+    _ = mods;
+}
+
+fn scrollCallback(window: Window, xoffset: f64, yoffset: f64) callconv(.C) void {
+    _ = window;
+    _ = xoffset;
+    _ = yoffset;
+}
+
+fn keyCallback(window: Window, key: Key, scancode: i32, action: Action, mods: Mods) callconv(.C) void {
+    _ = window;
+    _ = key;
+    _ = scancode;
+    _ = action;
+    _ = mods;
+}
+
 test "zglfw.basic" {
     try init();
     defer terminate();
@@ -536,8 +472,8 @@ test "zglfw.basic" {
         const monitors = getMonitors().?;
         try expect(monitor == monitors[0]);
         const pos = monitor.getPos();
-        _ = pos.x;
-        _ = pos.y;
+        _ = pos[0];
+        _ = pos[1];
 
         const adapter = switch (@import("builtin").target.os.tag) {
             .windows => try getWin32Adapter(monitor),
@@ -553,11 +489,17 @@ test "zglfw.basic" {
     const window = try createWindow(200, 200, "test", null, null);
     defer window.destroy();
 
+    window.setCursorPosCallback(cursorPosCallback);
+    window.setMouseButtonCallback(mouseButtonCallback);
+    window.setKeyCallback(keyCallback);
+    window.setScrollCallback(scrollCallback);
+    window.setKeyCallback(null);
+
     if (window.getKey(.a) == .press) {}
     if (window.getMouseButton(.right) == .press) {}
     const cursor_pos = window.getCursorPos();
-    _ = cursor_pos.x;
-    _ = cursor_pos.y;
+    _ = cursor_pos[0];
+    _ = cursor_pos[1];
 
     const window_native = try switch (@import("builtin").target.os.tag) {
         .windows => getWin32Window(window),
@@ -569,8 +511,8 @@ test "zglfw.basic" {
 
     window.setSizeLimits(10, 10, 300, 300);
     const content_scale = window.getContentScale();
-    _ = content_scale.x;
-    _ = content_scale.y;
+    _ = content_scale[0];
+    _ = content_scale[1];
     pollEvents();
     try maybeError();
 }

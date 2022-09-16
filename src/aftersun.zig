@@ -118,7 +118,7 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     const environment_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
 
     const window_size = gctx.window.getSize();
-    var camera = gfx.Camera.init(settings.design_size, .{ .w = window_size.w, .h = window_size.h }, zm.f32x4(0, 0, 0, 0));
+    var camera = gfx.Camera.init(settings.design_size, .{ .w = window_size[0], .h = window_size[1] }, zm.f32x4(0, 0, 0, 0));
 
     // Build the default bind group.
     const bind_group_layout_default = gctx.createBindGroupLayout(&.{
@@ -717,7 +717,7 @@ pub fn main() !void {
 
     const scale_factor = scale_factor: {
         const cs = window.getContentScale();
-        break :scale_factor std.math.max(cs.x, cs.y);
+        break :scale_factor std.math.max(cs[0], cs[1]);
     };
 
     zgui.init();

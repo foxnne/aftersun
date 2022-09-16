@@ -32,7 +32,7 @@ pub const Camera = struct {
     /// Sets window size from the window, call this everytime the window changes.
     pub fn setWindow(self: *Camera, window: zglfw.Window) void {
         const window_size = window.getSize();
-        self.window_size = zm.f32x4(@intToFloat(f32, window_size.w), @intToFloat(f32, window_size.h), 0, 0);
+        self.window_size = zm.f32x4(@intToFloat(f32, window_size[0]), @intToFloat(f32, window_size[1]), 0, 0);
         const min_zoom = self.minZoom();
         const max_zoom = self.maxZoom();
         if (self.zoom < min_zoom) self.zoom = min_zoom;

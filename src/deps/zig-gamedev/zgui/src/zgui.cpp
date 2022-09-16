@@ -175,11 +175,11 @@ ZGUI_API void zguiGetCursorPos(float pos[2]) {
     pos[1] = p.y;
 }
 
-ZGUI_API float zguiGetCursorPosX() {
+ZGUI_API float zguiGetCursorPosX(void) {
     return ImGui::GetCursorPosX();
 }
 
-ZGUI_API float zguiGetCursorPosY() {
+ZGUI_API float zguiGetCursorPosY(void) {
     return ImGui::GetCursorPosY();
 }
 
@@ -211,23 +211,23 @@ ZGUI_API void zguiSetCursorScreenPos(float screen_x, float screen_y) {
     ImGui::SetCursorScreenPos({ screen_x, screen_y });
 }
 
-ZGUI_API void zguiAlignTextToFramePadding() {
+ZGUI_API void zguiAlignTextToFramePadding(void) {
     ImGui::AlignTextToFramePadding();
 }
 
-ZGUI_API float zguiGetTextLineHeight() {
+ZGUI_API float zguiGetTextLineHeight(void) {
     return ImGui::GetTextLineHeight();
 }
 
-ZGUI_API float zguiGetTextLineHeightWithSpacing() {
+ZGUI_API float zguiGetTextLineHeightWithSpacing(void) {
     return ImGui::GetTextLineHeightWithSpacing();
 }
 
-ZGUI_API float zguiGetFrameHeight() {
+ZGUI_API float zguiGetFrameHeight(void) {
     return ImGui::GetFrameHeight();
 }
 
-ZGUI_API float zguiGetFrameHeightWithSpacing() {
+ZGUI_API float zguiGetFrameHeightWithSpacing(void) {
     return ImGui::GetFrameHeightWithSpacing();
 }
 
@@ -605,11 +605,11 @@ ZGUI_API bool zguiSliderAngle(
     return ImGui::SliderAngle(label, v_rad, v_degrees_min, v_degrees_max, format, flags);
 }
 
-ZGUI_API ImGuiInputTextCallbackData zguiInputTextCallbackData_init() {
+ZGUI_API ImGuiInputTextCallbackData zguiInputTextCallbackData_Init(void) {
     return ImGuiInputTextCallbackData();
 }
 
-ZGUI_API void zguiInputTextCallbackData_deleteChars(
+ZGUI_API void zguiInputTextCallbackData_DeleteChars(
     ImGuiInputTextCallbackData* data,
     int pos,
     int bytes_count
@@ -617,7 +617,7 @@ ZGUI_API void zguiInputTextCallbackData_deleteChars(
     data->DeleteChars(pos, bytes_count);
 }
 
-ZGUI_API void zguiInputTextCallbackData_insertChars(
+ZGUI_API void zguiInputTextCallbackData_InsertChars(
     ImGuiInputTextCallbackData* data,
     int pos,
     const char* text,
@@ -955,11 +955,11 @@ ZGUI_API ImGuiStyle* zguiGetStyle(void) {
     return &ImGui::GetStyle();
 }
 
-ZGUI_API ImGuiStyle zguiStyle_init(void) {
+ZGUI_API ImGuiStyle zguiStyle_Init(void) {
     return ImGuiStyle();
 }
 
-ZGUI_API void zguiStyle_scaleAllSizes(ImGuiStyle* style, float scale_factor) {
+ZGUI_API void zguiStyle_ScaleAllSizes(ImGuiStyle* style, float scale_factor) {
     style->ScaleAllSizes(scale_factor);
 }
 
@@ -1209,37 +1209,39 @@ ZGUI_API bool zguiBeginTabItem(const char* string) {
     return ImGui::BeginTabItem(string);
 }
 
-ZGUI_API void zguiEndTabItem() {
+ZGUI_API void zguiEndTabItem(void) {
     ImGui::EndTabItem();
 }
 
-ZGUI_API void zguiEndTabBar() {
+ZGUI_API void zguiEndTabBar(void) {
     ImGui::EndTabBar();
 }
-
-ZGUI_API ImDrawList* zguiGetWindowDrawList() {
+//--------------------------------------------------------------------------------------------------
+//
+// DrawList
+//
+//--------------------------------------------------------------------------------------------------
+ZGUI_API ImDrawList* zguiGetWindowDrawList(void) {
     return ImGui::GetWindowDrawList();
 }
 
-ZGUI_API ImDrawList* zguiGetBackgroundDrawList() {
+ZGUI_API ImDrawList* zguiGetBackgroundDrawList(void) {
     return ImGui::GetBackgroundDrawList();
 }
 
-ZGUI_API ImDrawList* zguiGetForegroundDrawList() {
+ZGUI_API ImDrawList* zguiGetForegroundDrawList(void) {
     return ImGui::GetForegroundDrawList();
 }
 
 ZGUI_API void zguiDrawList_PushClipRect(
     ImDrawList* draw_list,
-    float clip_rect_min_x,
-    float clip_rect_min_y,
-    float clip_rect_max_x,
-    float clip_rect_max_y,
+    const float clip_rect_min[2],
+    const float clip_rect_max[2],
     bool intersect_with_current_clip_rect
 ) {
     draw_list->PushClipRect(
-        { clip_rect_min_x, clip_rect_min_y },
-        { clip_rect_max_x, clip_rect_max_y },
+        { clip_rect_min[0], clip_rect_min[1] },
+        { clip_rect_max[0], clip_rect_max[1] },
         intersect_with_current_clip_rect
     );
 }
@@ -1252,11 +1254,11 @@ ZGUI_API void zguiDrawList_PopClipRect(ImDrawList* draw_list) {
     draw_list->PopClipRect();
 }
 
-ZGUI_API void zguiDrawList_PushTextureID(ImDrawList* draw_list, ImTextureID texture_id) {
+ZGUI_API void zguiDrawList_PushTextureId(ImDrawList* draw_list, ImTextureID texture_id) {
     draw_list->PushTextureID(texture_id);
 }
 
-ZGUI_API void zguiDrawList_PopTextureID(ImDrawList* draw_list) {
+ZGUI_API void zguiDrawList_PopTextureId(ImDrawList* draw_list) {
     draw_list->PopTextureID();
 }
 
@@ -1274,57 +1276,49 @@ ZGUI_API void zguiDrawList_GetClipRectMax(ImDrawList* draw_list, float clip_max[
 
 ZGUI_API void zguiDrawList_AddLine(
     ImDrawList* draw_list,
-    float p1_x,
-    float p1_y,
-    float p2_x,
-    float p2_y,
+    const float p1[2],
+    const float p2[2],
     unsigned int col,
     float thickness
 ) {
-    draw_list->AddLine({ p1_x, p1_y }, { p2_x, p2_y }, col, thickness);
+    draw_list->AddLine({ p1[0], p1[1] }, { p2[0], p2[1] }, col, thickness);
 }
 
 ZGUI_API void zguiDrawList_AddRect(
     ImDrawList* draw_list,
-    float p_min_x,
-    float p_min_y,
-    float p_max_x,
-    float p_max_y,
+    const float pmin[2],
+    const float pmax[2],
     unsigned int col,
     float rounding,
     ImDrawFlags flags,
     float thickness
 ) {
-    draw_list->AddRect({ p_min_x, p_min_y }, { p_max_x, p_max_y }, col, rounding, flags, thickness);
+    draw_list->AddRect({ pmin[0], pmin[1] }, { pmax[0], pmax[1] }, col, rounding, flags, thickness);
 }
 
 ZGUI_API void zguiDrawList_AddRectFilled(
     ImDrawList* draw_list,
-    float p_min_x,
-    float p_min_y,
-    float p_max_x,
-    float p_max_y,
+    const float pmin[2],
+    const float pmax[2],
     unsigned int col,
     float rounding,
     ImDrawFlags flags
 ) {
-    draw_list->AddRectFilled({ p_min_x, p_min_y }, { p_max_x, p_max_y }, col, rounding, flags);
+    draw_list->AddRectFilled({ pmin[0], pmin[1] }, { pmax[0], pmax[1] }, col, rounding, flags);
 }
 
 ZGUI_API void zguiDrawList_AddRectFilledMultiColor(
     ImDrawList* draw_list,
-    float p_min_x,
-    float p_min_y,
-    float p_max_x,
-    float p_max_y,
+    const float pmin[2],
+    const float pmax[2],
     unsigned int col_upr_left,
     unsigned int col_upr_right,
     unsigned int col_bot_right,
     unsigned int col_bot_left
 ) {
     draw_list->AddRectFilledMultiColor(
-        { p_min_x, p_min_y },
-        { p_max_x, p_max_y },
+        { pmin[0], pmin[1] },
+        { pmax[0], pmax[1] },
         col_upr_left,
         col_upr_right,
         col_bot_right,
@@ -1334,190 +1328,164 @@ ZGUI_API void zguiDrawList_AddRectFilledMultiColor(
 
 ZGUI_API void zguiDrawList_AddQuad(
     ImDrawList* draw_list,
-    float p1_x,
-    float p1_y,
-    float p2_x,
-    float p2_y,
-    float p3_x,
-    float p3_y,
-    float p4_x,
-    float p4_y,
+    const float p1[2],
+    const float p2[2],
+    const float p3[2],
+    const float p4[2],
     unsigned int col,
     float thickness
 ) {
-    draw_list->AddQuad({ p1_x, p1_y }, { p2_x, p2_y }, { p3_x, p3_y }, { p4_x, p4_y }, col, thickness);
+    draw_list->AddQuad({ p1[0], p1[1] }, { p2[0], p2[1] }, { p3[0], p3[1] }, { p4[0], p4[1] }, col, thickness);
 }
 
 ZGUI_API void zguiDrawList_AddQuadFilled(
     ImDrawList* draw_list,
-    float p1_x,
-    float p1_y,
-    float p2_x,
-    float p2_y,
-    float p3_x,
-    float p3_y,
-    float p4_x,
-    float p4_y,
+    const float p1[2],
+    const float p2[2],
+    const float p3[2],
+    const float p4[2],
     unsigned int col
 ) {
-    draw_list->AddQuadFilled({ p1_x, p1_y }, { p2_x, p2_y }, { p3_x, p3_y }, { p4_x, p4_y }, col);
+    draw_list->AddQuadFilled({ p1[0], p1[1] }, { p2[0], p2[1] }, { p3[0], p3[1] }, { p4[0], p4[1] }, col);
 }
 
 ZGUI_API void zguiDrawList_AddTriangle(
     ImDrawList* draw_list,
-    float p1_x,
-    float p1_y,
-    float p2_x,
-    float p2_y,
-    float p3_x,
-    float p3_y,
+    const float p1[2],
+    const float p2[2],
+    const float p3[2],
     unsigned int col,
     float thickness
 ) {
-    draw_list->AddTriangle({ p1_x, p1_y }, { p2_x, p2_y }, { p3_x, p3_y }, col, thickness);
+    draw_list->AddTriangle({ p1[0], p1[1] }, { p2[0], p2[1] }, { p3[0], p3[1] }, col, thickness);
 }
 
 ZGUI_API void zguiDrawList_AddTriangleFilled(
     ImDrawList* draw_list,
-    float p1_x,
-    float p1_y,
-    float p2_x,
-    float p2_y,
-    float p3_x,
-    float p3_y,
+    const float p1[2],
+    const float p2[2],
+    const float p3[2],
     unsigned int col
 ) {
-    draw_list->AddTriangleFilled({ p1_x, p1_y }, { p2_x, p2_y }, { p3_x, p3_y }, col);
+    draw_list->AddTriangleFilled({ p1[0], p1[1] }, { p2[0], p2[1] }, { p3[0], p3[1] }, col);
 }
 
 ZGUI_API void zguiDrawList_AddCircle(
     ImDrawList* draw_list,
-    float center_x,
-    float center_y,
+    const float center[2],
     float radius,
     unsigned int col,
     int num_segments,
     float thickness
 ) {
-    draw_list->AddCircle({ center_x, center_y }, radius, col, num_segments, thickness);
+    draw_list->AddCircle({ center[0], center[1] }, radius, col, num_segments, thickness);
 }
 
 ZGUI_API void zguiDrawList_AddCircleFilled(
     ImDrawList* draw_list,
-    float center_x,
-    float center_y,
+    const float center[2],
     float radius,
     unsigned int col,
     int num_segments
 ) {
-    draw_list->AddCircleFilled({ center_x, center_y }, radius, col, num_segments);
+    draw_list->AddCircleFilled({ center[0], center[1] }, radius, col, num_segments);
 }
 
 ZGUI_API void zguiDrawList_AddNgon(
     ImDrawList* draw_list,
-    float center_x,
-    float center_y,
+    const float center[2],
     float radius,
     unsigned int col,
     int num_segments,
     float thickness
 ) {
-    draw_list->AddNgon({ center_x, center_y }, radius, col, num_segments, thickness);
+    draw_list->AddNgon({ center[0], center[1] }, radius, col, num_segments, thickness);
 }
 
 ZGUI_API void zguiDrawList_AddNgonFilled(
     ImDrawList* draw_list,
-    float center_x,
-    float center_y,
+    const float center[2],
     float radius,
     unsigned int col,
     int num_segments
 ) {
-    draw_list->AddNgonFilled({ center_x, center_y }, radius, col, num_segments);
+    draw_list->AddNgonFilled({ center[0], center[1] }, radius, col, num_segments);
 }
 
 ZGUI_API void zguiDrawList_AddText(
     ImDrawList* draw_list,
-    float pos_x,
-    float pos_y,
+    const float pos[2],
     unsigned int col,
     const char* text_begin,
     const char* text_end
 ) {
-    draw_list->AddText({ pos_x, pos_y }, col, text_begin, text_end);
+    draw_list->AddText({ pos[0], pos[1] }, col, text_begin, text_end);
 }
 
 ZGUI_API void zguiDrawList_AddPolyline(
     ImDrawList* draw_list,
-    const float (*points)[2],
+    const float points[][2],
     int num_points,
     unsigned int col,
     ImDrawFlags flags,
     float thickness
 ) {
-    draw_list->AddPolyline((const ImVec2*)points, num_points, col, flags, thickness);
+    draw_list->AddPolyline((const ImVec2*)&points[0][0], num_points, col, flags, thickness);
 }
 
 ZGUI_API void zguiDrawList_AddConvexPolyFilled(
     ImDrawList* draw_list,
-    const float (*points)[2],
+    const float points[][2],
     int num_points,
     unsigned int col
 ) {
-    draw_list->AddConvexPolyFilled((const ImVec2*)points, num_points, col);
+    draw_list->AddConvexPolyFilled((const ImVec2*)&points[0][0], num_points, col);
 }
 
 ZGUI_API void zguiDrawList_AddBezierCubic(
     ImDrawList* draw_list,
-    float p1_x,
-    float p1_y,
-    float p2_x,
-    float p2_y,
-    float p3_x,
-    float p3_y,
-    float p4_x,
-    float p4_y,
+    const float p1[2],
+    const float p2[2],
+    const float p3[2],
+    const float p4[2],
     unsigned int col,
     float thickness,
     int num_segments
 ) {
-    draw_list->AddBezierCubic({ p1_x, p1_y }, { p2_x, p2_y }, { p3_x, p3_y }, { p4_x, p4_y }, col, thickness, num_segments);
+    draw_list->AddBezierCubic(
+        { p1[0], p1[1] }, { p2[0], p2[1] }, { p3[0], p3[1] }, { p4[0], p4[1] }, col, thickness, num_segments
+    );
 }
 
 ZGUI_API void zguiDrawList_AddBezierQuadratic(
     ImDrawList* draw_list,
-    float p1_x,
-    float p1_y,
-    float p2_x,
-    float p2_y,
-    float p3_x,
-    float p3_y,
+    const float p1[2],
+    const float p2[2],
+    const float p3[2],
     unsigned int col,
     float thickness,
     int num_segments
 ) {
-    draw_list->AddBezierQuadratic({ p1_x, p1_y }, { p2_x, p2_y }, { p3_x, p3_y }, col, thickness, num_segments);
+    draw_list->AddBezierQuadratic(
+        { p1[0], p1[1] }, { p2[0], p2[1] }, { p3[0], p3[1] }, col, thickness, num_segments
+    );
 }
 
 ZGUI_API void zguiDrawList_AddImage(
     ImDrawList* draw_list,
     ImTextureID user_texture_id,
-    float p_min_x,
-    float p_min_y,
-    float p_max_x,
-    float p_max_y,
-    float uv_min_x,
-    float uv_min_y,
-    float uv_max_x,
-    float uv_max_y,
+    const float pmin[2],
+    const float pmax[2],
+    const float uvmin[2],
+    const float uvmax[2],
     unsigned int col
 ) {
     draw_list->AddImage(
         user_texture_id,
-        { p_min_x, p_min_y },
-        { p_max_x, p_max_y },
-        { uv_min_x, uv_min_y },
-        { uv_max_x, uv_max_y },
+        { pmin[0], pmin[1] },
+        { pmax[0], pmax[1] },
+        { uvmin[0], uvmin[1] },
+        { uvmax[0], uvmax[1] },
         col
     );
 }
@@ -1525,34 +1493,26 @@ ZGUI_API void zguiDrawList_AddImage(
 ZGUI_API void zguiDrawList_AddImageQuad(
     ImDrawList* draw_list,
     ImTextureID user_texture_id,
-    float p1_x,
-    float p1_y,
-    float p2_x,
-    float p2_y,
-    float p3_x,
-    float p3_y,
-    float p4_x,
-    float p4_y,
-    float uv1_x,
-    float uv1_y,
-    float uv2_x,
-    float uv2_y,
-    float uv3_x,
-    float uv3_y,
-    float uv4_x,
-    float uv4_y,
+    const float p1[2],
+    const float p2[2],
+    const float p3[2],
+    const float p4[2],
+    const float uv1[2],
+    const float uv2[2],
+    const float uv3[2],
+    const float uv4[2],
     unsigned int col
 ) {
     draw_list->AddImageQuad(
         user_texture_id,
-        { p1_x, p1_y },
-        { p2_x, p2_y },
-        { p3_x, p3_y },
-        { p4_x, p4_y },
-        { uv1_x, uv1_y },
-        { uv2_x, uv2_y },
-        { uv3_x, uv3_y },
-        { uv4_x, uv4_y },
+        { p1[0], p1[1] },
+        { p2[0], p2[1] },
+        { p3[0], p3[1] },
+        { p4[0], p4[1] },
+        { uv1[0], uv1[1] },
+        { uv2[0], uv2[1] },
+        { uv3[0], uv3[1] },
+        { uv4[0], uv4[1] },
         col
     );
 }
@@ -1560,24 +1520,20 @@ ZGUI_API void zguiDrawList_AddImageQuad(
 ZGUI_API void zguiDrawList_AddImageRounded(
     ImDrawList* draw_list,
     ImTextureID user_texture_id,
-    float p_min_x,
-    float p_min_y,
-    float p_max_x,
-    float p_max_y,
-    float uv_min_x,
-    float uv_min_y,
-    float uv_max_x,
-    float uv_max_y,
+    const float pmin[2],
+    const float pmax[2],
+    const float uvmin[2],
+    const float uvmax[2],
     unsigned int col,
     float rounding,
     ImDrawFlags flags
 ) {
     draw_list->AddImageRounded(
         user_texture_id,
-        { p_min_x, p_min_y },
-        { p_max_x, p_max_y },
-        { uv_min_x, uv_min_y },
-        { uv_max_x, uv_max_y },
+        { pmin[0], pmin[1] },
+        { pmax[0], pmax[1] },
+        { uvmin[0], uvmin[1] },
+        { uvmax[0], uvmax[1] },
         col,
         rounding,
         flags
@@ -1588,12 +1544,12 @@ ZGUI_API void zguiDrawList_PathClear(ImDrawList* draw_list) {
     draw_list->PathClear();
 }
 
-ZGUI_API void zguiDrawList_PathLineTo(ImDrawList* draw_list, float pos_x, float pos_y) {
-    draw_list->PathLineTo({ pos_x, pos_y });
+ZGUI_API void zguiDrawList_PathLineTo(ImDrawList* draw_list, const float pos[2]) {
+    draw_list->PathLineTo({ pos[0], pos[1] });
 }
 
-ZGUI_API void zguiDrawList_PathLineToMergeDuplicate(ImDrawList* draw_list, float pos_x, float pos_y) {
-    draw_list->PathLineToMergeDuplicate({ pos_x, pos_y });
+ZGUI_API void zguiDrawList_PathLineToMergeDuplicate(ImDrawList* draw_list, const float pos[2]) {
+    draw_list->PathLineToMergeDuplicate({ pos[0], pos[1] });
 }
 
 ZGUI_API void zguiDrawList_PathFillConvex(ImDrawList* draw_list, unsigned int col) {
@@ -1606,103 +1562,111 @@ ZGUI_API void zguiDrawList_PathStroke(ImDrawList* draw_list, unsigned int col, I
 
 ZGUI_API void zguiDrawList_PathArcTo(
     ImDrawList* draw_list,
-    float center_x,
-    float center_y,
+    const float center[2],
     float radius,
     float a_min,
     float a_max,
     int num_segments
 ) {
-    draw_list->PathArcTo({ center_x, center_y }, radius, a_min, a_max, num_segments);
+    draw_list->PathArcTo({ center[0], center[1] }, radius, a_min, a_max, num_segments);
 }
 
 ZGUI_API void zguiDrawList_PathArcToFast(
     ImDrawList* draw_list,
-    float center_x,
-    float center_y,
+    const float center[2],
     float radius,
     int a_min_of_12,
     int a_max_of_12
 ) {
-    draw_list->PathArcToFast({ center_x, center_y }, radius, a_min_of_12, a_max_of_12);
+    draw_list->PathArcToFast({ center[0], center[1] }, radius, a_min_of_12, a_max_of_12);
 }
 
 ZGUI_API void zguiDrawList_PathBezierCubicCurveTo(
     ImDrawList* draw_list,
-    float p2_x,
-    float p2_y,
-    float p3_x,
-    float p3_y,
-    float p4_x,
-    float p4_y,
+    const float p2[2],
+    const float p3[2],
+    const float p4[2],
     int num_segments
 ) {
-    draw_list->PathBezierCubicCurveTo({ p2_x, p2_y }, { p3_x, p3_y }, { p4_x, p4_y }, num_segments);
+    draw_list->PathBezierCubicCurveTo({ p2[0], p2[1] }, { p3[0], p3[1] }, { p4[0], p4[1] }, num_segments);
 }
 
 ZGUI_API void zguiDrawList_PathBezierQuadraticCurveTo(
     ImDrawList* draw_list,
-    float p2_x,
-    float p2_y,
-    float p3_x,
-    float p3_y,
+    const float p2[2],
+    const float p3[2],
     int num_segments
 ) {
-    draw_list->PathBezierQuadraticCurveTo({ p2_x, p2_y }, { p3_x, p3_y }, num_segments);
+    draw_list->PathBezierQuadraticCurveTo({ p2[0], p2[1] }, { p3[0], p3[1] }, num_segments);
 }
 
 ZGUI_API void zguiDrawList_PathRect(
     ImDrawList* draw_list,
-    float rect_min_x,
-    float rect_min_y,
-    float rect_max_x,
-    float rect_max_y,
+    const float rect_min[2],
+    const float rect_max[2],
     float rounding,
     ImDrawFlags flags
 ) {
-    draw_list->PathRect({ rect_min_x, rect_min_y }, { rect_max_x, rect_max_y }, rounding, flags);
+    draw_list->PathRect({ rect_min[0], rect_min[1] }, { rect_max[0], rect_max[1] }, rounding, flags);
+}
+//--------------------------------------------------------------------------------------------------
+//
+// Viewport
+//
+//--------------------------------------------------------------------------------------------------
+ZGUI_API ImGuiViewport* zguiGetMainViewport(void) {
+    return ImGui::GetMainViewport();
 }
 
-ZGUI_API void zguipShowDemoWindow(bool* p_open) {
-    ImPlot::ShowDemoWindow(p_open);
+ZGUI_API void zguiViewport_GetWorkPos(ImGuiViewport* viewport, float p[2]) {
+    const ImVec2 pos = viewport->WorkPos;
+    p[0] = pos.x;
+    p[1] = pos.y;
 }
 
-ZGUI_API ImPlotContext* zguipCreateContext(){
+ZGUI_API void zguiViewport_GetWorkSize(ImGuiViewport* viewport, float p[2]) {
+    const ImVec2 sz = viewport->WorkSize;
+    p[0] = sz.x;
+    p[1] = sz.y;
+}
+//--------------------------------------------------------------------------------------------------
+//
+// ImPlot
+//
+//--------------------------------------------------------------------------------------------------
+ZGUI_API ImPlotContext* zguiPlot_CreateContext(void) {
     return ImPlot::CreateContext();
 }
 
-ZGUI_API void zguipDestroyContext(ImPlotContext* ctx = NULL){
+ZGUI_API void zguiPlot_DestroyContext(ImPlotContext* ctx) {
     ImPlot::DestroyContext(ctx);
 }
 
-ZGUI_API ImPlotContext* zguipGetCurrentContext(){
+ZGUI_API ImPlotContext* zguiPlot_GetCurrentContext(void) {
     return ImPlot::GetCurrentContext();
 }
 
-ZGUI_API void zguipSetCurrentContext(ImPlotContext* ctx){
-    ImPlot::SetCurrentContext(ctx);
-}
-
-ZGUI_API void zguipSetupLegend(ImPlotLocation location, ImPlotLegendFlags flags){
+ZGUI_API void zguiPlot_SetupLegend(ImPlotLocation location, ImPlotLegendFlags flags) {
     ImPlot::SetupLegend(location, flags);
 }
 
-ZGUI_API void zguipSetupXAxis(const char* label, ImPlotAxisFlags flags){
+ZGUI_API void zguiPlot_SetupXAxis(const char* label, ImPlotAxisFlags flags) {
     ImPlot::SetupAxis(ImAxis_X1, label, flags);
 }
 
-ZGUI_API void zguipSetupYAxis(const char* label, ImPlotAxisFlags flags){
+ZGUI_API void zguiPlot_SetupYAxis(const char* label, ImPlotAxisFlags flags) {
     ImPlot::SetupAxis(ImAxis_Y1, label, flags);
 }
 
-ZGUI_API bool zguipBeginPlot(const char* title_id, float width, float height, ImPlotFlags flags) {
+ZGUI_API bool zguiPlot_BeginPlot(const char* title_id, float width, float height, ImPlotFlags flags) {
     return ImPlot::BeginPlot(title_id, { width, height }, flags);
 }
 
-ZGUI_API void zguipPlotLineValues(const char* label_id, const int* values, int count, ImPlotLineFlags flags){
+ZGUI_API void zguiPlot_PlotLineValues(const char* label_id, const int* values, int count, ImPlotLineFlags flags) {
     ImPlot::PlotLine(label_id, values, count, 1, 0, flags, 0, sizeof(int));
 }
 
-ZGUI_API void zguipEnd() {
+ZGUI_API void zguiPlot_EndPlot(void) {
     ImPlot::EndPlot();
 }
+//--------------------------------------------------------------------------------------------------
