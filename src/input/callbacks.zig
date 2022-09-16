@@ -88,8 +88,8 @@ pub fn button(_: zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Act
         } 
     }
 
-    if (game.state.controls.mouse.secondary.down_tile) |down| {
-        if (game.state.controls.mouse.secondary.up_tile) |up| {
+    if (game.state.controls.mouse.secondary.down_tile) |_| {
+        if (game.state.controls.mouse.secondary.up_tile) |_| {
             
             game.state.controls.mouse.secondary.down_tile = null;
             game.state.controls.mouse.secondary.up_tile = null;
