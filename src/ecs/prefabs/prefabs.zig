@@ -11,6 +11,8 @@ _stackable: flecs.EcsEntity = 0,
 apple: flecs.EcsEntity = 0,
 cooked_ham: flecs.EcsEntity = 0,
 ham: flecs.EcsEntity = 0,
+pear: flecs.EcsEntity = 0,
+plum: flecs.EcsEntity = 0,
 torch: flecs.EcsEntity = 0,
 
 pub const id_start: u64 = 6000;
@@ -72,6 +74,28 @@ pub fn create(prefabs: *Prefabs, world: *flecs.EcsWorld) void {
     });
     flecs.ecs_set(world, prefabs.apple, &components.SpriteRenderer{
         .index = game.assets.aftersun_atlas.Apple_0_Layer,
+    });
+
+    flecs.ecs_add_id(world, prefabs.plum, flecs.Constants.EcsPrefab);
+    flecs.ecs_add_pair(world, prefabs.plum, flecs.Constants.EcsIsA, prefabs._stackable);
+    flecs.ecs_set(world, prefabs.plum, &components.Stack{ .max = 5 });
+    flecs.ecs_set(world, prefabs.plum, &components.StackAnimator{
+        .animation = &game.animations.Plum_Layer,
+        .counts = &[_]usize{ 1, 2, 3, 4, 5 },
+    });
+    flecs.ecs_set(world, prefabs.plum, &components.SpriteRenderer{
+        .index = game.assets.aftersun_atlas.Plum_0_Layer,
+    });
+
+    flecs.ecs_add_id(world, prefabs.pear, flecs.Constants.EcsPrefab);
+    flecs.ecs_add_pair(world, prefabs.pear, flecs.Constants.EcsIsA, prefabs._stackable);
+    flecs.ecs_set(world, prefabs.pear, &components.Stack{ .max = 5 });
+    flecs.ecs_set(world, prefabs.pear, &components.StackAnimator{
+        .animation = &game.animations.Pear_Layer,
+        .counts = &[_]usize{ 1, 2, 3, 4, 5 },
+    });
+    flecs.ecs_set(world, prefabs.pear, &components.SpriteRenderer{
+        .index = game.assets.aftersun_atlas.Pear_0_Layer,
     });
 
     flecs.ecs_add_id(world, prefabs.torch, flecs.Constants.EcsPrefab);
