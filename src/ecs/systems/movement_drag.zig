@@ -39,6 +39,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
         var i: usize = 0;
         while (i < it.count) : (i += 1) {
             const entity = it.entities[i];
+
             if (flecs.ecs_field(it, components.Tile, 2)) |tiles| {
                 if (flecs.ecs_field(it, components.Drag, 3)) |drags| {
                     const dist_x = std.math.absInt(drags[i].start.x - tiles[i].x) catch unreachable;

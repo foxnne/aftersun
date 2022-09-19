@@ -21,6 +21,9 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
         var i: usize = 0;
         while (i < it.count) : (i += 1) {
             const entity = it.entities[i];
+
+            if (entity != game.state.entities.player) break;
+
             const direction = game.state.controls.movement();
             if (flecs.ecs_field(it, components.Tile, 2)) |tiles| {
                 if (direction != .none) {

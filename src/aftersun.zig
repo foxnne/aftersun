@@ -37,7 +37,7 @@ pub var state: *GameState = undefined;
 pub const GameState = struct {
     gctx: *zgpu.GraphicsContext,
     world: *flecs.EcsWorld,
-    entities: Entities = undefined,
+    entities: Entities = .{},
     prefabs: Prefabs,
     camera: gfx.Camera,
     controls: input.Controls = .{},
@@ -77,8 +77,8 @@ pub const Channel = enum(i32) {
 
 /// Holds global entities.
 pub const Entities = struct {
-    player: flecs.EcsEntity,
-    debug: flecs.EcsEntity,
+    player: flecs.EcsEntity = 5000,
+    debug: flecs.EcsEntity = 5001,
 };
 
 /// Registers all public declarations within the passed type
@@ -97,8 +97,13 @@ fn register(world: *flecs.EcsWorld, comptime T: type) void {
 
 fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     const world = flecs.ecs_init().?;
+    // Ensure that auto-generated IDs are well above anything we will need.
+    flecs.ecs_set_entity_range(world, 8000, 0);
     register(world, components);
-    const prefabs = Prefabs.init(world);
+
+    // Create all of our prefabs.
+    var prefabs = Prefabs.init();
+    prefabs.create(world);
 
     const gctx = try zgpu.GraphicsContext.init(allocator, window);
 
@@ -312,7 +317,8 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     var render_final_system = @import("ecs/systems/render_final_pass.zig").system();
     flecs.ecs_system(world, "RenderFinalSystem", flecs.Constants.EcsPostUpdate, &render_final_system);
 
-    const player = flecs.ecs_new(world, components.Player);
+    const player = state.entities.player;
+    flecs.ecs_add(world, player, components.Player);
     flecs.ecs_set(world, player, &components.Position{ .x = 0.0, .y = -32.0 });
     flecs.ecs_set(world, player, &components.Tile{ .x = 0, .y = -1, .counter = state.counter.count() });
     flecs.ecs_set(world, player, &components.Collider{});
@@ -342,7 +348,7 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     flecs.ecs_set_pair(world, player, &components.Direction{ .value = .se }, components.Body);
     flecs.ecs_add_pair(world, player, components.Camera, components.Target);
 
-    const debug = flecs.ecs_new(world, null);
+    const debug = state.entities.debug;
     flecs.ecs_add_pair(world, debug, flecs.Constants.EcsIsA, state.prefabs.ham);
     flecs.ecs_set(world, debug, &components.Position{ .x = 0.0, .y = -64.0 });
     flecs.ecs_set(world, debug, &components.Tile{ .x = 0, .y = -2, .counter = state.counter.count() });
@@ -352,8 +358,6 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     flecs.ecs_set(world, ham, &components.Position{ .x = 0.0, .y = -96.0 });
     flecs.ecs_set(world, ham, &components.Tile{ .x = 0, .y = -3, .counter = state.counter.count() });
     flecs.ecs_set(world, ham, &components.Stack{ .count = 3, .max = 5 });
-
-    state.entities = .{ .player = player, .debug = debug };
 
     // Create campfire
     {
@@ -551,10 +555,10 @@ fn update() void {
                 if (delimiter == 0) continue;
             }
 
-            if (zgui.button(zgui.formatZ("{s}", .{n}), .{})) {
+            if (zgui.button(zgui.formatZ("{s}", .{n}), .{ .w = -1 })) {
                 if (flecs.ecs_get(state.world, state.entities.player, components.Tile)) |tile| {
                     if (flecs.ecs_get(state.world, state.entities.player, components.Position)) |position| {
-                        const new = flecs.ecs_new_w_pair(state.world, flecs.Constants.EcsIsA, state.prefabs.get(i));
+                        const new = flecs.ecs_new_w_pair(state.world, flecs.Constants.EcsIsA, Prefabs.id_start + @as(u64, i));
                         flecs.ecs_set(state.world, new, position);
                         const end = tile.*;
                         const start: components.Tile = .{ .x = end.x, .y = end.y, .z = end.z + 1 };
