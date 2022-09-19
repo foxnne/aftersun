@@ -284,6 +284,8 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     // - Other
     var stack_system = @import("ecs/systems/stack.zig").system();
     flecs.ecs_system(world, "StackSystem", flecs.Constants.EcsOnUpdate, &stack_system);
+    var use_system = @import("ecs/systems/use.zig").system(world);
+    flecs.ecs_system(world, "UseSystem", flecs.Constants.EcsOnUpdate, &use_system);
 
     // - Observers
     var tile_observer = @import("ecs/observers/tile.zig").observer();

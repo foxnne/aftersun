@@ -51,8 +51,7 @@ pub fn button(_: zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Act
                 game.state.controls.mouse.primary.state = false;
                 game.state.controls.mouse.primary.up_tile = tile;
             },
-            .repeat,
-            .press => {
+            .repeat, .press => {
                 game.state.controls.mouse.primary.state = true;
                 game.state.controls.mouse.primary.down_tile = tile;
             },
@@ -66,8 +65,7 @@ pub fn button(_: zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Act
                 game.state.controls.mouse.secondary.state = false;
                 game.state.controls.mouse.secondary.up_tile = tile;
             },
-            .repeat,
-            .press => {
+            .repeat, .press => {
                 game.state.controls.mouse.secondary.state = true;
                 game.state.controls.mouse.secondary.down_tile = tile;
             },
@@ -85,15 +83,19 @@ pub fn button(_: zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Act
             }
             game.state.controls.mouse.primary.down_tile = null;
             game.state.controls.mouse.primary.up_tile = null;
-        } 
+        }
     }
 
-    if (game.state.controls.mouse.secondary.down_tile) |_| {
-        if (game.state.controls.mouse.secondary.up_tile) |_| {
-            
+    if (game.state.controls.mouse.secondary.down_tile) |down| {
+        if (game.state.controls.mouse.secondary.up_tile) |up| {
+            if (down.x == up.x and down.y == up.y) {
+                flecs.ecs_set_pair_second(game.state.world, game.state.entities.player, components.Request, &components.Use{
+                    .target = up,
+                });
+            }
             game.state.controls.mouse.secondary.down_tile = null;
             game.state.controls.mouse.secondary.up_tile = null;
-        } 
+        }
     }
 }
 
