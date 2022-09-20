@@ -23,7 +23,6 @@ pub fn system(world: *flecs.EcsWorld) flecs.EcsSystemDesc {
     var ctx_desc = std.mem.zeroes(flecs.EcsQueryDesc);
     ctx_desc.filter.terms[0] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Cell, flecs.Constants.EcsWildcard) });
     ctx_desc.filter.terms[1] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Tile) });
-    ctx_desc.filter.terms[2] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Stack), .oper = flecs.EcsOperKind.ecs_optional });
     ctx_desc.group_by = groupBy;
     ctx_desc.group_by_id = flecs.ecs_id(components.Cell);
     ctx_desc.order_by = orderBy;
@@ -47,7 +46,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
 
                     if (dist_x <= 1 and dist_y <= 1) {
                         var target_entity: ?flecs.EcsEntity = null;
-                        var target_tile: ?components.Tile = null;
+                        var target_tile: components.Tile = .{};
                         var counter: u64 = 0;
                         if (it.ctx) |ctx| {
                             var query = @ptrCast(*flecs.EcsQuery, ctx);
@@ -88,8 +87,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
 
                                 if (flecs.ecs_get(world, target, components.Toggleable)) |toggle| {
                                     const new = flecs.ecs_new_w_pair(world, flecs.Constants.EcsIsA, if (toggle.state) toggle.off_prefab else toggle.on_prefab);
-                                    flecs.ecs_set(world, new, target_tile.?);
-                                    flecs.ecs_set(world, new, target_tile.?.toPosition());
+                                    flecs.ecs_set(world, new, target_tile);
+                                    flecs.ecs_set(world, new, target_tile.toPosition());
                                     flecs.ecs_delete(world, target);
                                 }
                             }
