@@ -48,6 +48,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             .vert_mode = renderers[i].vert_mode,
                             .time = @floatCast(f32, game.state.gctx.stats.time) + @intToFloat(f32, renderers[i].order),
                             .rotation = rotation,
+                            .flip_x = renderers[i].flip_x,
+                            .flip_y = renderers[i].flip_y,
                         },
                     ) catch unreachable;
                 }
