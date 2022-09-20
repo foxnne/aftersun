@@ -1,4 +1,5 @@
-# aftersun
+![aftersun_logo](https://user-images.githubusercontent.com/49629865/191372504-99704ce8-6e63-49f1-9e66-f5ec275070e5.png)
+
 
 An ongoing pet-project top-down RPG written in [zig](https://ziglang.org).
 
