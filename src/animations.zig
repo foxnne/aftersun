@@ -2,6 +2,30 @@
 const std = @import("std");
 const assets = @import("assets.zig");
 
+pub var Oak_Leaves01 = [_]usize {
+    assets.aftersun_atlas.Oak_0_Leaves01,
+};
+pub var Oak_Leaves02 = [_]usize {
+    assets.aftersun_atlas.Oak_0_Leaves02,
+};
+pub var Oak_Leaves03 = [_]usize {
+    assets.aftersun_atlas.Oak_0_Leaves03,
+};
+pub var Oak_Leaves04 = [_]usize {
+    assets.aftersun_atlas.Oak_0_Leaves04,
+};
+pub var Oak_Trunk = [_]usize {
+    assets.aftersun_atlas.Oak_0_Trunk,
+};
+pub var Oak_Ground = [_]usize {
+    assets.aftersun_atlas.Oak_0_Ground,
+};
+pub var Pine_Needles = [_]usize {
+    assets.aftersun_atlas.Pine_0_Needles,
+};
+pub var Pine_Trunk = [_]usize {
+    assets.aftersun_atlas.Pine_0_Trunk,
+};
 pub var Idle_N_HairF01 = [_]usize {
     assets.aftersun_atlas.Idle_N_0_HairF01,
     assets.aftersun_atlas.Idle_N_1_HairF01,
@@ -609,35 +633,6 @@ pub var Walk_S_Body = [_]usize {
     assets.aftersun_atlas.Walk_S_6_Body,
     assets.aftersun_atlas.Walk_S_7_Body,
 };
-pub var Drop_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Drop_0_Layer_0,
-    assets.aftersun_atlas.Drop_1_Layer_0,
-    assets.aftersun_atlas.Drop_2_Layer_0,
-};
-pub var Oak_Leaves04 = [_]usize {
-    assets.aftersun_atlas.Oak_0_Leaves04,
-};
-pub var Oak_Leaves03 = [_]usize {
-    assets.aftersun_atlas.Oak_0_Leaves03,
-};
-pub var Oak_Leaves01 = [_]usize {
-    assets.aftersun_atlas.Oak_0_Leaves01,
-};
-pub var Oak_Leaves02 = [_]usize {
-    assets.aftersun_atlas.Oak_0_Leaves02,
-};
-pub var Oak_Trunk = [_]usize {
-    assets.aftersun_atlas.Oak_0_Trunk,
-};
-pub var Oak_Ground = [_]usize {
-    assets.aftersun_atlas.Oak_0_Ground,
-};
-pub var Pine_Needles = [_]usize {
-    assets.aftersun_atlas.Pine_0_Needles,
-};
-pub var Pine_Trunk = [_]usize {
-    assets.aftersun_atlas.Pine_0_Trunk,
-};
 pub var Campfire_Layer_0 = [_]usize {
     assets.aftersun_atlas.Campfire_0_Layer_0,
     assets.aftersun_atlas.Campfire_1_Layer_0,
@@ -734,4 +729,9 @@ pub var Torch_Flame_Layer = [_]usize {
     assets.aftersun_atlas.Torch_Flame_5_Layer,
     assets.aftersun_atlas.Torch_Flame_6_Layer,
     assets.aftersun_atlas.Torch_Flame_7_Layer,
+};
+pub var Drop_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Drop_0_Layer_0,
+    assets.aftersun_atlas.Drop_1_Layer_0,
+    assets.aftersun_atlas.Drop_2_Layer_0,
 };
