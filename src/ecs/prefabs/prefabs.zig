@@ -18,20 +18,17 @@ lit_torch: flecs.EcsEntity = 0,
 
 pub const id_start: u64 = 6000;
 
-pub fn init() Prefabs {
-    comptime {
-        var prefabs: Prefabs = .{};
-        const fields = std.meta.fieldNames(Prefabs);
-        inline for (fields) |field_name, i| {
-            @field(prefabs, field_name) = id_start + @as(u64, i);
-        }
-        return prefabs;
+pub fn init(world: *flecs.EcsWorld) Prefabs {
+    var prefabs: Prefabs = .{};
+    const fields = comptime std.meta.fieldNames(Prefabs);
+    inline for (fields) |field_name| {
+        @field(prefabs, field_name) = flecs.ecs_new_prefab(world, field_name[0.. :0]);
     }
+    return prefabs;
 }
 
 pub fn create(prefabs: *Prefabs, world: *flecs.EcsWorld) void {
     // Base item
-    flecs.ecs_add_id(world, prefabs._item, flecs.Constants.EcsPrefab);
     flecs.ecs_add(world, prefabs._item, components.Position);
     flecs.ecs_override(world, prefabs._item, components.Position);
     flecs.ecs_add(world, prefabs._item, components.Tile);
@@ -41,13 +38,11 @@ pub fn create(prefabs: *Prefabs, world: *flecs.EcsWorld) void {
     flecs.ecs_override(world, prefabs._item, components.SpriteRenderer);
 
     // Stackable item
-    flecs.ecs_add_id(world, prefabs._stackable, flecs.Constants.EcsPrefab);
     flecs.ecs_add_pair(world, prefabs._stackable, flecs.Constants.EcsIsA, prefabs._item);
     flecs.ecs_set(world, prefabs._stackable, &components.Stack{ .max = 100 });
     flecs.ecs_override(world, prefabs._stackable, components.Stack);
 
     // Ham
-    flecs.ecs_add_id(world, prefabs.ham, flecs.Constants.EcsPrefab);
     flecs.ecs_add_pair(world, prefabs.ham, flecs.Constants.EcsIsA, prefabs._stackable);
     flecs.ecs_set(world, prefabs.ham, &components.Stack{ .max = 5 });
     flecs.ecs_set(world, prefabs.ham, &components.StackAnimator{
@@ -59,7 +54,6 @@ pub fn create(prefabs: *Prefabs, world: *flecs.EcsWorld) void {
     });
 
     // Cooked ham
-    flecs.ecs_add_id(world, prefabs.cooked_ham, flecs.Constants.EcsPrefab);
     flecs.ecs_add_pair(world, prefabs.cooked_ham, flecs.Constants.EcsIsA, prefabs._stackable);
     flecs.ecs_set(world, prefabs.cooked_ham, &components.Stack{ .max = 5 });
     flecs.ecs_set(world, prefabs.cooked_ham, &components.StackAnimator{
@@ -73,7 +67,6 @@ pub fn create(prefabs: *Prefabs, world: *flecs.EcsWorld) void {
     flecs.ecs_add(world, prefabs.cooked_ham, components.Useable);
 
     // Apple
-    flecs.ecs_add_id(world, prefabs.apple, flecs.Constants.EcsPrefab);
     flecs.ecs_add_pair(world, prefabs.apple, flecs.Constants.EcsIsA, prefabs._stackable);
     flecs.ecs_set(world, prefabs.apple, &components.Stack{ .max = 5 });
     flecs.ecs_set(world, prefabs.apple, &components.StackAnimator{
@@ -87,7 +80,6 @@ pub fn create(prefabs: *Prefabs, world: *flecs.EcsWorld) void {
     flecs.ecs_add(world, prefabs.apple, components.Useable);
 
     // Plum
-    flecs.ecs_add_id(world, prefabs.plum, flecs.Constants.EcsPrefab);
     flecs.ecs_add_pair(world, prefabs.plum, flecs.Constants.EcsIsA, prefabs._stackable);
     flecs.ecs_set(world, prefabs.plum, &components.Stack{ .max = 5 });
     flecs.ecs_set(world, prefabs.plum, &components.StackAnimator{
@@ -101,7 +93,6 @@ pub fn create(prefabs: *Prefabs, world: *flecs.EcsWorld) void {
     flecs.ecs_add(world, prefabs.plum, components.Useable);
 
     // Pear
-    flecs.ecs_add_id(world, prefabs.pear, flecs.Constants.EcsPrefab);
     flecs.ecs_add_pair(world, prefabs.pear, flecs.Constants.EcsIsA, prefabs._stackable);
     flecs.ecs_set(world, prefabs.pear, &components.Stack{ .max = 5 });
     flecs.ecs_set(world, prefabs.pear, &components.StackAnimator{
@@ -115,7 +106,6 @@ pub fn create(prefabs: *Prefabs, world: *flecs.EcsWorld) void {
     flecs.ecs_add(world, prefabs.pear, components.Useable);
 
     // Lit torch
-    flecs.ecs_add_id(world, prefabs.lit_torch, flecs.Constants.EcsPrefab);
     flecs.ecs_add_pair(world, prefabs.lit_torch, flecs.Constants.EcsIsA, prefabs._item);
     flecs.ecs_set(world, prefabs.lit_torch, &components.SpriteAnimator{
         .animation = &game.animations.Torch_Flame_Layer,
@@ -134,7 +124,6 @@ pub fn create(prefabs: *Prefabs, world: *flecs.EcsWorld) void {
     });
 
     // Torch
-    flecs.ecs_add_id(world, prefabs.torch, flecs.Constants.EcsPrefab);
     flecs.ecs_add_pair(world, prefabs.torch, flecs.Constants.EcsIsA, prefabs._item);
     flecs.ecs_set(world, prefabs.torch, &components.SpriteRenderer{
         .index = game.assets.aftersun_atlas.Torch_0_Layer,

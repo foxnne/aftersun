@@ -103,7 +103,7 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     register(world, components);
 
     // Create all of our prefabs.
-    var prefabs = Prefabs.init();
+    var prefabs = Prefabs.init(world);
     prefabs.create(world);
 
     const gctx = try zgpu.GraphicsContext.init(allocator, window);
@@ -524,7 +524,7 @@ fn update() void {
 
     if (zgui.begin("Prefabs", .{})) {
         const prefab_names = std.meta.fieldNames(Prefabs);
-        for (prefab_names) |n, i| {
+        for (prefab_names) |n| {
             if (std.mem.indexOf(u8, n, "_")) |delimiter| {
                 if (delimiter == 0) continue;
             }
@@ -532,7 +532,7 @@ fn update() void {
             if (zgui.button(zgui.formatZ("{s}", .{n}), .{ .w = -1 })) {
                 if (flecs.ecs_get(state.world, state.entities.player, components.Tile)) |tile| {
                     if (flecs.ecs_get(state.world, state.entities.player, components.Position)) |position| {
-                        const new = flecs.ecs_new_w_pair(state.world, flecs.Constants.EcsIsA, Prefabs.id_start + @as(u64, i));
+                        const new = flecs.ecs_new_w_pair(state.world, flecs.Constants.EcsIsA, flecs.ecs_lookup(state.world, n.ptr));
                         flecs.ecs_set(state.world, new, position);
                         const end = tile.*;
                         const start: components.Tile = .{ .x = end.x, .y = end.y, .z = end.z + 1 };
