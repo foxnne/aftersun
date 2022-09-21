@@ -12,7 +12,7 @@ pub const Environment = struct {
             .start = 6.0,
             .end = 8.0,
             .ambient_color = game.math.Color.initBytes(130, 140, 150, 255),
-            .shadow_color = game.math.Color.initFloats(0.7, 0.7, 1.0, 1.0),
+            .shadow_color = game.math.Color.initFloats(0.6, 0.6, 1.0, 1.0),
         },
         .{
             .name = "Day",
@@ -21,7 +21,7 @@ pub const Environment = struct {
             .start = 8.0,
             .end = 19.0,
             .ambient_color = game.math.Color.initBytes(245, 245, 255, 255),
-            .shadow_color = game.math.Color.initFloats(0.7, 0.7, 1.0, 1.0),
+            .shadow_color = game.math.Color.initFloats(0.8, 0.8, 1.0, 1.0),
         },
         .{
             .name = "Sunset",
@@ -39,7 +39,7 @@ pub const Environment = struct {
             .start = 21.0,
             .end = 6.0,
             .ambient_color = game.math.Color.initBytes(50, 50, 120, 255),
-            .shadow_color = game.math.Color.initFloats(0.7, 0.7, 1.0, 1.0),
+            .shadow_color = game.math.Color.initFloats(0.5, 0.5, 1.0, 1.0),
         },
     },
 

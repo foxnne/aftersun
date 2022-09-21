@@ -57,6 +57,7 @@ pub const GameState = struct {
     bind_group_environment: zgpu.BindGroupHandle,
     bind_group_final: zgpu.BindGroupHandle,
     batcher: gfx.Batcher,
+    cursor_drag: zglfw.Cursor,
     diffusemap: gfx.Texture,
     palettemap: gfx.Texture,
     heightmap: gfx.Texture,
@@ -121,6 +122,10 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     const height_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
     const reverse_height_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
     const environment_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
+
+    // Create cursors
+    const cursor_drag = zglfw.Cursor.createStandard(.crosshair);
+
 
     const window_size = gctx.window.getSize();
     var camera = gfx.Camera.init(settings.design_size, .{ .w = window_size[0], .h = window_size[1] }, zm.f32x4(0, 0, 0, 0));
@@ -231,6 +236,7 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
         .bind_group_height = bind_group_height,
         .bind_group_environment = bind_group_environment,
         .bind_group_final = bind_group_final,
+        .cursor_drag = cursor_drag,
     };
 
     // Create render pipelines.
@@ -436,7 +442,7 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
         flecs.ecs_set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Oak_0_Trunk });
         flecs.ecs_set(world, tree, &components.Collider{});
 
-        const leaf_color = math.Color.initBytes(16, 0, 0, 255);
+        const leaf_color = math.Color.initBytes(15, 0, 0, 255);
 
         const tree_leaves_01 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
         flecs.ecs_set(world, tree_leaves_01, &position);
@@ -487,48 +493,14 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
         const tree = flecs.ecs_new_entity(world, "Tree03");
         flecs.ecs_set(world, tree, &position);
         flecs.ecs_set(world, tree, &position.toTile(state.counter.count()));
-        flecs.ecs_set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Oak_0_Trunk });
+        flecs.ecs_set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Pine_0_Trunk, .vert_mode = .top_sway});
         flecs.ecs_set(world, tree, &components.Collider{});
-
-        const leaf_color = math.Color.initBytes(16, 0, 0, 255);
 
         const tree_leaves_01 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
         flecs.ecs_set(world, tree_leaves_01, &position);
         flecs.ecs_set(world, tree_leaves_01, &position.toTile(state.counter.count()));
         flecs.ecs_set(world, tree_leaves_01, &components.SpriteRenderer{
-            .index = assets.aftersun_atlas.Oak_0_Leaves04,
-            .color = leaf_color,
-            .frag_mode = .palette,
-            .vert_mode = .top_sway,
-        });
-
-        const tree_leaves_02 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
-        flecs.ecs_set(world, tree_leaves_02, &position);
-        flecs.ecs_set(world, tree_leaves_02, &position.toTile(state.counter.count()));
-        flecs.ecs_set(world, tree_leaves_02, &components.SpriteRenderer{
-            .index = assets.aftersun_atlas.Oak_0_Leaves03,
-            .color = leaf_color,
-            .frag_mode = .palette,
-            .vert_mode = .top_sway,
-        });
-
-        const tree_leaves_03 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
-        flecs.ecs_set(world, tree_leaves_03, &position);
-        flecs.ecs_set(world, tree_leaves_03, &position.toTile(state.counter.count()));
-        flecs.ecs_set(world, tree_leaves_03, &components.SpriteRenderer{
-            .index = assets.aftersun_atlas.Oak_0_Leaves02,
-            .color = leaf_color,
-            .frag_mode = .palette,
-            .vert_mode = .top_sway,
-        });
-
-        const tree_leaves_04 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
-        flecs.ecs_set(world, tree_leaves_04, &position);
-        flecs.ecs_set(world, tree_leaves_04, &position.toTile(state.counter.count()));
-        flecs.ecs_set(world, tree_leaves_04, &components.SpriteRenderer{
-            .index = assets.aftersun_atlas.Oak_0_Leaves01,
-            .color = leaf_color,
-            .frag_mode = .palette,
+            .index = assets.aftersun_atlas.Pine_0_Needles,
             .vert_mode = .top_sway,
         });
     }
@@ -729,6 +701,7 @@ pub fn main() !void {
     defer zgui.deinit();
 
     zgui.io.setIniFilename(assets.root ++ "imgui.ini");
+    zgui.io.setConfigFlags(.no_mouse_cursor_change);
 
     _ = zgui.io.addFontFromFile(assets.root ++ "fonts/CozetteVector.ttf", settings.zgui_font_size * scale_factor);
 

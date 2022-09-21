@@ -166,9 +166,15 @@ pub const MousePosition = struct {
     }
 };
 
+pub const MouseCursor = enum {
+    standard,
+    drag,
+};
+
 pub const Mouse = struct {
     primary: MouseButton = .{ .name = "Primary", .button = zglfw.MouseButton.left },
     secondary: MouseButton = .{ .name = "Secondary", .button = zglfw.MouseButton.right },
     position: MousePosition = .{},
     tile: components.Tile = .{},
+    cursor: MouseCursor = .standard,
 };

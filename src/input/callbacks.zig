@@ -16,6 +16,29 @@ pub fn cursor(window: zglfw.Window, x: f64, y: f64) callconv(.C) void {
     game.state.controls.mouse.position.x = @floatCast(f32, x / scale_factor);
     game.state.controls.mouse.position.y = @floatCast(f32, y / scale_factor);
     game.state.controls.mouse.tile = game.state.controls.mouse.position.tile();
+
+    // Handle setting the mouse drag cursor image
+    if (game.state.controls.mouse.primary.down_tile) |tile| {
+        if (game.state.controls.mouse.primary.up_tile == null) {
+            const mouse_tile = game.state.controls.mouse.tile;
+            if (mouse_tile.x != tile.x or mouse_tile.y != tile.y) {
+                if (game.state.controls.mouse.cursor != .drag) {
+                    game.state.controls.mouse.cursor = .drag;
+                    window.setCursor(game.state.cursor_drag);
+                }
+            } else {
+                if (game.state.controls.mouse.cursor != .standard) {
+                    game.state.controls.mouse.cursor = .standard;
+                    window.setCursor(null);
+                }
+            }
+        }
+    } else {
+        if (game.state.controls.mouse.cursor != .standard) {
+            game.state.controls.mouse.cursor = .standard;
+            window.setCursor(null);
+        }
+    }
 }
 
 pub fn scroll(_: zglfw.Window, _: f64, y: f64) callconv(.C) void {
