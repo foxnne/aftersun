@@ -291,6 +291,8 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     flecs.ecs_system(world, "StackSystem", flecs.Constants.EcsOnUpdate, &stack_system);
     var use_system = @import("ecs/systems/use.zig").system(world);
     flecs.ecs_system(world, "UseSystem", flecs.Constants.EcsOnUpdate, &use_system);
+    var inspect_system = @import("ecs/systems/inspect.zig").system();
+    flecs.ecs_system(world, "InspectSystem", flecs.Constants.EcsOnUpdate, &inspect_system);
 
     // - Observers
     var tile_observer = @import("ecs/observers/tile.zig").observer();
@@ -368,7 +370,7 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
 
     // Create campfire
     {
-        const campfire = flecs.ecs_new_entity(world, "Campfire");
+        const campfire = flecs.ecs_new_entity(world, "campfire");
         flecs.ecs_set(world, campfire, &components.Position{ .x = 32.0, .y = -64.0 });
         flecs.ecs_set(world, campfire, &components.Tile{ .x = 1, .y = -2, .counter = state.counter.count() });
         flecs.ecs_set(world, campfire, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Campfire_0_Layer_0 });
@@ -516,10 +518,10 @@ fn deinit(allocator: std.mem.Allocator) void {
 
 fn update() void {
     zgui.backend.newFrame(state.gctx.swapchain_descriptor.width, state.gctx.swapchain_descriptor.height);
+    zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.window_rounding, .v = 15.0 });
 
     _ = flecs.ecs_progress(state.world, 0);
 
-    zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.window_rounding, .v = 5.0 });
 
     if (zgui.begin("Prefabs", .{})) {
         const prefab_names = std.meta.fieldNames(Prefabs);
@@ -545,82 +547,82 @@ fn update() void {
     }
     zgui.end();
 
-    if (zgui.begin("Game Settings", .{})) {
-        zgui.bulletText(
-            "Average :  {d:.3} ms/frame ({d:.1} fps)",
-            .{ state.gctx.stats.average_cpu_time, state.gctx.stats.fps },
-        );
+    // if (zgui.begin("Game Settings", .{})) {
+    //     zgui.bulletText(
+    //         "Average :  {d:.3} ms/frame ({d:.1} fps)",
+    //         .{ state.gctx.stats.average_cpu_time, state.gctx.stats.fps },
+    //     );
 
-        zgui.bulletText("Channel:", .{});
-        if (zgui.radioButton("Final", .{ .active = state.output_channel == .final })) state.output_channel = .final;
-        zgui.sameLine(.{});
-        if (zgui.radioButton("Diffuse", .{ .active = state.output_channel == .diffuse })) state.output_channel = .diffuse;
-        if (zgui.radioButton("Height##1", .{ .active = state.output_channel == .height })) state.output_channel = .height;
-        zgui.sameLine(.{});
-        if (zgui.radioButton("Reverse Height", .{ .active = state.output_channel == .reverse_height })) state.output_channel = .reverse_height;
-        if (zgui.radioButton("Environment", .{ .active = state.output_channel == .environment })) state.output_channel = .environment;
+    //     zgui.bulletText("Channel:", .{});
+    //     if (zgui.radioButton("Final", .{ .active = state.output_channel == .final })) state.output_channel = .final;
+    //     zgui.sameLine(.{});
+    //     if (zgui.radioButton("Diffuse", .{ .active = state.output_channel == .diffuse })) state.output_channel = .diffuse;
+    //     if (zgui.radioButton("Height##1", .{ .active = state.output_channel == .height })) state.output_channel = .height;
+    //     zgui.sameLine(.{});
+    //     if (zgui.radioButton("Reverse Height", .{ .active = state.output_channel == .reverse_height })) state.output_channel = .reverse_height;
+    //     if (zgui.radioButton("Environment", .{ .active = state.output_channel == .environment })) state.output_channel = .environment;
 
-        _ = zgui.sliderFloat("Timescale", .{ .v = &state.time.scale, .min = 0.1, .max = 2400.0 });
-        zgui.bulletText("Day: {d:.4}, Hour: {d:.4}", .{ state.time.day(), state.time.hour() });
-        zgui.bulletText("Phase: {s}, Next Phase: {s}", .{ state.environment.phase().name, state.environment.nextPhase().name });
-        zgui.bulletText("Ambient XY Angle: {d:.4}", .{state.environment.ambientXYAngle()});
-        zgui.bulletText("Ambient Z Angle: {d:.4}", .{state.environment.ambientZAngle()});
+    //     _ = zgui.sliderFloat("Timescale", .{ .v = &state.time.scale, .min = 0.1, .max = 2400.0 });
+    //     zgui.bulletText("Day: {d:.4}, Hour: {d:.4}", .{ state.time.day(), state.time.hour() });
+    //     zgui.bulletText("Phase: {s}, Next Phase: {s}", .{ state.environment.phase().name, state.environment.nextPhase().name });
+    //     zgui.bulletText("Ambient XY Angle: {d:.4}", .{state.environment.ambientXYAngle()});
+    //     zgui.bulletText("Ambient Z Angle: {d:.4}", .{state.environment.ambientZAngle()});
 
-        zgui.bulletText("Movement Input: {s}", .{state.controls.movement().fmt()});
+    //     zgui.bulletText("Movement Input: {s}", .{state.controls.movement().fmt()});
 
-        if (flecs.ecs_get(state.world, state.entities.player, components.Velocity)) |velocity| {
-            zgui.bulletText("Velocity: x: {d} y: {d}", .{ velocity.x, velocity.y });
-        }
+    //     if (flecs.ecs_get(state.world, state.entities.player, components.Velocity)) |velocity| {
+    //         zgui.bulletText("Velocity: x: {d} y: {d}", .{ velocity.x, velocity.y });
+    //     }
 
-        if (flecs.ecs_get(state.world, state.entities.player, components.Tile)) |tile| {
-            zgui.bulletText("Tile: x: {d}, y: {d}, z: {d}", .{ tile.x, tile.y, tile.z });
-        }
+    //     if (flecs.ecs_get(state.world, state.entities.player, components.Tile)) |tile| {
+    //         zgui.bulletText("Tile: x: {d}, y: {d}, z: {d}", .{ tile.x, tile.y, tile.z });
+    //     }
 
-        if (flecs.ecs_get_pair(state.world, state.entities.player, components.Cell, flecs.Constants.EcsWildcard)) |cell| {
-            zgui.bulletText("Cell: x: {d}, y: {d}, z: {d}", .{ cell.x, cell.y, cell.z });
-        }
+    //     if (flecs.ecs_get_pair(state.world, state.entities.player, components.Cell, flecs.Constants.EcsWildcard)) |cell| {
+    //         zgui.bulletText("Cell: x: {d}, y: {d}, z: {d}", .{ cell.x, cell.y, cell.z });
+    //     }
 
-        if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Movement)) |direction| {
-            zgui.bulletText("Movement Direction: {s}", .{direction.value.fmt()});
-        }
+    //     if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Movement)) |direction| {
+    //         zgui.bulletText("Movement Direction: {s}", .{direction.value.fmt()});
+    //     }
 
-        if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Head)) |direction| {
-            zgui.bulletText("Head Direction: {s}", .{direction.value.fmt()});
-        }
+    //     if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Head)) |direction| {
+    //         zgui.bulletText("Head Direction: {s}", .{direction.value.fmt()});
+    //     }
 
-        if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Body)) |direction| {
-            zgui.bulletText("Body Direction: {s}", .{direction.value.fmt()});
-        }
+    //     if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Body)) |direction| {
+    //         zgui.bulletText("Body Direction: {s}", .{direction.value.fmt()});
+    //     }
 
-        if (flecs.ecs_get_mut(state.world, state.entities.player, components.Position)) |position| {
-            var z = position.z;
-            _ = zgui.sliderFloat("Height##2", .{ .v = &z, .min = 0.0, .max = 128.0 });
-            position.z = z;
-        }
+    //     if (flecs.ecs_get_mut(state.world, state.entities.player, components.Position)) |position| {
+    //         var z = position.z;
+    //         _ = zgui.sliderFloat("Height##2", .{ .v = &z, .min = 0.0, .max = 128.0 });
+    //         position.z = z;
+    //     }
 
-        if (flecs.ecs_get_mut(state.world, state.entities.player, components.CharacterAnimator)) |animator| {
-            zgui.bulletText("Player Clothing:", .{});
-            if (zgui.radioButton("TopF01", .{ .active = top == 0 })) {
-                top = 0;
-                animator.top_set = animation_sets.top_f_01;
-            }
-            zgui.sameLine(.{});
-            if (zgui.radioButton("TopF02", .{ .active = top == 1 })) {
-                top = 1;
-                animator.top_set = animation_sets.top_f_02;
-            }
-            if (zgui.radioButton("BottomF01", .{ .active = bottom == 0 })) {
-                bottom = 0;
-                animator.bottom_set = animation_sets.bottom_f_01;
-            }
-            zgui.sameLine(.{});
-            if (zgui.radioButton("BottomF02", .{ .active = bottom == 1 })) {
-                bottom = 1;
-                animator.bottom_set = animation_sets.bottom_f_02;
-            }
-        }
-    }
-    zgui.end();
+    //     if (flecs.ecs_get_mut(state.world, state.entities.player, components.CharacterAnimator)) |animator| {
+    //         zgui.bulletText("Player Clothing:", .{});
+    //         if (zgui.radioButton("TopF01", .{ .active = top == 0 })) {
+    //             top = 0;
+    //             animator.top_set = animation_sets.top_f_01;
+    //         }
+    //         zgui.sameLine(.{});
+    //         if (zgui.radioButton("TopF02", .{ .active = top == 1 })) {
+    //             top = 1;
+    //             animator.top_set = animation_sets.top_f_02;
+    //         }
+    //         if (zgui.radioButton("BottomF01", .{ .active = bottom == 0 })) {
+    //             bottom = 0;
+    //             animator.bottom_set = animation_sets.bottom_f_01;
+    //         }
+    //         zgui.sameLine(.{});
+    //         if (zgui.radioButton("BottomF02", .{ .active = bottom == 1 })) {
+    //             bottom = 1;
+    //             animator.bottom_set = animation_sets.bottom_f_02;
+    //         }
+    //     }
+    // }
+    // zgui.end();
 
     zgui.popStyleVar(.{ .count = 1});
 }

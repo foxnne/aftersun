@@ -9,6 +9,7 @@ const flecs = @import("flecs");
 const components = game.components;
 
 pub fn cursor(window: zglfw.Window, x: f64, y: f64) callconv(.C) void {
+    if (zgui.io.getWantCaptureMouse()) return;
     const scale_factor = scale_factor: {
         const cs = window.getContentScale();
         break :scale_factor std.math.max(cs[0], cs[1]);

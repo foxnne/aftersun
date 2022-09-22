@@ -14,13 +14,14 @@ pub const Keys = enum(usize) {
     left,
     zoom_in,
     zoom_out,
+    inspect,
 };
 
 pub const Controls = struct {
     mouse: Mouse = .{},
 
     /// Holds all rebindable keys.
-    keys: [6]Key = [_]Key{
+    keys: [7]Key = [_]Key{
         .{
             .name = "Movement - Up",
             .primary = zglfw.Key.w,
@@ -63,6 +64,13 @@ pub const Controls = struct {
             .default_primary = zglfw.Key.minus,
             .default_secondary = zglfw.Key.unknown,
         },
+        .{
+            .name = "Inspect",
+            .primary = zglfw.Key.left_shift,
+            .secondary = zglfw.Key.right_shift,
+            .default_primary = zglfw.Key.left_shift,
+            .default_secondary = zglfw.Key.right_shift,
+        }
     },
 
     /// Returns the current direction of the movement keys.
@@ -78,6 +86,11 @@ pub const Controls = struct {
     /// Returns the current axis state of the zoom keys.
     pub fn zoom(self: Controls) f32 {
         return if (self.keys[@enumToInt(Keys.zoom_in)].state) 1.0 else if (self.keys[@enumToInt(Keys.zoom_out)].state) -1.0 else 0.0;
+    }
+
+    /// Returns the current state of the inspect key.
+    pub fn inspect(self: Controls) bool {
+        return self.keys[@enumToInt(Keys.inspect)].state;
     }
 };
 
