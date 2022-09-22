@@ -1,5 +1,6 @@
 const std = @import("std");
 const zm = @import("zmath");
+const game = @import("game");
 
 pub const utils = @import("utils.zig");
 
@@ -21,3 +22,14 @@ pub const Vertex = struct {
 pub const Uniforms = struct {
     mvp: zm.Mat,
 };
+
+test "Camera - CoordinateConversion" {
+        const camera = Camera.init(game.settings.design_size, .{ .w = game.settings.design_width, .h = game.settings.design_height}, zm.f32x4(2, 4, 0, 0));
+        const screen_pos = zm.f32x4(24, 36, 0, 0);
+        const fb_mat = camera.frameBufferMatrix();
+        const world_pos = camera.screenToWorld(screen_pos, fb_mat);
+        const screen_pos_converted = camera.worldToScreen(world_pos, fb_mat);
+        try std.testing.expect(screen_pos[0] == screen_pos_converted[0]);
+        try std.testing.expect(screen_pos[1] == screen_pos_converted[1]);
+        try std.testing.expect(screen_pos[2] == screen_pos_converted[2]);
+}

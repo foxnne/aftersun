@@ -68,7 +68,7 @@ pub const Camera = struct {
     pub fn worldToScreen(self:Camera, position: zm.F32x4, fb_mat: zm.Mat) zm.F32x4 {
         // TODO: Figure out how to invert the above function to convert world to screen.
         const ndc = zm.mul(fb_mat, zm.f32x4(position[0], -position[1], 0, 0)) / zm.f32x4(self.zoom * 2, self.zoom * 2, 0, 0) + zm.f32x4(-0.5, 0.5, 0, 0);
-        const world = ndc * zm.f32x4(self.window_size[0] / self.zoom, self.window_size[1] / self.zoom, 0, 0) - zm.f32x4(-self.position[0], -self.position[1], 0, 0);
+        const screen = ndc * zm.f32x4(self.window_size[0] / self.zoom, self.window_size[1] / self.zoom, 0, 0) - zm.f32x4(-self.position[0], -self.position[1], 0, 0);
 
         return zm.f32x4(screen[0], screen[1], 0, 0);
     }
@@ -84,4 +84,6 @@ pub const Camera = struct {
         const min = self.minZoom();
         return min + game.settings.max_zoom_offset;
     }
+    
+    
 };

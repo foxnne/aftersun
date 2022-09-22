@@ -88,15 +88,6 @@
                 "clear": true
             }
         },
-        {
-            "label": "Update Dependency - Flecs",
-            "type": "shell",
-            "command": "zig build update-flecs",
-            "group": "build",
-            "presentation": {
-                "clear": true
-            }
-        },
     ],
     "inputs": [
         {

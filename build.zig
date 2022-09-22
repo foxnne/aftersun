@@ -6,6 +6,11 @@ const Builder = std.build.Builder;
 const Target = std.build.Target;
 const Pkg = std.build.Pkg;
 
+const aftersun_pkg = std.build.Pkg{
+    .name = "game",
+    .source = .{ .path = "src/aftersun.zig" },
+};
+
 const zgpu = @import("src/deps/zig-gamedev/zgpu/build.zig");
 const zmath = @import("src/deps/zig-gamedev/zmath/build.zig");
 const zpool = @import("src/deps/zig-gamedev/zpool/build.zig");
@@ -24,8 +29,13 @@ pub fn build(b: *Builder) !void {
     var exe = createExe(b, target, "run", "src/aftersun.zig");
     b.default_step.dependOn(&exe.step);
 
-    const assets = ProcessAssetsStep.init(b, "assets", "src/assets.zig", "src/animations.zig");
+    const tests = b.step("test", "Run all tests");
+    const aftersun_tests = b.addTest(aftersun_pkg.source.path);
+    aftersun_tests.addPackage(zmath.pkg);
+    aftersun_tests.addPackage(aftersun_pkg);
+    tests.dependOn(&aftersun_tests.step);
 
+    const assets = ProcessAssetsStep.init(b, "assets", "src/assets.zig", "src/animations.zig");
     const process_assets_step = b.step("process-assets", "generates struct for all assets");
     process_assets_step.dependOn(&assets.step);
 
@@ -35,14 +45,9 @@ pub fn build(b: *Builder) !void {
         .install_subdir = "bin/" ++ content_dir,
     });
     exe.step.dependOn(&install_content_step.step);
-
-    // only mac and linux get the update_flecs command
-    if (!target.isWindows()) {
-        const update_flecs = b.addSystemCommand(&[_][]const u8{ "zsh", ".vscode/update_flecs.sh" });
-        const update_flecs_step = b.step("update-flecs", b.fmt("updates Flecs.h/c and runs translate-c", .{}));
-        update_flecs_step.dependOn(&update_flecs.step);
-    }
 }
+
+
 
 fn createExe(b: *Builder, target: std.zig.CrossTarget, name: []const u8, source: []const u8) *std.build.LibExeObjStep {
     var exe = b.addExecutable(name, source);
@@ -59,13 +64,8 @@ fn createExe(b: *Builder, target: std.zig.CrossTarget, name: []const u8, source:
         }
     }
 
-    const aftersun_pkg = std.build.Pkg{
-        .name = "game",
-        .source = .{ .path = "src/aftersun.zig" },
-    };
-
     const zgpu_pkg = zgpu.getPkg(&.{ zpool.pkg, zglfw.pkg });
-    const zgui_pkg = zgui.getPkg(&.{ zglfw.pkg });
+    const zgui_pkg = zgui.getPkg(&.{zglfw.pkg});
 
     exe.install();
 
