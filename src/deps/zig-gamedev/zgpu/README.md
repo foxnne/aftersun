@@ -1,7 +1,5 @@
 # zgpu v0.2 - Cross-platform graphics layer
 
-This library uses wgpu binaries kindly provided by [mach-gpu-dawn](https://github.com/hexops/mach-gpu-dawn) project.
-
 `zgpu` is a cross-platform (Windows/Linux/macOS) graphics layer built on top of native wgpu API (Dawn).
 
 ## Features:
@@ -25,7 +23,6 @@ const zpool = @import("libs/zpool/build.zig");
 const zglfw = @import("libs/zglfw/build.zig");
 
 pub fn build(b: *std.build.Builder) void {
-    ...
     const zgpu_pkg = zgpu.getPkg(&.{ zpool.pkg, zglfw.pkg });
 
     exe.addPackage(zgpu_pkg);
@@ -35,16 +32,19 @@ pub fn build(b: *std.build.Builder) void {
     zglfw.link(exe);
 }
 ```
-Now in your code you may import and use `zgpu` and `zglfw`:
-```zig
-const zglfw = @import("zglfw");
-const zgpu = @import("zgpu");
+#### NOTE
 
-pub fn main() !void {
-    ...
-}
+`zgpu/libs/dawn` folder contains large binary files - Dawn/WebGPU static libs compiled for several platforms/architectures.
+To avoid storing those files in your repo it is recommended to create a submodule pointing to the [dawn-bin](https://github.com/michal-z/dawn-bin) repo.
+
+To create the submodule run below commands in the root of your project:
 ```
-For sample applications please see:
+rm -rf libs/zgpu/libs
+git submodule add -b main https://github.com/michal-z/dawn-bin libs/zgpu/libs/dawn
+git submodule update --init --remote
+```
+## Sample applications
+
 * [gui test (wgpu)](https://github.com/michal-z/zig-gamedev/tree/main/samples/gui_test_wgpu)
 * [physically based rendering (wgpu)](https://github.com/michal-z/zig-gamedev/tree/main/samples/physically_based_rendering_wgpu)
 * [bullet physics test (wgpu)](https://github.com/michal-z/zig-gamedev/tree/main/samples/bullet_physics_test_wgpu)

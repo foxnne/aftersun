@@ -1,3 +1,7 @@
 [submodule "src/deps/zig-flecs"]
 	path = src/deps/zig-flecs
 	url = https://github.com/foxnne/zig-flecs.git
+[submodule "src/deps/zig-gamedev/zgpu/libs/dawn"]
+	path = src/deps/zig-gamedev/zgpu/libs/dawn
+	url = https://github.com/michal-z/dawn-bin
+	branch = main

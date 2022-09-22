@@ -124,8 +124,7 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     const environment_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
 
     // Create cursors
-    const cursor_drag = zglfw.Cursor.createStandard(.crosshair);
-
+    const cursor_drag = try zglfw.createStandardCursor(.crosshair);
 
     const window_size = gctx.window.getSize();
     var camera = gfx.Camera.init(settings.design_size, .{ .w = window_size[0], .h = window_size[1] }, zm.f32x4(0, 0, 0, 0));

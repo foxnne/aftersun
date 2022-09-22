@@ -53,28 +53,6 @@ pub const MouseButton = enum(i32) {
     eight,
 };
 
-pub const Cursor = extern struct {
-    ptr: *glfwCursor,
-    pub const glfwCursor = opaque {};
-    pub const Shape = enum(c_int) {
-        arrow = 0x00036001,
-        ibeam = 0x00036002,
-        crosshair = 0x00036003,
-        pointing_hand = 0x00036004,
-        resize_ew = 0x00036005,
-        resize_ns = 0x00036006,
-        resize_nwse = 0x00036007,
-        resize_nesw = 0x00036008,
-        resize_all = 0x00036009,
-    };
-
-    pub fn createStandard(shape: Shape) Cursor {
-        if (glfwCreateStandardCursor(@enumToInt(shape))) |ptr| return Cursor{ .ptr = ptr };
-        unreachable;
-    }
-    extern fn glfwCreateStandardCursor(shape: c_int) ?*Cursor.glfwCursor;
-};
-
 pub const Key = enum(i32) {
     unknown = -1,
 
@@ -210,6 +188,31 @@ pub const Mods = packed struct(i32) {
     num_lock: bool = false,
     _padding: i26 = 0,
 };
+//--------------------------------------------------------------------------------------------------
+//
+// Cursor
+//
+//--------------------------------------------------------------------------------------------------
+pub const CursorShape = enum(i32) {
+    arrow = 0x00036001,
+    ibeam = 0x00036002,
+    crosshair = 0x00036003,
+    hand = 0x00036004,
+    hresize = 0x00036005,
+    vresize = 0x00036006,
+};
+
+pub const Cursor = *opaque {
+    pub const destroy = glfwDestroyCursor;
+    extern fn glfwDestroyCursor(cursor: Cursor) void;
+};
+
+pub fn createStandardCursor(shape: CursorShape) Error!Cursor {
+    if (glfwCreateStandardCursor(shape)) |ptr| return ptr;
+    try maybeError();
+    unreachable;
+}
+extern fn glfwCreateStandardCursor(shape: CursorShape) ?Cursor;
 //--------------------------------------------------------------------------------------------------
 //
 // Error
@@ -372,12 +375,8 @@ pub const Window = *opaque {
         ) callconv(.C) void,
     ) void;
 
-    pub fn setCursor(window: Window, cursor: ?Cursor) void {
-        if (cursor) |c| {
-            glfwSetCursor(window, c.ptr);
-        } else glfwSetCursor(window, null);
-    }
-    extern fn glfwSetCursor(window: Window, cursor: ?*Cursor.glfwCursor) void;
+    pub const setCursor = glfwSetCursor;
+    extern fn glfwSetCursor(window: Window, cursor: ?Cursor) void;
 };
 
 pub fn createWindow(
@@ -523,6 +522,11 @@ test "zglfw.basic" {
     window.setKeyCallback(keyCallback);
     window.setScrollCallback(scrollCallback);
     window.setKeyCallback(null);
+
+    const cursor = try createStandardCursor(.hand);
+    defer cursor.destroy();
+    window.setCursor(cursor);
+    window.setCursor(null);
 
     if (window.getKey(.a) == .press) {}
     if (window.getMouseButton(.right) == .press) {}
