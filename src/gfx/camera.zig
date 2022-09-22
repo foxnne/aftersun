@@ -65,6 +65,8 @@ pub const Camera = struct {
         return zm.f32x4(world[0], world[1], 0, 0);
     }
 
+    /// Transforms a position from world-space to screen-space.
+    /// Remember that in screen-space positive Y is down, and positive Y is up in world-space.
     pub fn worldToScreen(self:Camera, position: zm.F32x4, fb_mat: zm.Mat) zm.F32x4 {
         // TODO: Figure out how to invert the above function to convert world to screen.
         const ndc = zm.mul(fb_mat, zm.f32x4(position[0], -position[1], 0, 0)) / zm.f32x4(self.zoom * 2, self.zoom * 2, 0, 0) + zm.f32x4(-0.5, 0.5, 0, 0);
