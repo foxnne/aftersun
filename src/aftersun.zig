@@ -526,10 +526,10 @@ fn deinit(allocator: std.mem.Allocator) void {
 
 fn update() void {
     zgui.backend.newFrame(state.gctx.swapchain_descriptor.width, state.gctx.swapchain_descriptor.height);
-    zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.window_rounding, .v = 15.0 });
+    zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.window_rounding, .v = 10.0 });
+    zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.frame_rounding, .v = 5.0 });
 
     _ = flecs.ecs_progress(state.world, 0);
-
 
     if (zgui.begin("Prefabs", .{})) {
         const prefab_names = std.meta.fieldNames(Prefabs);
@@ -632,7 +632,7 @@ fn update() void {
     // }
     // zgui.end();
 
-    zgui.popStyleVar(.{ .count = 1});
+    zgui.popStyleVar(.{ .count = 2});
 }
 
 fn draw() void {

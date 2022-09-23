@@ -64,7 +64,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             const screen_position = game.state.camera.worldToScreen(position);
 
 
-            const name = if (prefab != 0) flecs.ecs_get_name(world, prefab) else flecs.ecs_get_name(world, target);
+            var name = if (prefab != 0) flecs.ecs_get_name(world, prefab) else flecs.ecs_get_name(world, target);
 
             if (name != null) {
                 zgui.pushStyleColor4f(.{ .idx = .window_bg, .c = [_]f32{ 0, 0, 0, 0.7 }});
@@ -82,7 +82,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     }
 
                    if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Useable))) {
-                        if (zgui.button("Use", .{})) {
+                        if (zgui.button("Use", .{ .w = -1 })) {
                             flecs.ecs_set_pair_second(world, game.state.entities.player, components.Request, &components.Use{ .target = mouse_tile });
                         }
                    }
