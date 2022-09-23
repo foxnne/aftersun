@@ -59,11 +59,10 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
         if (target_entity) |target| {
             const prefab = flecs.ecs_get_target(world, target, flecs.Constants.EcsIsA, 0);
 
-            const position = mouse_tile.toPosition().toF32x4() + game.settings.inspect_window_offset;    
+            const position = mouse_tile.toPosition().toF32x4() + game.settings.inspect_window_offset;
             const screen_position = game.state.camera.worldToScreen(position);
 
             const name = if (prefab != 0) flecs.ecs_get_name(world, prefab) else flecs.ecs_get_name(world, target);
-            
 
             if (name != null) {
                 zgui.pushStyleColor4f(.{ .idx = .window_bg, .c = [_]f32{ 0, 0, 0, 0.6 } });
@@ -73,29 +72,27 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     .no_resize = true,
                     .always_auto_resize = true,
                 } })) {
-                    if (name != null) {
-                        const prefix = "You see";
-                        const count = if (flecs.ecs_get(world, target, components.Stack)) |stack| stack.count else 1;
-                        var n = std.mem.span(name);
-                        var buffer: [128]u8 = undefined;
-                        _ = std.mem.replace(u8, n, "_", " ", &buffer);
-                        const fixed_name = buffer[0..n.len];
+                    const prefix = "You see";
+                    const count = if (flecs.ecs_get(world, target, components.Stack)) |stack| stack.count else 1;
+                    var n = std.mem.span(name);
+                    var buffer: [128]u8 = undefined;
+                    _ = std.mem.replace(u8, n, "_", " ", &buffer);
+                    const fixed_name = buffer[0..n.len];
 
-                        if (count > 1) {
-                            zgui.text("{s} {d} {s}s.", .{ prefix, count, fixed_name });
-                        } else {
-                            const a = "a";
-                            const e = "e";
-                            const i = "i";
-                            const o = "o";
-                            const u = "u";
-                            const quantifier = switch (name[0]) {
-                                a[0], e[0], i[0], o[0], u[0] => "an",
-                                else => "a",
-                            };
+                    if (count > 1) {
+                        zgui.text("{s} {d} {s}s.", .{ prefix, count, fixed_name });
+                    } else {
+                        const a = "a";
+                        const e = "e";
+                        const i = "i";
+                        const o = "o";
+                        const u = "u";
+                        const quantifier = switch (name[0]) {
+                            a[0], e[0], i[0], o[0], u[0] => "an",
+                            else => "a",
+                        };
 
-                            zgui.text("{s} {s} {s}.", .{ prefix, quantifier, fixed_name });
-                        }
+                        zgui.text("{s} {s} {s}.", .{ prefix, quantifier, fixed_name });
                     }
 
                     if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Useable))) {
