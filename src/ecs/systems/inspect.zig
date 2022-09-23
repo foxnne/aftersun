@@ -59,12 +59,15 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
         if (target_entity) |target| {
             const prefab = flecs.ecs_get_target(world, target, flecs.Constants.EcsIsA, 0);
 
-            const position = mouse_tile.toPosition().toF32x4();
-            const screen_position = game.state.camera.worldToScreen(position, game.state.camera.frameBufferMatrix());
+            var position = mouse_tile.toPosition().toF32x4();
+            position[0] += game.settings.pixels_per_unit / 3;
+            const screen_position = game.state.camera.worldToScreen(position);
+
 
             const name = if (prefab != 0) flecs.ecs_get_name(world, prefab) else flecs.ecs_get_name(world, target);
 
             if (name != null) {
+                zgui.pushStyleColor4f(.{ .idx = .window_bg, .c = [_]f32{ 0.2, 0.2, 0.2, 0.4 }});
                 zgui.setNextWindowPos(.{ .x = screen_position[0], .y = screen_position[1], .cond = .always });
                 if (zgui.begin("Inspect", .{ .flags = zgui.WindowFlags{
                     .no_title_bar = true,
@@ -77,8 +80,11 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                         const suffix = if (count > 1) "s." else ".";
                         zgui.text("{s} {d} {s}{s}", .{ prefix, count, name, suffix });
                     }
-                    zgui.end();
+                    
                 }
+                zgui.end();
+
+                zgui.popStyleColor(.{ .count = 1});
             }
         }
     }
