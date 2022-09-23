@@ -59,15 +59,13 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
         if (target_entity) |target| {
             const prefab = flecs.ecs_get_target(world, target, flecs.Constants.EcsIsA, 0);
 
-            var position = mouse_tile.toPosition().toF32x4();
-            position[0] += game.settings.pixels_per_unit / 3;
+            const position = mouse_tile.toPosition().toF32x4() + game.settings.inspect_window_offset;    
             const screen_position = game.state.camera.worldToScreen(position);
-
 
             var name = if (prefab != 0) flecs.ecs_get_name(world, prefab) else flecs.ecs_get_name(world, target);
 
             if (name != null) {
-                zgui.pushStyleColor4f(.{ .idx = .window_bg, .c = [_]f32{ 0, 0, 0, 0.7 }});
+                zgui.pushStyleColor4f(.{ .idx = .window_bg, .c = [_]f32{ 0, 0, 0, 0.6 } });
                 zgui.setNextWindowPos(.{ .x = screen_position[0], .y = screen_position[1], .cond = .always });
                 if (zgui.begin("Inspect", .{ .flags = zgui.WindowFlags{
                     .no_title_bar = true,
@@ -77,20 +75,33 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     if (name != null) {
                         const prefix = "You see";
                         const count = if (flecs.ecs_get(world, target, components.Stack)) |stack| stack.count else 1;
-                        const suffix = if (count > 1) "s." else ".";
-                        zgui.text("{s} {d} {s}{s}", .{ prefix, count, name, suffix });
+
+                        if (count > 1) {
+                            zgui.text("{s} {d} {s}s.", .{ prefix, count, name });
+                        } else {
+                            const a = "a";
+                            const e = "e";
+                            const i = "i";
+                            const o = "o";
+                            const u = "u";
+                            const quantifier = switch (name[0]) {
+                                a[0], e[0], i[0], o[0], u[0] => "an",
+                                else => "a",
+                            };
+
+                            zgui.text("{s} {s} {s}.", .{ prefix, quantifier, name });
+                        }
                     }
 
-                   if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Useable))) {
+                    if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Useable))) {
                         if (zgui.button("Use", .{ .w = -1 })) {
                             flecs.ecs_set_pair_second(world, game.state.entities.player, components.Request, &components.Use{ .target = mouse_tile });
                         }
-                   }
-                    
+                    }
                 }
                 zgui.end();
 
-                zgui.popStyleColor(.{ .count = 1});
+                zgui.popStyleColor(.{ .count = 1 });
             }
         }
     }

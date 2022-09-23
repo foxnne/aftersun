@@ -30,10 +30,13 @@ pub const movement_cooldown: f32 = 0.42;
 pub const batcher_max_sprites = 1000;
 
 /// The font size used by zgui elements.
-pub const zgui_font_size = 12;
+pub const zgui_font_size = 14;
 
 /// Size of a square game cell in tiles wide/tall.
 pub const cell_size = 8;
 
 /// Speed at which the camera will lerp to new velocity.
 pub const camera_follow_speed = 1.5;
+
+/// Offset to use when displaying inspection window popup.
+pub const inspect_window_offset = zm.f32x4(pixels_per_unit / 3, pixels_per_unit / 2, 0, 0);
