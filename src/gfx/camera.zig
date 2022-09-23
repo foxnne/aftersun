@@ -42,8 +42,8 @@ pub const Camera = struct {
     /// Use this matrix when drawing to the framebuffer.
     pub fn frameBufferMatrix(self: Camera) zm.Mat {
         const fb_ortho = zm.orthographicLh(self.window_size[0], self.window_size[1], -100, 100);
-        const fb_scaling = zm.scaling(self.zoom, self.zoom, 0);
-        const fb_translation = zm.translation(-self.design_size[0] / 2 * self.zoom, -self.design_size[1] / 2 * self.zoom, 0);
+        const fb_scaling = zm.scaling(self.zoom, self.zoom, 1);
+        const fb_translation = zm.translation(-self.design_size[0] / 2 * self.zoom, -self.design_size[1] / 2 * self.zoom, 1);
 
         return zm.mul(fb_scaling, zm.mul(fb_translation, fb_ortho));
     }
@@ -59,20 +59,19 @@ pub const Camera = struct {
     /// Transforms a position from screen-space to world-space.
     /// Remember that in screen-space positive Y is down, and positive Y is up in world-space.
     pub fn screenToWorld(self: Camera, position: zm.F32x4, fb_mat: zm.Mat) zm.F32x4 {
-        const ndc = zm.mul(fb_mat, zm.f32x4(position[0], -position[1], 0, 0)) / zm.f32x4(self.zoom * 2, self.zoom * 2, 0, 0) + zm.f32x4(-0.5, 0.5, 0, 0);
-        const world = ndc * zm.f32x4(self.window_size[0] / self.zoom, self.window_size[1] / self.zoom, 0, 0) - zm.f32x4(-self.position[0], -self.position[1], 0, 0);
+        const ndc = zm.mul(fb_mat, zm.f32x4(position[0], -position[1], 1, 1)) / zm.f32x4(self.zoom * 2, self.zoom * 2, 1, 1) + zm.f32x4(-0.5, 0.5, 1, 1);
+        const world = ndc * zm.f32x4(self.window_size[0] / self.zoom, self.window_size[1] / self.zoom, 1, 1) - zm.f32x4(-self.position[0], -self.position[1], 1, 1);
 
         return zm.f32x4(world[0], world[1], 0, 0);
     }
 
     /// Transforms a position from world-space to screen-space.
     /// Remember that in screen-space positive Y is down, and positive Y is up in world-space.
-    pub fn worldToScreen(self:Camera, position: zm.F32x4, fb_mat: zm.Mat) zm.F32x4 {
-        // TODO: Figure out how to invert the above function to convert world to screen.
-        const ndc = zm.mul(fb_mat, zm.f32x4(position[0], -position[1], 0, 0)) / zm.f32x4(self.zoom * 2, self.zoom * 2, 0, 0) + zm.f32x4(-0.5, 0.5, 0, 0);
-        const screen = ndc * zm.f32x4(self.window_size[0] / self.zoom, self.window_size[1] / self.zoom, 0, 0) - zm.f32x4(-self.position[0], -self.position[1], 0, 0);
+    pub fn worldToScreen(self: Camera, position: zm.F32x4, fb_mat: zm.Mat) zm.F32x4 {
+        const ndc = zm.mul(fb_mat, zm.f32x4(position[0], -position[1], 1, 1)) / zm.f32x4(self.zoom * 2, self.zoom * 2, 1, 1) + zm.f32x4(-0.5, 0.5, 1, 1);
+        const world = ndc * zm.f32x4(self.window_size[0] / self.zoom, self.window_size[1] / self.zoom, 1, 1) - zm.f32x4(-self.position[0], -self.position[1], 1, 1); 
 
-        return zm.f32x4(screen[0], screen[1], 0, 0);
+        return zm.f32x4(screen[0], -screen[1], 0, 0);
     }
 
     /// Returns the minimum zoom needed to render to the window without black bars.
@@ -86,6 +85,4 @@ pub const Camera = struct {
         const min = self.minZoom();
         return min + game.settings.max_zoom_offset;
     }
-    
-    
 };
