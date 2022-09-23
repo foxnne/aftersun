@@ -28,10 +28,10 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 if (flecs.ecs_field(it, components.CharacterRenderer, 2)) |renderers| {
                     if (flecs.ecs_field(it, components.Direction, 4)) |head_directions| {
                         if (flecs.ecs_field(it, components.Direction, 5)) |body_directions| {
-                            const move_direction: Direction = if (flecs.ecs_field(it, components.Direction, 3)) |move_directions| move_directions[i].value else Direction.none;
-                            if (body_directions[i].value == .none) body_directions[i].value = if (move_direction != .none) move_direction else Direction.se;
-                            if (head_directions[i].value == .none) head_directions[i].value = body_directions[i].value;
-                            var temp_head_direction = head_directions[i].value;
+                            const move_direction: Direction = if (flecs.ecs_field(it, components.Direction, 3)) |move_directions| move_directions[i] else Direction.none;
+                            if (body_directions[i] == .none) body_directions[i] = if (move_direction != .none) move_direction else Direction.se;
+                            if (head_directions[i] == .none) head_directions[i] = body_directions[i];
+                            var temp_head_direction = head_directions[i];
 
                             if (entity == game.state.entities.player) {
                                 const mouse_world = game.state.controls.mouse.position.world();
@@ -49,23 +49,23 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
 
                             if (move_direction != .none) {
                                 animators[i].state = components.CharacterAnimator.State.walk;
-                                body_directions[i].value = move_direction;
+                                body_directions[i] = move_direction;
 
                                 // Clamp face direction to directions close to the movement direction
                                 if (temp_head_direction == move_direction or
                                     temp_head_direction == move_direction.rotateCW() or
                                     temp_head_direction == move_direction.rotateCCW())
                                 {
-                                    head_directions[i].value = temp_head_direction;
-                                } else if (head_directions[i].value != move_direction and
-                                    head_directions[i].value != move_direction.rotateCW() and
-                                    head_directions[i].value != move_direction.rotateCCW())
+                                    head_directions[i] = temp_head_direction;
+                                } else if (head_directions[i] != move_direction and
+                                    head_directions[i] != move_direction.rotateCW() and
+                                    head_directions[i] != move_direction.rotateCCW())
                                 {
-                                    head_directions[i].value = move_direction;
+                                    head_directions[i] = move_direction;
                                 }
 
                                 // Set relevant animations for the body based on movement direction
-                                switch (body_directions[i].value) {
+                                switch (body_directions[i]) {
                                     .n => {
                                         body_animation = animators[i].body_set.walk_n;
                                         top_animation = animators[i].top_set.walk_n;
@@ -94,7 +94,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                     else => {},
                                 }
 
-                                switch (head_directions[i].value) {
+                                switch (head_directions[i]) {
                                     .n => {
                                         head_animation = animators[i].head_set.walk_n;
                                         hair_animation = animators[i].hair_set.walk_n;
@@ -121,26 +121,26 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                 animators[i].state = components.CharacterAnimator.State.idle;
 
                                 // When idle, only allow the 4 angled directions as body directions.
-                                body_directions[i].value = switch (body_directions[i].value) {
+                                body_directions[i] = switch (body_directions[i]) {
                                     .n => .ne,
                                     .s => .se,
                                     .e => .ne,
                                     .w => .sw,
-                                    else => body_directions[i].value,
+                                    else => body_directions[i],
                                 };
 
                                 // Clamp face direction to directions close to the body direction
-                                if (temp_head_direction == body_directions[i].value or
-                                    temp_head_direction == body_directions[i].value.rotateCW() or
-                                    temp_head_direction == body_directions[i].value.rotateCCW() or
-                                    temp_head_direction == body_directions[i].value.rotateCW().rotateCW() or
-                                    temp_head_direction == body_directions[i].value.rotateCCW().rotateCCW())
+                                if (temp_head_direction == body_directions[i] or
+                                    temp_head_direction == body_directions[i].rotateCW() or
+                                    temp_head_direction == body_directions[i].rotateCCW() or
+                                    temp_head_direction == body_directions[i].rotateCW().rotateCW() or
+                                    temp_head_direction == body_directions[i].rotateCCW().rotateCCW())
                                 {
-                                    head_directions[i].value = temp_head_direction;
+                                    head_directions[i] = temp_head_direction;
                                 }
 
                                 // Set relevant animations for the body based on previous body direction
-                                switch (body_directions[i].value) {
+                                switch (body_directions[i]) {
                                     .n => {
                                         body_animation = animators[i].body_set.idle_n;
                                         top_animation = animators[i].top_set.idle_n;
@@ -169,7 +169,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                     else => {},
                                 }
 
-                                switch (head_directions[i].value) {
+                                switch (head_directions[i]) {
                                     .n => {
                                         head_animation = animators[i].head_set.idle_n;
                                         hair_animation = animators[i].hair_set.idle_n;
@@ -204,8 +204,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                 } else animators[i].frame = 0;
                             }
 
-                            renderers[i].flip_body = body_directions[i].value.flippedHorizontally();
-                            renderers[i].flip_head = head_directions[i].value.flippedHorizontally();
+                            renderers[i].flip_body = body_directions[i].flippedHorizontally();
+                            renderers[i].flip_head = head_directions[i].flippedHorizontally();
 
                             renderers[i].body_index = body_animation[animators[i].frame];
                             renderers[i].head_index = head_animation[animators[i].frame];

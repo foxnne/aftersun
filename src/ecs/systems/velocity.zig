@@ -20,8 +20,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 if (flecs.ecs_field(it, components.Velocity, 2)) |velocities| {
                     const step = it.delta_time * game.settings.camera_follow_speed;
 
-                    const target_v_x = directions[i].value.x();
-                    const target_v_y = directions[i].value.y();
+                    const target_v_x = directions[i].x();
+                    const target_v_y = directions[i].y();
 
                     if (velocities[i].x > target_v_x) {
                         if (velocities[i].x >= target_v_x + step) {

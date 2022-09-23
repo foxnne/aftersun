@@ -91,7 +91,7 @@ pub const Velocity = struct {
     }
 };
 
-pub const Direction = struct { value: game.math.Direction = .none };
+pub const Direction = game.math.Direction;
 pub const Rotation = struct { value: f32 = 0 };
 
 pub const Request = struct {};

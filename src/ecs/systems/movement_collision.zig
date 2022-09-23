@@ -74,7 +74,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                                                 // Collision. Set movement request to same tile to prevent extra frames on set/add and
                                                                 // zero movement direction.
                                                                 movements[i].end = tiles[i];
-                                                                flecs.ecs_set_pair(world, entity, &components.Direction{}, components.Movement);
+                                                                flecs.ecs_add_pair(world, entity, components.Direction.none, components.Movement);
                                                             }
                                                         }
                                                     }

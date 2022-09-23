@@ -43,7 +43,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     flecs.ecs_set_pair(world, entity, &components.Cooldown{ .current = 0.0, .end = cooldown }, components.Movement);
                 } else {
                     // Zero movement direction.
-                    flecs.ecs_set_pair(world, entity, &components.Direction{}, components.Movement);
+                    flecs.ecs_add_pair(world, entity, components.Direction.none, components.Movement);
                 }
             }
         }

@@ -44,7 +44,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             const direction = game.math.Direction.find(8, difference[0], difference[1]);
 
                             // Update movement direction
-                            flecs.ecs_set_pair(world, entity, &components.Direction{ .value = direction }, components.Movement);
+                            flecs.ecs_add_pair(world, entity, direction, components.Movement);
 
                             // Update position
                             const position = zm.lerp(start_position, end_position, t);
