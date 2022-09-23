@@ -60,7 +60,7 @@ pub const Camera = struct {
     /// Remember that in screen-space positive Y is down, and positive Y is up in world-space.
     pub fn screenToWorld(self: Camera, position: zm.F32x4, fb_mat: zm.Mat) zm.F32x4 {
         const ndc = zm.mul(fb_mat, zm.f32x4(position[0], -position[1], 1, 1)) / zm.f32x4(self.zoom * 2, self.zoom * 2, 1, 1) + zm.f32x4(-0.5, 0.5, 1, 1);
-        const world = ndc *  - zm.f32x4(-self.position[0], -self.position[1], 1, 1);
+        const world = ndc * zm.f32x4(self.window_size[0] / self.zoom, self.window_size[1] / self.zoom, 1, 1) - zm.f32x4(-self.position[0], -self.position[1], 1, 1);
 
         return zm.f32x4(world[0], world[1], 0, 0);
     }
