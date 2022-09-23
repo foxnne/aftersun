@@ -29,7 +29,7 @@ test "Camera - CoordinateConversion" {
         const screen_pos = zm.f32x4(24, 36, 0, 0);
         const fb_mat = camera.frameBufferMatrix();
         const world_pos = camera.screenToWorld(screen_pos, fb_mat);
-        const screen_pos_converted = camera.worldToScreen(world_pos, fb_mat);
+        const screen_pos_converted = camera.worldToScreen(world_pos);
         try std.testing.expect(screen_pos[0] == screen_pos_converted[0]);
         try std.testing.expect(screen_pos[1] == screen_pos_converted[1]);
 }
