@@ -591,15 +591,15 @@ fn update() void {
     //     }
 
     //     if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Movement)) |direction| {
-    //         zgui.bulletText("Movement Direction: {s}", .{direction.value.fmt()});
+    //         zgui.bulletText("Movement Direction: {s}", .{direction.fmt()});
     //     }
 
     //     if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Head)) |direction| {
-    //         zgui.bulletText("Head Direction: {s}", .{direction.value.fmt()});
+    //         zgui.bulletText("Head Direction: {s}", .{direction.fmt()});
     //     }
 
     //     if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Body)) |direction| {
-    //         zgui.bulletText("Body Direction: {s}", .{direction.value.fmt()});
+    //         zgui.bulletText("Body Direction: {s}", .{direction.fmt()});
     //     }
 
     //     if (flecs.ecs_get_mut(state.world, state.entities.player, components.Position)) |position| {
