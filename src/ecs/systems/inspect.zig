@@ -67,7 +67,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             const name = if (prefab != 0) flecs.ecs_get_name(world, prefab) else flecs.ecs_get_name(world, target);
 
             if (name != null) {
-                zgui.pushStyleColor4f(.{ .idx = .window_bg, .c = [_]f32{ 0.2, 0.2, 0.2, 0.4 }});
+                zgui.pushStyleColor4f(.{ .idx = .window_bg, .c = [_]f32{ 0, 0, 0, 0.7 }});
                 zgui.setNextWindowPos(.{ .x = screen_position[0], .y = screen_position[1], .cond = .always });
                 if (zgui.begin("Inspect", .{ .flags = zgui.WindowFlags{
                     .no_title_bar = true,
@@ -80,6 +80,12 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                         const suffix = if (count > 1) "s." else ".";
                         zgui.text("{s} {d} {s}{s}", .{ prefix, count, name, suffix });
                     }
+
+                   if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Useable))) {
+                        if (zgui.button("Use", .{})) {
+                            flecs.ecs_set_pair_second(world, game.state.entities.player, components.Request, &components.Use{ .target = mouse_tile });
+                        }
+                   }
                     
                 }
                 zgui.end();
