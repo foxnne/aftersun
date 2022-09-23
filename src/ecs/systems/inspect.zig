@@ -62,7 +62,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             const position = mouse_tile.toPosition().toF32x4() + game.settings.inspect_window_offset;    
             const screen_position = game.state.camera.worldToScreen(position);
 
-            var name = if (prefab != 0) flecs.ecs_get_name(world, prefab) else flecs.ecs_get_name(world, target);
+            const name = if (prefab != 0) flecs.ecs_get_name(world, prefab) else flecs.ecs_get_name(world, target);
+            
 
             if (name != null) {
                 zgui.pushStyleColor4f(.{ .idx = .window_bg, .c = [_]f32{ 0, 0, 0, 0.6 } });
@@ -75,9 +76,13 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     if (name != null) {
                         const prefix = "You see";
                         const count = if (flecs.ecs_get(world, target, components.Stack)) |stack| stack.count else 1;
+                        var n = std.mem.span(name);
+                        var buffer: [128]u8 = undefined;
+                        _ = std.mem.replace(u8, n, "_", " ", &buffer);
+                        const fixed_name = buffer[0..n.len];
 
                         if (count > 1) {
-                            zgui.text("{s} {d} {s}s.", .{ prefix, count, name });
+                            zgui.text("{s} {d} {s}s.", .{ prefix, count, fixed_name });
                         } else {
                             const a = "a";
                             const e = "e";
@@ -89,7 +94,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                 else => "a",
                             };
 
-                            zgui.text("{s} {s} {s}.", .{ prefix, quantifier, name });
+                            zgui.text("{s} {s} {s}.", .{ prefix, quantifier, fixed_name });
                         }
                     }
 
