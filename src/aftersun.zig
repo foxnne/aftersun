@@ -526,8 +526,11 @@ fn deinit(allocator: std.mem.Allocator) void {
 
 fn update() void {
     zgui.backend.newFrame(state.gctx.swapchain_descriptor.width, state.gctx.swapchain_descriptor.height);
-    zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.window_rounding, .v = 10.0 });
-    zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.frame_rounding, .v = 5.0 });
+    zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.window_rounding, .v = 15.0 });
+    zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.frame_rounding, .v = 10.0 });
+    zgui.pushStyleVar2f(.{ .idx = zgui.StyleVar.window_padding, .v = [2]f32{ 10.0, 10.0 }});
+    zgui.pushStyleVar2f(.{ .idx = zgui.StyleVar.item_spacing, .v = [2]f32{ 10.0, 10.0 }});
+    defer zgui.popStyleVar(.{ .count = 4 });
 
     _ = flecs.ecs_progress(state.world, 0);
 
@@ -632,7 +635,7 @@ fn update() void {
     // }
     // zgui.end();
 
-    zgui.popStyleVar(.{ .count = 2});
+    
 }
 
 fn draw() void {
@@ -713,6 +716,7 @@ pub fn main() !void {
     zgui.io.setConfigFlags(.no_mouse_cursor_change);
 
     _ = zgui.io.addFontFromFile(assets.root ++ "fonts/CozetteVector.ttf", settings.zgui_font_size * scale_factor);
+   
 
     zgui.backend.init(window, state.gctx.device, @enumToInt(zgpu.GraphicsContext.swapchain_format));
 

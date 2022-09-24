@@ -59,19 +59,42 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
         if (target_entity) |target| {
             const prefab = flecs.ecs_get_target(world, target, flecs.Constants.EcsIsA, 0);
 
-            const position = mouse_tile.toPosition().toF32x4() + game.settings.inspect_window_offset;
-            const screen_position = game.state.camera.worldToScreen(position);
+            const tile_position = mouse_tile.toPosition().toF32x4();
+            const position = tile_position + game.settings.inspect_window_offset;
+            const screen_position = game.state.camera.worldToScreen(tile_position);
+            const window_position = game.state.camera.worldToScreen(position);
 
             const name = if (prefab != 0) flecs.ecs_get_name(world, prefab) else flecs.ecs_get_name(world, target);
 
             if (name != null) {
-                zgui.pushStyleColor4f(.{ .idx = .window_bg, .c = [_]f32{ 0, 0, 0, 0.6 } });
-                zgui.setNextWindowPos(.{ .x = screen_position[0], .y = screen_position[1], .cond = .always });
+                // Set style for inspect window
+                zgui.pushStyleColor4f(.{ .idx = .window_bg, .c = .{ 0, 0, 0, 0 } });
+                zgui.pushStyleColor4f(.{ .idx = .border, .c = .{ 1, 1, 1, 0.0 } });
+                zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.separator, .c = .{ 1, 1, 1, 1 } });
+                zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.window_border_size, .v = 3 });
+                defer zgui.popStyleVar(.{ .count = 1 });
+                defer zgui.popStyleColor(.{ .count = 3 });
+
+                zgui.setNextWindowPos(.{ .x = window_position[0], .y = window_position[1], .cond = .always });
                 if (zgui.begin("Inspect", .{ .flags = zgui.WindowFlags{
                     .no_title_bar = true,
                     .no_resize = true,
                     .always_auto_resize = true,
                 } })) {
+                    const draw_list = zgui.getWindowDrawList();
+                    const cs = game.state.gctx.window.getContentScale();
+                    const ws = game.state.gctx.window.getSize();
+                    const width = @intToFloat(f32, ws[0]) * cs[0];
+                    const height = @intToFloat(f32, ws[1]) * cs[1];
+                    draw_list.pushClipRect(.{ .pmin = .{ 0, 0 }, .pmax = .{ width, height } });
+                    draw_list.addCircle(.{
+                        .p = .{ screen_position[0], screen_position[1] },
+                        .r = game.settings.pixels_per_unit / 1.5 * cs[1],
+                        .col = 0x55_ff_ff_ff,
+                        .thickness = 2,
+                    });
+                    draw_list.popClipRect();
+
                     const prefix = "You see";
                     const count = if (flecs.ecs_get(world, target, components.Stack)) |stack| stack.count else 1;
                     var n = std.mem.span(name);
@@ -94,6 +117,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
 
                         zgui.text("{s} {s} {s}.", .{ prefix, quantifier, fixed_name });
                     }
+                    zgui.separator();
 
                     if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Useable))) {
                         if (zgui.button("Use", .{ .w = -1 })) {
@@ -102,8 +126,6 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     }
                 }
                 zgui.end();
-
-                zgui.popStyleColor(.{ .count = 1 });
             }
         }
     }
