@@ -39,4 +39,4 @@ pub const cell_size = 8;
 pub const camera_follow_speed = 1.5;
 
 /// Offset to use when displaying inspection window popup.
-pub const inspect_window_offset = zm.f32x4(pixels_per_unit / 3, pixels_per_unit / 2, 0, 0);
+pub const inspect_window_offset = zm.f32x4(pixels_per_unit / 3, pixels_per_unit * 2, 0, 0);

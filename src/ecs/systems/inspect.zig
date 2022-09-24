@@ -60,7 +60,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             const prefab = flecs.ecs_get_target(world, target, flecs.Constants.EcsIsA, 0);
 
             const tile_position = mouse_tile.toPosition().toF32x4();
-            const position = tile_position + game.settings.inspect_window_offset;
+            const position = tile_position + game.settings.inspect_window_offset / zm.f32x4(1, game.state.camera.zoom * 2 ,1, 1);
             const screen_position = game.state.camera.worldToScreen(tile_position);
             const window_position = game.state.camera.worldToScreen(position);
 
@@ -71,7 +71,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 // Set style for inspect window
                 zgui.pushStyleColor4f(.{ .idx = .window_bg, .c = .{ 0, 0, 0, 0 } });
                 zgui.pushStyleColor4f(.{ .idx = .border, .c = .{ 1, 1, 1, 0.0 } });
-                zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.separator, .c = .{ 1, 1, 1, 1 } });
+                zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.separator, .c = .{ 1, 1, 1, 0.5 } });
                 zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.window_border_size, .v = 3 });
                 defer zgui.popStyleVar(.{ .count = 1 });
                 defer zgui.popStyleColor(.{ .count = 3 });
@@ -90,8 +90,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     draw_list.pushClipRect(.{ .pmin = .{ 0, 0 }, .pmax = .{ width, height } });
                     draw_list.addCircle(.{
                         .p = .{ screen_position[0], screen_position[1] },
-                        .r = game.settings.pixels_per_unit / 1.5 * cs[1],
-                        .col = 0x55_ff_ff_ff,
+                        .r = game.settings.pixels_per_unit / 1.5 * game.state.camera.zoom / 2 * cs[1] ,
+                        .col = 0x60_ff_ff_ff,
                         .thickness = 2,
                     });
                     draw_list.popClipRect();
