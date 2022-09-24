@@ -89,7 +89,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                         .p = .{ screen_position[0], screen_position[1] },
                         .r = game.settings.pixels_per_unit / 1.5 * game.state.camera.zoom / 2 * cs[1] ,
                         .col = 0x60_ff_ff_ff,
-                        .thickness = 2,
+                        .thickness = 1,
                     });
                     draw_list.popClipRect();
 
