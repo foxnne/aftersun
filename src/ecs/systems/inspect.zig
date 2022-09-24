@@ -64,7 +64,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             const screen_position = game.state.camera.worldToScreen(tile_position);
             const window_position = game.state.camera.worldToScreen(position);
 
-            const name = if (prefab != 0) flecs.ecs_get_name(world, prefab) else flecs.ecs_get_name(world, target);
+            var name = if (prefab != 0) flecs.ecs_get_name(world, prefab) else flecs.ecs_get_name(world, target);
+            if (target == game.state.entities.player) name = "yourself";
 
             if (name != null) {
                 // Set style for inspect window
@@ -96,7 +97,9 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     draw_list.popClipRect();
 
                     const prefix = "You see";
+
                     const count = if (flecs.ecs_get(world, target, components.Stack)) |stack| stack.count else 1;
+
                     var n = std.mem.span(name);
                     var buffer: [128]u8 = undefined;
                     _ = std.mem.replace(u8, n, "_", " ", &buffer);
@@ -105,17 +108,21 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     if (count > 1) {
                         zgui.text("{s} {d} {s}s.", .{ prefix, count, fixed_name });
                     } else {
-                        const a = "a";
-                        const e = "e";
-                        const i = "i";
-                        const o = "o";
-                        const u = "u";
-                        const quantifier = switch (name[0]) {
-                            a[0], e[0], i[0], o[0], u[0] => "an",
-                            else => "a",
-                        };
+                        if (target != game.state.entities.player) {
+                            const a = "a";
+                            const e = "e";
+                            const i = "i";
+                            const o = "o";
+                            const u = "u";
+                            const quantifier = switch (name[0]) {
+                                a[0], e[0], i[0], o[0], u[0] => "an",
+                                else => "a",
+                            };
 
-                        zgui.text("{s} {s} {s}.", .{ prefix, quantifier, fixed_name });
+                            zgui.text("{s} {s} {s}.", .{ prefix, quantifier, fixed_name });
+                        } else {
+                            zgui.text("{s} {s}.", .{ prefix, fixed_name });
+                        }
                     }
                     zgui.separator();
 
@@ -123,6 +130,10 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                         if (zgui.button("Use", .{ .w = -1 })) {
                             flecs.ecs_set_pair_second(world, game.state.entities.player, components.Request, &components.Use{ .target = mouse_tile });
                         }
+                    }
+
+                    if (target == game.state.entities.player) {
+                        if (zgui.button("Change", .{ .w = -1 })) {}
                     }
                 }
                 zgui.end();
