@@ -84,10 +84,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 } })) {
                     const draw_list = zgui.getWindowDrawList();
                     const cs = game.state.gctx.window.getContentScale();
-                    const ws = game.state.gctx.window.getSize();
-                    const width = @intToFloat(f32, ws[0]) * cs[0];
-                    const height = @intToFloat(f32, ws[1]) * cs[1];
-                    draw_list.pushClipRect(.{ .pmin = .{ 0, 0 }, .pmax = .{ width, height } });
+                    draw_list.pushClipRectFullScreen();
                     draw_list.addCircle(.{
                         .p = .{ screen_position[0], screen_position[1] },
                         .r = game.settings.pixels_per_unit / 1.5 * game.state.camera.zoom / 2 * cs[1] ,
