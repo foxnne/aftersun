@@ -80,7 +80,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 const window_padding = game.settings.inspect_window_padding * scale;
                 const window_spacing = game.settings.inspect_window_spacing * scale;
 
-                zgui.pushStyleColor4f(.{ .idx = .window_bg, .c = .{ 0, 0, 0, 0 } });
+                zgui.pushStyleColor4f(.{ .idx = .window_bg, .c = .{ 0, 0, 0, 0.0 } });
                 zgui.pushStyleColor4f(.{ .idx = .border, .c = .{ 1, 1, 1, 0.0 } });
                 zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.separator, .c = .{ 1, 1, 1, 1 } });
                 defer zgui.popStyleColor(.{ .count = 3 });
@@ -91,15 +91,15 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 zgui.pushStyleVar2f(.{ .idx = zgui.StyleVar.item_spacing, .v = [2]f32{ window_spacing, window_spacing } });
                 defer zgui.popStyleVar(.{ .count = 5 });
 
-                const radius = game.settings.pixels_per_unit / 1.5 * game.state.camera.zoom / 2 * scale;
-                const leader_length = game.settings.pixels_per_unit / 2;
+                const radius = game.settings.pixels_per_unit / 1.8 * game.state.camera.zoom / 2 * scale;
+                const leader_length = game.settings.pixels_per_unit / 3;
 
                 const direction: game.math.Direction = .se;
                 const normalized_direction = direction.normalized();
 
                 const pos_1 = screen_position + normalized_direction * zm.f32x4s(game.math.lerp(0.0, radius, game.state.controls.mouse.tile_timer));
                 const pos_2 = pos_1 + normalized_direction * zm.f32x4s(game.math.lerp(0.0, leader_length, game.state.controls.mouse.tile_timer) * scale);
-                const pos_3 = pos_2 + zm.f32x4(game.math.lerp(0, leader_length * 2 * scale, game.state.controls.mouse.tile_timer), 0, 0, 0);
+                
 
                 zgui.setNextWindowPos(.{ .x = pos_2[0], .y = pos_2[1] - text_spacing - window_padding - window_spacing, .cond = .always });
                 if (zgui.begin("Inspect", .{ .flags = zgui.WindowFlags{
@@ -107,6 +107,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     .no_resize = true,
                     .always_auto_resize = true,
                 } })) {
+                    const pos_3 = pos_2 + zm.f32x4(game.math.lerp(0, zgui.getWindowWidth(), game.state.controls.mouse.tile_timer), 0, 0, 0);
+
                     const draw_list = zgui.getWindowDrawList();
 
                     draw_list.pushClipRectFullScreen();
@@ -158,7 +160,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             zgui.text("{s}", .{description[0..index]});
                         }
                     }
-                    zgui.separator();
+                    zgui.spacing();
 
                     if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Useable))) {
                         if (zgui.button("Use", .{ .w = -1 })) {
