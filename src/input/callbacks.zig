@@ -16,7 +16,11 @@ pub fn cursor(window: zglfw.Window, x: f64, y: f64) callconv(.C) void {
     };
     game.state.controls.mouse.position.x = @floatCast(f32, x / scale_factor);
     game.state.controls.mouse.position.y = @floatCast(f32, y / scale_factor);
-    game.state.controls.mouse.tile = game.state.controls.mouse.position.tile();
+    const current_tile = game.state.controls.mouse.position.tile();
+    if (game.state.controls.mouse.tile.x !=  current_tile.x or game.state.controls.mouse.tile.y != current_tile.y){
+        game.state.controls.mouse.tile = current_tile;
+        game.state.controls.mouse.tile_timer = 0.0;
+    }
 
     // Handle setting the mouse drag cursor image
     if (game.state.controls.mouse.primary.down_tile) |tile| {

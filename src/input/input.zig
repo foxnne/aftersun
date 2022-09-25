@@ -189,5 +189,6 @@ pub const Mouse = struct {
     secondary: MouseButton = .{ .name = "Secondary", .button = zglfw.MouseButton.right },
     position: MousePosition = .{},
     tile: components.Tile = .{},
+    tile_timer: f32 = 0.0,
     cursor: MouseCursor = .standard,
 };

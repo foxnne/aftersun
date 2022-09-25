@@ -28,6 +28,11 @@ pub fn system() flecs.EcsSystemDesc {
 
 pub fn run(it: *flecs.EcsIter) callconv(.C) void {
     if (game.state.controls.inspect()) {
+        if (game.state.controls.mouse.tile_timer < 1.0) {
+            game.state.controls.mouse.tile_timer += it.delta_time * 2;
+            game.state.controls.mouse.tile_timer = std.math.clamp(game.state.controls.mouse.tile_timer, 0.0, 1.0);
+        }
+
         const world = it.world.?;
 
         var mouse_tile = game.state.controls.mouse.tile;
@@ -60,38 +65,64 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             const prefab = flecs.ecs_get_target(world, target, flecs.Constants.EcsIsA, 0);
 
             const tile_position = mouse_tile.toPosition().toF32x4();
-            const position = tile_position + game.settings.inspect_window_offset / zm.f32x4(1, game.state.camera.zoom * 2 ,1, 1);
+            //const position = tile_position + game.settings.inspect_window_offset / zm.f32x4(1, game.state.camera.zoom * 2, 1, 1);
             const screen_position = game.state.camera.worldToScreen(tile_position);
-            const window_position = game.state.camera.worldToScreen(position);
+            //const window_position = game.state.camera.worldToScreen(position);
 
             var name = if (prefab != 0) flecs.ecs_get_name(world, prefab) else flecs.ecs_get_name(world, target);
             if (target == game.state.entities.player) name = "yourself";
 
             if (name != null) {
-                // Set style for inspect window
+                const cs = game.state.gctx.window.getContentScale();
+                const scale = std.math.max(cs[0], cs[1]);
+
+                const text_spacing = game.settings.zgui_font_size * scale;
+                const window_padding = game.settings.inspect_window_padding * scale;
+                const window_spacing = game.settings.inspect_window_spacing * scale;
+
                 zgui.pushStyleColor4f(.{ .idx = .window_bg, .c = .{ 0, 0, 0, 0 } });
                 zgui.pushStyleColor4f(.{ .idx = .border, .c = .{ 1, 1, 1, 0.0 } });
-                zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.separator, .c = .{ 1, 1, 1, 0.5 } });
-                zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.window_border_size, .v = 3 });
-                defer zgui.popStyleVar(.{ .count = 1 });
+                zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.separator, .c = .{ 1, 1, 1, 1 } });
                 defer zgui.popStyleColor(.{ .count = 3 });
+                zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.window_border_size, .v = 0 });
+                zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.window_rounding, .v = 15.0 * scale });
+                zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.frame_rounding, .v = 10.0 * scale });
+                zgui.pushStyleVar2f(.{ .idx = zgui.StyleVar.window_padding, .v = [2]f32{ window_padding, window_padding } });
+                zgui.pushStyleVar2f(.{ .idx = zgui.StyleVar.item_spacing, .v = [2]f32{ window_spacing, window_spacing } });
+                defer zgui.popStyleVar(.{ .count = 5 });
 
-                zgui.setNextWindowPos(.{ .x = window_position[0], .y = window_position[1], .cond = .always });
+                const radius = game.settings.pixels_per_unit / 1.5 * game.state.camera.zoom / 2 * scale;
+                const leader_length = game.settings.pixels_per_unit / 2;
+
+                const direction: game.math.Direction = .se;
+                const normalized_direction = direction.normalized();
+
+                const pos_1 = screen_position + normalized_direction * zm.f32x4s(game.math.lerp(0.0, radius, game.state.controls.mouse.tile_timer));
+                const pos_2 = pos_1 + normalized_direction * zm.f32x4s(game.math.lerp(0.0, leader_length, game.state.controls.mouse.tile_timer) * scale);
+                const pos_3 = pos_2 + zm.f32x4(game.math.lerp(0, leader_length * 2 * scale, game.state.controls.mouse.tile_timer), 0, 0, 0);
+
+                zgui.setNextWindowPos(.{ .x = pos_2[0], .y = pos_2[1] - text_spacing - window_padding - window_spacing, .cond = .always });
                 if (zgui.begin("Inspect", .{ .flags = zgui.WindowFlags{
                     .no_title_bar = true,
                     .no_resize = true,
                     .always_auto_resize = true,
                 } })) {
                     const draw_list = zgui.getWindowDrawList();
-                    const cs = game.state.gctx.window.getContentScale();
+
                     draw_list.pushClipRectFullScreen();
+                    defer draw_list.popClipRect();
                     draw_list.addCircle(.{
                         .p = .{ screen_position[0], screen_position[1] },
-                        .r = game.settings.pixels_per_unit / 1.5 * game.state.camera.zoom / 2 * cs[1] ,
-                        .col = 0x60_ff_ff_ff,
-                        .thickness = 1,
+                        .r = game.math.lerp(0.0, radius, game.state.controls.mouse.tile_timer),
+                        .col = 0xff_ff_ff_ff,
+                        .thickness = 1 * scale,
                     });
-                    draw_list.popClipRect();
+
+                    draw_list.addPolyline(&[_][2]f32{
+                        [_]f32{ pos_1[0], pos_1[1] },
+                        [_]f32{ pos_2[0], pos_2[1] },
+                        [_]f32{ pos_3[0], pos_3[1] },
+                    }, .{ .col = 0xff_ff_ff_ff, .thickness = 1 * scale });
 
                     const prefix = "You see";
 
@@ -103,7 +134,9 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     const fixed_name = buffer[0..n.len];
 
                     if (count > 1) {
-                        zgui.text("{s} {d} {s}s.", .{ prefix, count, fixed_name });
+                        const description = zgui.formatZ("{s} {d} {s}s.", .{ prefix, count, fixed_name });
+                        const index = @floatToInt(usize, @trunc(game.state.controls.mouse.tile_timer * @intToFloat(f32, description.len)));
+                        zgui.text("{s}", .{description[0..index]});
                     } else {
                         if (target != game.state.entities.player) {
                             const a = "a";
@@ -116,9 +149,13 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                 else => "a",
                             };
 
-                            zgui.text("{s} {s} {s}.", .{ prefix, quantifier, fixed_name });
+                            const description = zgui.formatZ("{s} {s} {s}.", .{ prefix, quantifier, fixed_name });
+                            const index = @floatToInt(usize, @trunc(game.state.controls.mouse.tile_timer * @intToFloat(f32, description.len)));
+                            zgui.text("{s}", .{description[0..index]});
                         } else {
-                            zgui.text("{s} {s}.", .{ prefix, fixed_name });
+                            const description = zgui.formatZ("{s} {s}.", .{ prefix, fixed_name });
+                            const index = @floatToInt(usize, @trunc(game.state.controls.mouse.tile_timer * @intToFloat(f32, description.len)));
+                            zgui.text("{s}", .{description[0..index]});
                         }
                     }
                     zgui.separator();
@@ -130,7 +167,25 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     }
 
                     if (target == game.state.entities.player) {
-                        if (zgui.button("Change", .{ .w = -1 })) {}
+                        if (zgui.button("Change", .{ .w = -1 })) {
+                            var prng = std.rand.DefaultPrng.init(@floatToInt(u64, game.state.gctx.stats.time * 100));
+                            const rand = prng.random();
+
+                            if (flecs.ecs_get_mut(world, game.state.entities.player, components.CharacterAnimator)) |animator| {
+                                animator.top_set = if (rand.boolean()) game.animation_sets.top_f_01 else game.animation_sets.top_f_02;
+                                animator.bottom_set = if (rand.boolean()) game.animation_sets.bottom_f_01 else game.animation_sets.bottom_f_02;
+                            }
+
+                            if (flecs.ecs_get_mut(world, game.state.entities.player, components.CharacterRenderer)) |renderer| {
+                                const top = rand.intRangeAtMost(u8, 0, 12);
+                                const bottom = rand.intRangeAtMost(u8, 0, 12);
+                                const hair = rand.intRangeAtMost(u8, 0, 12);
+
+                                renderer.top_color = game.math.Color.initBytes(top, 0, 0, 255);
+                                renderer.bottom_color = game.math.Color.initBytes(bottom, 0, 0, 255);
+                                renderer.hair_color = game.math.Color.initBytes(hair, 0, 0, 255);
+                            }
+                        }
                     }
                 }
                 zgui.end();

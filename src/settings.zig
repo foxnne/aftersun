@@ -38,5 +38,8 @@ pub const cell_size = 8;
 /// Speed at which the camera will lerp to new velocity.
 pub const camera_follow_speed = 1.5;
 
-/// Offset to use when displaying inspection window popup.
-pub const inspect_window_offset = zm.f32x4(pixels_per_unit / 3, pixels_per_unit * 2, 0, 0);
+/// Padding to use when displaying inspection window popup.
+pub const inspect_window_padding = 4.0;
+
+/// Spacing to use when displaying inspection window popup.
+pub const inspect_window_spacing = 4.0;
