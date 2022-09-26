@@ -27,7 +27,7 @@ pub fn system() flecs.EcsSystemDesc {
 }
 
 pub fn run(it: *flecs.EcsIter) callconv(.C) void {
-    if (game.state.controls.inspect()) {
+    if (game.state.controls.inspect() or game.state.controls.inspecting) {
         if (game.state.controls.mouse.tile_timer < 1.0) {
             game.state.controls.mouse.tile_timer += it.delta_time * 2;
             game.state.controls.mouse.tile_timer = std.math.clamp(game.state.controls.mouse.tile_timer, 0.0, 1.0);
@@ -65,9 +65,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             const prefab = flecs.ecs_get_target(world, target, flecs.Constants.EcsIsA, 0);
 
             const tile_position = mouse_tile.toPosition().toF32x4();
-            //const position = tile_position + game.settings.inspect_window_offset / zm.f32x4(1, game.state.camera.zoom * 2, 1, 1);
             const screen_position = game.state.camera.worldToScreen(tile_position);
-            //const window_position = game.state.camera.worldToScreen(position);
 
             var name = if (prefab != 0) flecs.ecs_get_name(world, prefab) else flecs.ecs_get_name(world, target);
             if (target == game.state.entities.player) name = "yourself";
@@ -94,12 +92,11 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 const radius = game.settings.pixels_per_unit / 1.8 * game.state.camera.zoom / 2 * scale;
                 const leader_length = game.settings.pixels_per_unit / 3;
 
-                const direction: game.math.Direction = .se;
+                const direction: game.math.Direction = if (screen_position[1] < game.settings.pixels_per_unit * 2 * scale) .ne else .se;
                 const normalized_direction = direction.normalized();
 
                 const pos_1 = screen_position + normalized_direction * zm.f32x4s(game.math.lerp(0.0, radius, game.state.controls.mouse.tile_timer));
                 const pos_2 = pos_1 + normalized_direction * zm.f32x4s(game.math.lerp(0.0, leader_length, game.state.controls.mouse.tile_timer) * scale);
-                
 
                 zgui.setNextWindowPos(.{ .x = pos_2[0], .y = pos_2[1] - text_spacing - window_padding - window_spacing, .cond = .always });
                 if (zgui.begin("Inspect", .{ .flags = zgui.WindowFlags{
@@ -163,7 +160,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     zgui.spacing();
 
                     if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Useable))) {
-                        if (zgui.button("Use", .{ .w = -1 })) {
+                        if (zgui.button(if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Consumeable))) "Consume" else "Use", .{ .w = -1 })) {
                             flecs.ecs_set_pair_second(world, game.state.entities.player, components.Request, &components.Use{ .target = mouse_tile });
                         }
                     }

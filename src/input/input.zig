@@ -15,13 +15,15 @@ pub const Keys = enum(usize) {
     zoom_in,
     zoom_out,
     inspect,
+    toggle_inspect,
 };
 
 pub const Controls = struct {
     mouse: Mouse = .{},
+    inspecting: bool = false,
 
     /// Holds all rebindable keys.
-    keys: [7]Key = [_]Key{
+    keys: [8]Key = [_]Key{
         .{
             .name = "Movement - Up",
             .primary = zglfw.Key.w,
@@ -70,6 +72,13 @@ pub const Controls = struct {
             .secondary = zglfw.Key.right_shift,
             .default_primary = zglfw.Key.left_shift,
             .default_secondary = zglfw.Key.right_shift,
+        },
+        .{
+            .name = "Toggle Inspect",
+            .primary = zglfw.Key.tab,
+            .secondary = zglfw.Key.unknown,
+            .default_primary = zglfw.Key.tab,
+            .default_secondary = zglfw.Key.unknown,
         }
     },
 

@@ -129,7 +129,7 @@ pub fn button(_: zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Act
 
 pub fn key(_: zglfw.Window, glfw_key: zglfw.Key, _: i32, action: zglfw.Action, _: zglfw.Mods) callconv(.C) void {
     if (zgui.io.getWantCaptureKeyboard()) return;
-    for (game.state.controls.keys) |*k| {
+    for (game.state.controls.keys) |*k, i| {
         if (k.primary == glfw_key or k.secondary == glfw_key) {
             k.previous_state = k.state;
             k.state = switch (action) {
@@ -137,6 +137,11 @@ pub fn key(_: zglfw.Window, glfw_key: zglfw.Key, _: i32, action: zglfw.Action, _
                 .press => true,
                 .repeat => true,
             };
+            if (i == @enumToInt(input.Keys.toggle_inspect) and action == .press) {
+                game.state.controls.inspecting = !game.state.controls.inspecting;
+            }
         }
     }
+
+
 }
