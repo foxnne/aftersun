@@ -18,6 +18,12 @@ pub const Color = struct {
     pub fn lerp (self: Color, other: Color, t: f32) Color {
         return .{ .value = zm.lerp(self.value, other.value, t)};
     }
+
+    pub fn toSlice (self: Color) [4]f32 {
+        var slice: [4]f32 = undefined;
+        zm.storeArr4(&slice, self.value);
+        return slice;
+    }
 };
 
 pub const Colors = struct {
@@ -27,4 +33,5 @@ pub const Colors = struct {
     pub const green = Color.initFloats(0, 1, 0, 1);
     pub const blue = Color.initFloats(0, 0, 1, 1);
     pub const grass = Color.initBytes(110, 138, 92, 255);
+    pub const background = Color.initBytes(42, 44, 54, 255);
 };

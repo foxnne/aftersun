@@ -525,13 +525,7 @@ fn deinit(allocator: std.mem.Allocator) void {
 }
 
 fn update() void {
-    const cs = state.gctx.window.getContentScale();
     zgui.backend.newFrame(state.gctx.swapchain_descriptor.width, state.gctx.swapchain_descriptor.height);
-    zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.window_rounding, .v = 15.0 * cs[0] });
-    zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.frame_rounding, .v = 10.0 * cs[0] });
-    zgui.pushStyleVar2f(.{ .idx = zgui.StyleVar.window_padding, .v = [2]f32{ 4.0 * cs[0], 4.0 * cs[1] }});
-    zgui.pushStyleVar2f(.{ .idx = zgui.StyleVar.item_spacing, .v = [2]f32{ 4.0 * cs[0], 4.0 * cs[1] }});
-    defer zgui.popStyleVar(.{ .count = 4 });
 
     _ = flecs.ecs_progress(state.world, 0);
 
@@ -718,8 +712,23 @@ pub fn main() !void {
 
     _ = zgui.io.addFontFromFile(assets.root ++ "fonts/CozetteVector.ttf", settings.zgui_font_size * scale_factor);
    
-
     zgui.backend.init(window, state.gctx.device, @enumToInt(zgpu.GraphicsContext.swapchain_format));
+
+    // TODO: Move GUI styling and color to its own file
+    // Base style
+    var style = zgui.getStyle();
+    style.window_rounding = 15.0 * scale_factor; 
+    style.frame_rounding = 10.0 * scale_factor;
+    style.window_padding = .{ 4.0 * scale_factor, 4.0 * scale_factor };
+    style.item_spacing = .{ 4.0 * scale_factor, 4.0 * scale_factor};
+
+    // Base colors
+    style.setColor(zgui.StyleCol.border, math.Colors.white.toSlice());
+    style.setColor(zgui.StyleCol.window_bg, math.Colors.background.toSlice());
+    style.setColor(zgui.StyleCol.button, .{ 1.0, 1.0, 1.0, 0.5 });
+    style.setColor(zgui.StyleCol.button_active, .{ 1.0, 1.0, 1.0, 1.0 });
+    style.setColor(zgui.StyleCol.button_hovered, .{ 1.0, 1.0, 1.0, 0.9 });
+    style.setColor(zgui.StyleCol.text, .{ 1.0, 1.0, 1.0, 1.0 });
 
     while (!window.shouldClose()) {
         zglfw.pollEvents();

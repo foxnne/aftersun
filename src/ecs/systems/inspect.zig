@@ -83,11 +83,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.separator, .c = .{ 1, 1, 1, 1 } });
                 defer zgui.popStyleColor(.{ .count = 3 });
                 zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.window_border_size, .v = 0 });
-                zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.window_rounding, .v = 15.0 * scale });
-                zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.frame_rounding, .v = 10.0 * scale });
-                zgui.pushStyleVar2f(.{ .idx = zgui.StyleVar.window_padding, .v = [2]f32{ window_padding, window_padding } });
-                zgui.pushStyleVar2f(.{ .idx = zgui.StyleVar.item_spacing, .v = [2]f32{ window_spacing, window_spacing } });
-                defer zgui.popStyleVar(.{ .count = 5 });
+                defer zgui.popStyleVar(.{ .count = 1 });
 
                 const radius = game.settings.pixels_per_unit / 1.8 * game.state.camera.zoom / 2 * scale;
                 const leader_length = game.settings.pixels_per_unit / 3;
