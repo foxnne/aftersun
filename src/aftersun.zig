@@ -24,7 +24,7 @@ pub const input = @import("input/input.zig");
 pub const time = @import("time/time.zig");
 pub const environment = @import("time/environment.zig");
 
-comptime {
+test {
     _ = math;
     _ = gfx;
     _ = input;

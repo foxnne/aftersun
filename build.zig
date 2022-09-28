@@ -29,10 +29,24 @@ pub fn build(b: *Builder) !void {
     var exe = createExe(b, target, "run", "src/aftersun.zig");
     b.default_step.dependOn(&exe.step);
 
+    const zgpu_pkg = zgpu.getPkg(&.{ zpool.pkg, zglfw.pkg });
+    const zgui_pkg = zgui.getPkg(&.{zglfw.pkg});
+
     const tests = b.step("test", "Run all tests");
     const aftersun_tests = b.addTest(aftersun_pkg.source.path);
-    aftersun_tests.addPackage(zmath.pkg);
     aftersun_tests.addPackage(aftersun_pkg);
+    aftersun_tests.addPackage(zgpu_pkg);
+    aftersun_tests.addPackage(zglfw.pkg);
+    aftersun_tests.addPackage(zgui_pkg);
+    aftersun_tests.addPackage(zstbi.pkg);
+    aftersun_tests.addPackage(zmath.pkg);
+    aftersun_tests.addPackage(flecs.pkg);
+
+    zgpu.link(aftersun_tests);
+    zglfw.link(aftersun_tests);
+    zstbi.link(aftersun_tests);
+    zgui.link(aftersun_tests);
+    flecs.link(aftersun_tests, target);
     tests.dependOn(&aftersun_tests.step);
 
     const assets = ProcessAssetsStep.init(b, "assets", "src/assets.zig", "src/animations.zig");
