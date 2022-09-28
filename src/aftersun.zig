@@ -717,17 +717,28 @@ pub fn main() !void {
     // TODO: Move GUI styling and color to its own file
     // Base style
     var style = zgui.getStyle();
-    style.window_rounding = 15.0 * scale_factor; 
+    style.window_rounding = 10.0 * scale_factor; 
     style.frame_rounding = 10.0 * scale_factor;
     style.window_padding = .{ 4.0 * scale_factor, 4.0 * scale_factor };
     style.item_spacing = .{ 4.0 * scale_factor, 4.0 * scale_factor};
+    style.window_title_align = .{ 0.5, 0.5 };
+    style.window_menu_button_position = zgui.Direction.none;
+
+    const bg = math.Colors.background.toSlice();
 
     // Base colors
-    style.setColor(zgui.StyleCol.border, math.Colors.white.toSlice());
-    style.setColor(zgui.StyleCol.window_bg, math.Colors.background.toSlice());
-    style.setColor(zgui.StyleCol.button, .{ 1.0, 1.0, 1.0, 0.5 });
-    style.setColor(zgui.StyleCol.button_active, .{ 1.0, 1.0, 1.0, 1.0 });
-    style.setColor(zgui.StyleCol.button_hovered, .{ 1.0, 1.0, 1.0, 0.9 });
+    style.setColor(zgui.StyleCol.border, bg,);
+    style.setColor(zgui.StyleCol.menu_bar_bg, bg);
+    style.setColor(zgui.StyleCol.header, bg);
+    style.setColor(zgui.StyleCol.title_bg, bg);
+    style.setColor(zgui.StyleCol.title_bg_active, bg);
+    style.setColor(zgui.StyleCol.window_bg, .{ bg[0], bg[1], bg[2], 0.5});
+    style.setColor(zgui.StyleCol.button, .{ bg[0], bg[1], bg[2], 0.6 });
+    style.setColor(zgui.StyleCol.button_active, .{ bg[0], bg[1], bg[2], 1.0 });
+    style.setColor(zgui.StyleCol.button_hovered, .{ bg[0], bg[1], bg[2], 0.9 });
+    style.setColor(zgui.StyleCol.resize_grip, .{ bg[0], bg[1], bg[2], 0.6 });
+    style.setColor(zgui.StyleCol.resize_grip_active, .{ bg[0], bg[1], bg[2], 1.0 });
+    style.setColor(zgui.StyleCol.resize_grip_hovered, .{ bg[0], bg[1], bg[2], 0.9 });
     style.setColor(zgui.StyleCol.text, .{ 1.0, 1.0, 1.0, 1.0 });
 
     while (!window.shouldClose()) {

@@ -78,12 +78,10 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 const window_padding = game.settings.inspect_window_padding * scale;
                 const window_spacing = game.settings.inspect_window_spacing * scale;
 
-                zgui.pushStyleColor4f(.{ .idx = .window_bg, .c = .{ 0, 0, 0, 0.0 } });
-                zgui.pushStyleColor4f(.{ .idx = .border, .c = .{ 1, 1, 1, 0.0 } });
+                zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.window_bg, .c = .{ 0, 0, 0, 0.0 } });
+                zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.border, .c = .{ 1, 1, 1, 0.0 } });
                 zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.separator, .c = .{ 1, 1, 1, 1 } });
                 defer zgui.popStyleColor(.{ .count = 3 });
-                zgui.pushStyleVar1f(.{ .idx = zgui.StyleVar.window_border_size, .v = 0 });
-                defer zgui.popStyleVar(.{ .count = 1 });
 
                 const radius = game.settings.pixels_per_unit / 1.8 * game.state.camera.zoom / 2 * scale;
                 const leader_length = game.settings.pixels_per_unit / 3;
@@ -118,6 +116,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                         [_]f32{ pos_2[0], pos_2[1] },
                         [_]f32{ pos_3[0], pos_3[1] },
                     }, .{ .col = 0xff_ff_ff_ff, .thickness = 1 * scale });
+
+                
 
                     const prefix = "You see";
 
