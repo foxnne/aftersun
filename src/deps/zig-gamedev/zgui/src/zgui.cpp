@@ -218,6 +218,10 @@ ZGUI_API void zguiSetCursorScreenPos(float screen_x, float screen_y) {
     ImGui::SetCursorScreenPos({ screen_x, screen_y });
 }
 
+ZGUI_API void zguiSetMouseCursor(int cursor) {
+    ImGui::SetMouseCursor(cursor);
+}
+
 ZGUI_API void zguiAlignTextToFramePadding(void) {
     ImGui::AlignTextToFramePadding();
 }

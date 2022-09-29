@@ -17,7 +17,8 @@ pub fn cursor(window: zglfw.Window, x: f64, y: f64) callconv(.C) void {
     game.state.controls.mouse.position.x = @floatCast(f32, x / scale_factor);
     game.state.controls.mouse.position.y = @floatCast(f32, y / scale_factor);
     const current_tile = game.state.controls.mouse.position.tile();
-    if (game.state.controls.mouse.tile.x !=  current_tile.x or game.state.controls.mouse.tile.y != current_tile.y){
+    if (game.state.controls.mouse.tile.x != current_tile.x or game.state.controls.mouse.tile.y != current_tile.y) {
+        game.state.controls.inspecting = false;
         game.state.controls.mouse.tile = current_tile;
         game.state.controls.mouse.tile_timer = 0.0;
     }
@@ -27,22 +28,11 @@ pub fn cursor(window: zglfw.Window, x: f64, y: f64) callconv(.C) void {
         if (game.state.controls.mouse.primary.up_tile == null) {
             const mouse_tile = game.state.controls.mouse.tile;
             if (mouse_tile.x != tile.x or mouse_tile.y != tile.y) {
-                if (game.state.controls.mouse.cursor != .drag) {
-                    game.state.controls.mouse.cursor = .drag;
-                    window.setCursor(game.state.cursor_drag);
-                }
-            } else {
-                if (game.state.controls.mouse.cursor != .standard) {
-                    game.state.controls.mouse.cursor = .standard;
-                    window.setCursor(null);
-                }
-            }
+                game.state.controls.mouse.cursor = .drag;
+            } else game.state.controls.mouse.cursor = .standard;
         }
     } else {
-        if (game.state.controls.mouse.cursor != .standard) {
-            game.state.controls.mouse.cursor = .standard;
-            window.setCursor(null);
-        }
+        game.state.controls.mouse.cursor = .standard;
     }
 }
 
@@ -78,6 +68,7 @@ pub fn button(_: zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Act
             .release => {
                 game.state.controls.mouse.primary.state = false;
                 game.state.controls.mouse.primary.up_tile = tile;
+                game.state.controls.mouse.cursor = .standard;
             },
             .repeat, .press => {
                 game.state.controls.mouse.primary.state = true;
@@ -117,9 +108,10 @@ pub fn button(_: zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Act
     if (game.state.controls.mouse.secondary.down_tile) |down| {
         if (game.state.controls.mouse.secondary.up_tile) |up| {
             if (down.x == up.x and down.y == up.y) {
-                flecs.ecs_set_pair_second(game.state.world, game.state.entities.player, components.Request, &components.Use{
-                    .target = up,
-                });
+                // flecs.ecs_set_pair_second(game.state.world, game.state.entities.player, components.Request, &components.Use{
+                //     .target = up,
+                // });
+                game.state.controls.inspecting = true;
             }
             game.state.controls.mouse.secondary.down_tile = null;
             game.state.controls.mouse.secondary.up_tile = null;
@@ -142,6 +134,4 @@ pub fn key(_: zglfw.Window, glfw_key: zglfw.Key, _: i32, action: zglfw.Action, _
             }
         }
     }
-
-
 }
