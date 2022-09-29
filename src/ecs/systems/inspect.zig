@@ -82,6 +82,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.border, .c = .{ 1, 1, 1, 0.0 } });
                 zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.separator, .c = .{ 1, 1, 1, 1 } });
                 defer zgui.popStyleColor(.{ .count = 3 });
+                zgui.pushStyleVar2f(.{ .idx = zgui.StyleVar.item_spacing, .v = .{ 2.0 * scale, 2.0 * scale }});
+                defer zgui.popStyleVar(.{ .count = 1 });
 
                 const radius = game.settings.pixels_per_unit / 1.8 * game.state.camera.zoom / 2 * scale;
                 const leader_length = game.settings.pixels_per_unit / 3;
@@ -116,8 +118,6 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                         [_]f32{ pos_2[0], pos_2[1] },
                         [_]f32{ pos_3[0], pos_3[1] },
                     }, .{ .col = 0xff_ff_ff_ff, .thickness = 1 * scale });
-
-                
 
                     const prefix = "You see";
 
@@ -154,11 +154,15 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                         }
                     }
                     zgui.spacing();
+                    zgui.spacing();
+                    zgui.spacing();
+                    zgui.spacing();
 
                     if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Useable))) {
                         if (zgui.button(if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Consumeable))) "Consume" else "Use", .{ .w = -1 })) {
                             flecs.ecs_set_pair_second(world, game.state.entities.player, components.Request, &components.Use{ .target = mouse_tile });
                         }
+                        if (zgui.button("Use with", .{ .w = -1 })) {}
                     }
 
                     if (target == game.state.entities.player) {
@@ -172,9 +176,9 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             }
 
                             if (flecs.ecs_get_mut(world, game.state.entities.player, components.CharacterRenderer)) |renderer| {
-                                const top = rand.intRangeAtMost(u8, 0, 12);
-                                const bottom = rand.intRangeAtMost(u8, 0, 12);
-                                const hair = rand.intRangeAtMost(u8, 0, 12);
+                                const top = rand.intRangeAtMost(u8, 1, 12);
+                                const bottom = rand.intRangeAtMost(u8, 1, 12);
+                                const hair = rand.intRangeAtMost(u8, 1, 12);
 
                                 renderer.top_color = game.math.Color.initBytes(top, 0, 0, 255);
                                 renderer.bottom_color = game.math.Color.initBytes(bottom, 0, 0, 255);
