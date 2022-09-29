@@ -29,7 +29,7 @@ pub fn system() flecs.EcsSystemDesc {
 pub fn run(it: *flecs.EcsIter) callconv(.C) void {
     if (game.state.controls.inspect() or game.state.controls.inspecting) {
         if (game.state.controls.mouse.tile_timer < 1.0) {
-            game.state.controls.mouse.tile_timer += it.delta_time * 2;
+            game.state.controls.mouse.tile_timer += it.delta_time * 3;
             game.state.controls.mouse.tile_timer = std.math.clamp(game.state.controls.mouse.tile_timer, 0.0, 1.0);
         }
 

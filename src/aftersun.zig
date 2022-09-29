@@ -528,6 +528,7 @@ fn deinit(allocator: std.mem.Allocator) void {
 
 fn update() void {
     zgui.backend.newFrame(state.gctx.swapchain_descriptor.width, state.gctx.swapchain_descriptor.height);
+
     // Handle setting mouse cursor as with imgui we need to each frame.
     switch (state.controls.mouse.cursor) {
         .standard => { zgui.setMouseCursor(.arrow );},
@@ -706,14 +707,13 @@ pub fn main() !void {
     state = try init(allocator, window);
     defer deinit(allocator);
 
-    const cs = window.getContentScale();
+    
     const scale_factor = scale_factor: {
         const scale = window.getContentScale();
         break :scale_factor std.math.max(scale[0], scale[1]);
     };
 
     zgui.init(allocator);
-    zgui.io.setDisplayFramebufferScale(cs[0], cs[1]);
     zgui.io.setIniFilename(assets.root ++ "imgui.ini");
     _ = zgui.io.addFontFromFile(assets.root ++ "fonts/CozetteVector.ttf", settings.zgui_font_size * scale_factor);
     zgui.backend.init(window, state.gctx.device, @enumToInt(zgpu.GraphicsContext.swapchain_format));
