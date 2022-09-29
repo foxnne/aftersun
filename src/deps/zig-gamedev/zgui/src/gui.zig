@@ -1,28 +1,79 @@
 //--------------------------------------------------------------------------------------------------
-// Zig bindings for 'dear imgui' library. Easy to use, hand-crafted API with default arguments,
-// named parameters and Zig style text formatting.
-//--------------------------------------------------------------------------------------------------
 const std = @import("std");
 const assert = std.debug.assert;
 //--------------------------------------------------------------------------------------------------
 pub const f32_min: f32 = 1.17549435082228750796873653722225e-38;
 pub const f32_max: f32 = 3.40282346638528859811704183484517e+38;
 //--------------------------------------------------------------------------------------------------
-pub fn init() void {
+pub fn init(allocator: std.mem.Allocator) void {
     if (zguiGetCurrentContext() == null) {
+        mem_allocator = allocator;
+        mem_allocations = std.AutoHashMap(usize, usize).init(allocator);
+        mem_allocations.?.ensureTotalCapacity(32) catch @panic("zgui: out of memory");
+        zguiSetAllocatorFunctions(zguiMemAlloc, zguiMemFree);
+
         _ = zguiCreateContext(null);
-        temp_buffer.resize(3 * 1024 + 1) catch unreachable;
+
+        temp_buffer = std.ArrayList(u8).init(allocator);
+        temp_buffer.?.resize(3 * 1024 + 1) catch unreachable;
     }
 }
 pub fn deinit() void {
     if (zguiGetCurrentContext() != null) {
-        temp_buffer.deinit();
+        temp_buffer.?.deinit();
         zguiDestroyContext(null);
+        zguiSetAllocatorFunctions(null, null);
+
+        assert(mem_allocations.?.count() == 0);
+        mem_allocations.?.deinit();
+        mem_allocations = null;
+        mem_allocator = null;
     }
 }
 extern fn zguiCreateContext(shared_font_atlas: ?*const anyopaque) Context;
 extern fn zguiDestroyContext(ctx: ?Context) void;
 extern fn zguiGetCurrentContext() ?Context;
+//--------------------------------------------------------------------------------------------------
+var mem_allocator: ?std.mem.Allocator = null;
+var mem_allocations: ?std.AutoHashMap(usize, usize) = null;
+var mem_mutex: std.Thread.Mutex = .{};
+const mem_alignment = 16;
+
+export fn zguiMemAlloc(size: usize, _: ?*anyopaque) callconv(.C) ?*anyopaque {
+    mem_mutex.lock();
+    defer mem_mutex.unlock();
+
+    const mem = mem_allocator.?.allocBytes(
+        mem_alignment,
+        size,
+        0,
+        @returnAddress(),
+    ) catch @panic("zgui: out of memory");
+
+    mem_allocations.?.put(@ptrToInt(mem.ptr), size) catch
+        @panic("zgui: out of memory");
+
+    return mem.ptr;
+}
+
+export fn zguiMemFree(maybe_ptr: ?*anyopaque, _: ?*anyopaque) callconv(.C) void {
+    if (maybe_ptr) |ptr| {
+        mem_mutex.lock();
+        defer mem_mutex.unlock();
+
+        const size = mem_allocations.?.fetchRemove(@ptrToInt(ptr)).?.value;
+        const mem = @ptrCast(
+            [*]align(mem_alignment) u8,
+            @alignCast(mem_alignment, ptr),
+        )[0..size];
+        mem_allocator.?.free(mem);
+    }
+}
+
+extern fn zguiSetAllocatorFunctions(
+    alloc_func: ?*const fn (usize, ?*anyopaque) callconv(.C) ?*anyopaque,
+    free_func: ?*const fn (?*anyopaque, ?*anyopaque) callconv(.C) void,
+) void;
 //--------------------------------------------------------------------------------------------------
 pub const ConfigFlags = enum(u32) {
     none = 0,
@@ -427,6 +478,7 @@ pub const Style = extern struct {
     anti_aliased_fill: bool,
     curve_tessellation_tol: f32,
     circle_tessellation_max_error: f32,
+
     colors: [@typeInfo(StyleCol).Enum.fields.len][4]f32,
 
     /// `pub fn init() Style`
@@ -2304,20 +2356,20 @@ extern fn zguiIsAnyItemFocused() bool;
 // Helpers
 //
 //--------------------------------------------------------------------------------------------------
-var temp_buffer = std.ArrayList(u8).init(std.heap.c_allocator);
+var temp_buffer: ?std.ArrayList(u8) = null;
 
 pub fn format(comptime fmt: []const u8, args: anytype) []const u8 {
     const len = std.fmt.count(fmt, args);
-    if (len > temp_buffer.items.len) temp_buffer.resize(len + 64) catch unreachable;
-    return std.fmt.bufPrint(temp_buffer.items, fmt, args) catch unreachable;
+    if (len > temp_buffer.?.items.len) temp_buffer.?.resize(len + 64) catch unreachable;
+    return std.fmt.bufPrint(temp_buffer.?.items, fmt, args) catch unreachable;
 }
 pub fn formatZ(comptime fmt: []const u8, args: anytype) [:0]const u8 {
     const len = std.fmt.count(fmt ++ "\x00", args);
-    if (len > temp_buffer.items.len) temp_buffer.resize(len + 64) catch unreachable;
-    return std.fmt.bufPrintZ(temp_buffer.items, fmt, args) catch unreachable;
+    if (len > temp_buffer.?.items.len) temp_buffer.?.resize(len + 64) catch unreachable;
+    return std.fmt.bufPrintZ(temp_buffer.?.items, fmt, args) catch unreachable;
 }
 //--------------------------------------------------------------------------------------------------
-fn typeToDataTypeEnum(comptime T: type) DataType {
+pub fn typeToDataTypeEnum(comptime T: type) DataType {
     return switch (T) {
         i8 => .I8,
         u8 => .U8,
@@ -2337,19 +2389,57 @@ fn typeToDataTypeEnum(comptime T: type) DataType {
 // Tabs
 //
 //--------------------------------------------------------------------------------------------------
-pub fn beginTabBar(label: [:0]const u8) bool {
-    return zguiBeginTabBar(label);
-}
-pub fn beginTabItem(label: [:0]const u8) bool {
-    return zguiBeginTabItem(label);
-}
-pub const endTabItem = zguiEndTabItem;
-pub const endTabBar = zguiEndTabBar;
+pub const TabBarFlags = packed struct(u32) {
+    reorderable: bool = false,
+    auto_select_new_tabs: bool = false,
+    tab_list_popup_button: bool = false,
+    no_close_with_middle_mouse_button: bool = false,
+    no_tab_list_scrolling_buttons: bool = false,
+    no_tooltip: bool = false,
+    fitting_policy_resize_down: bool = false,
+    fitting_policy_scroll: bool = false,
+    _padding: u24 = 0,
 
-extern fn zguiBeginTabBar(label: [*:0]const u8) bool;
-extern fn zguiBeginTabItem(label: [*:0]const u8) bool;
+    pub const fitting_policy_mask = TabBarFlags{
+        .fitting_policy_resize_down = true,
+        .fitting_policy_scroll = true,
+    };
+    pub const fitting_policy_default = TabBarFlags{ .fitting_policy_resize_down = true };
+};
+pub const TabItemFlags = packed struct(u32) {
+    unsaved_document: bool = false,
+    set_selected: bool = false,
+    no_close_with_middle_mouse_button: bool = false,
+    no_push_id: bool = false,
+    no_tooltip: bool = false,
+    no_reorder: bool = false,
+    leading: bool = false,
+    trailing: bool = false,
+    _padding: u24 = 0,
+};
+pub fn beginTabBar(label: [:0]const u8, flags: TabBarFlags) bool {
+    return zguiBeginTabBar(label, flags);
+}
+const BeginTabItem = struct {
+    p_open: ?*bool = null,
+    flags: TabItemFlags = .{},
+};
+pub fn beginTabItem(label: [:0]const u8, args: BeginTabItem) bool {
+    return zguiBeginTabItem(label, args.p_open, args.flags);
+}
+/// `void endTabItem() void`
+pub const endTabItem = zguiEndTabItem;
+/// `void endTabBar() void`
+pub const endTabBar = zguiEndTabBar;
+pub fn setTabItemClosed(tab_or_docked_window_label: [:0]const u8) void {
+    zguiSetTabItemClosed(tab_or_docked_window_label);
+}
+
+extern fn zguiBeginTabBar(label: [*:0]const u8, flags: TabBarFlags) bool;
+extern fn zguiBeginTabItem(label: [*:0]const u8, p_open: ?*bool, flags: TabItemFlags) bool;
 extern fn zguiEndTabItem() void;
 extern fn zguiEndTabBar() void;
+extern fn zguiSetTabItemClosed(tab_or_docked_window_label: [*:0]const u8) void;
 //--------------------------------------------------------------------------------------------------
 //
 // Viewport
@@ -3051,158 +3141,5 @@ pub const DrawList = *opaque {
         rounding: f32,
         flags: DrawFlags,
     ) void;
-    //----------------------------------------------------------------------------------------------
-};
-//--------------------------------------------------------------------------------------------------
-//
-// ImPlot
-//
-//--------------------------------------------------------------------------------------------------
-pub const plot = struct {
-    //----------------------------------------------------------------------------------------------
-    pub fn init() void {
-        if (zguiPlot_GetCurrentContext() == null) {
-            _ = zguiPlot_CreateContext(null);
-        }
-    }
-    pub fn deinit() void {
-        if (zguiPlot_GetCurrentContext() != null) {
-            zguiPlot_DestroyContext(null);
-        }
-    }
-    extern fn zguiPlot_GetCurrentContext() ?Context;
-    extern fn zguiPlot_CreateContext(shared_font_atlas: ?*const anyopaque) Context;
-    extern fn zguiPlot_DestroyContext(ctx: ?Context) void;
-    //----------------------------------------------------------------------------------------------
-    pub const PlotLocation = packed struct(u32) {
-        north: bool = false,
-        south: bool = false,
-        west: bool = false,
-        east: bool = false,
-        _padding: u28 = 0,
-
-        pub const north_west = PlotLocation{ .north = true, .west = true };
-        pub const north_east = PlotLocation{ .north = true, .east = true };
-        pub const south_west = PlotLocation{ .south = true, .west = true };
-        pub const south_east = PlotLocation{ .south = true, .east = true };
-    };
-    pub const LegendFlags = packed struct(u32) {
-        no_buttons: bool = false,
-        no_highlight_item: bool = false,
-        no_highlight_axis: bool = false,
-        no_menus: bool = false,
-        outside: bool = false,
-        horizontal: bool = false,
-        _padding: u26 = 0,
-    };
-    pub fn setupLegend(location: PlotLocation, flags: LegendFlags) void {
-        zguiPlot_SetupLegend(location, flags);
-    }
-    extern fn zguiPlot_SetupLegend(location: PlotLocation, flags: LegendFlags) void;
-    //----------------------------------------------------------------------------------------------
-    pub const AxisFlags = packed struct(u32) {
-        no_label: bool = false,
-        no_grid_lines: bool = false,
-        no_tick_marks: bool = false,
-        no_tick_labels: bool = false,
-        no_initial_fit: bool = false,
-        no_menus: bool = false,
-        no_side_switch: bool = false,
-        no_highlight: bool = false,
-        opposite: bool = false,
-        foreground: bool = false,
-        invert: bool = false,
-        auto_fit: bool = false,
-        range_fit: bool = false,
-        pan_stretch: bool = false,
-        lock_min: bool = false,
-        lock_max: bool = false,
-        _padding: u16 = 0,
-
-        pub const lock = AxisFlags{
-            .lock_min = true,
-            .lock_max = true,
-        };
-        pub const no_decorations = AxisFlags{
-            .no_label = true,
-            .no_grid_lines = true,
-            .no_tick_marks = true,
-            .no_tick_labels = true,
-        };
-        pub const aux_default = AxisFlags{
-            .no_grid_lines = true,
-            .opposite = true,
-        };
-    };
-    pub fn setupXAxis(label: [:0]const u8, flags: AxisFlags) void {
-        zguiPlot_SetupXAxis(label, flags);
-    }
-    pub fn setupYAxis(label: [:0]const u8, flags: AxisFlags) void {
-        zguiPlot_SetupYAxis(label, flags);
-    }
-    extern fn zguiPlot_SetupXAxis(label: [*:0]const u8, flags: AxisFlags) void;
-    extern fn zguiPlot_SetupYAxis(label: [*:0]const u8, flags: AxisFlags) void;
-    //----------------------------------------------------------------------------------------------
-    pub const Flags = packed struct(u32) {
-        no_title: bool = false,
-        no_legend: bool = false,
-        no_mouse_text: bool = false,
-        no_inputs: bool = false,
-        no_menus: bool = false,
-        no_box_select: bool = false,
-        no_child: bool = false,
-        no_frame: bool = false,
-        equal: bool = false,
-        crosshairs: bool = false,
-        _padding: u22 = 0,
-
-        pub const canvas_only = Flags{
-            .no_title = true,
-            .no_legend = true,
-            .no_menus = true,
-            .no_box_select = true,
-            .no_mouse_text = true,
-        };
-    };
-    pub const BeginPlot = struct {
-        w: f32 = -1.0,
-        h: f32 = 0.0,
-        flags: Flags = .{},
-    };
-    pub fn beginPlot(title_id: [:0]const u8, args: BeginPlot) bool {
-        return zguiPlot_BeginPlot(title_id, args.w, args.h, args.flags);
-    }
-    extern fn zguiPlot_BeginPlot(title_id: [*:0]const u8, width: f32, height: f32, flags: Flags) bool;
-    //----------------------------------------------------------------------------------------------
-    pub const LineFlags = packed struct(u32) {
-        _reserved0: bool = false,
-        _reserved1: bool = false,
-        _reserved2: bool = false,
-        _reserved3: bool = false,
-        _reserved4: bool = false,
-        _reserved5: bool = false,
-        _reserved6: bool = false,
-        _reserved7: bool = false,
-        _reserved8: bool = false,
-        _reserved9: bool = false,
-        segments: bool = false,
-        loop: bool = false,
-        skip_nan: bool = false,
-        no_clip: bool = false,
-        shaded: bool = false,
-        _padding: u17 = 0,
-    };
-    pub fn plotLineValuesInt(label: [:0]const u8, values: []const i32, flags: LineFlags) void {
-        zguiPlot_PlotLineValues(label, values.ptr, @intCast(i32, values.len), flags);
-    }
-    extern fn zguiPlot_PlotLineValues(
-        label_id: [*:0]const u8,
-        values: [*]const i32,
-        count: i32,
-        flags: LineFlags,
-    ) void;
-    //----------------------------------------------------------------------------------------------
-    pub const endPlot = zguiPlot_EndPlot;
-    extern fn zguiPlot_EndPlot() void;
     //----------------------------------------------------------------------------------------------
 };

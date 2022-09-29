@@ -521,6 +521,8 @@ fn deinit(allocator: std.mem.Allocator) void {
     state.batcher.deinit();
     state.cells.deinit();
     state.gctx.deinit(allocator);
+    zgui.backend.deinit();
+    zgui.deinit();
     allocator.destroy(state);
 }
 
@@ -704,8 +706,8 @@ pub fn main() !void {
         break :scale_factor std.math.max(cs[0], cs[1]);
     };
 
-    zgui.init();
-    defer zgui.deinit();
+    zgui.init(allocator);
+    
 
     zgui.io.setIniFilename(assets.root ++ "imgui.ini");
     zgui.io.setConfigFlags(.no_mouse_cursor_change);

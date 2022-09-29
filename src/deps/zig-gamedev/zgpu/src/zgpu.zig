@@ -360,12 +360,12 @@ pub const GraphicsContext = struct {
         };
         defer stage_commands.release();
 
-        gctx.queue.onSubmittedWorkDone(0, gpuWorkDone, @ptrCast(*anyopaque, &gctx.stats.gpu_frame_number));
-
         // TODO: We support up to 32 command buffers for now. Make it more robust.
         var command_buffers = std.BoundedArray(wgpu.CommandBuffer, 32).init(0) catch unreachable;
         command_buffers.append(stage_commands) catch unreachable;
         command_buffers.appendSlice(commands) catch unreachable;
+
+        gctx.queue.onSubmittedWorkDone(0, gpuWorkDone, @ptrCast(*anyopaque, &gctx.stats.gpu_frame_number));
         gctx.queue.submit(command_buffers.slice());
 
         gctx.stats.tick();
@@ -985,20 +985,23 @@ pub const GraphicsContext = struct {
 // Defined in dawn.cpp
 pub const DawnNativeInstance = ?*opaque {};
 pub const DawnProcsTable = ?*opaque {};
-pub extern fn dawnNativeCreateInstance() DawnNativeInstance;
-pub extern fn dawnNativeDestroyInstance(native_instance: DawnNativeInstance) void;
-pub extern fn dawnNativeGetWgpuInstance(native_instance: DawnNativeInstance) ?wgpu.Instance;
-pub extern fn dawnNativeDiscoverDefaultAdapters(native_instance: DawnNativeInstance) void;
-pub extern fn dawnNativeGetProcs() DawnProcsTable;
+pub extern fn dniCreate() DawnNativeInstance;
+pub extern fn dniDestroy(native_instance: DawnNativeInstance) void;
+pub extern fn dniGetWgpuInstance(native_instance: DawnNativeInstance) ?wgpu.Instance;
+pub extern fn dniDiscoverDefaultAdapters(native_instance: DawnNativeInstance) void;
+pub extern fn dniEnableBackendValidation(native_instance: DawnNativeInstance, enable: bool) void;
+
+pub extern fn dnGetProcs() DawnProcsTable;
 
 // Defined in Dawn codebase
 pub extern fn dawnProcSetProcs(procs: DawnProcsTable) void;
 
 pub fn createWgpuInstance() wgpu.Instance {
-    dawnProcSetProcs(dawnNativeGetProcs());
-    const native_instance = dawnNativeCreateInstance();
-    dawnNativeDiscoverDefaultAdapters(native_instance);
-    return dawnNativeGetWgpuInstance(native_instance).?;
+    dawnProcSetProcs(dnGetProcs());
+    const native_instance = dniCreate();
+    dniDiscoverDefaultAdapters(native_instance);
+    //dniEnableBackendValidation(native_instance, true);
+    return dniGetWgpuInstance(native_instance).?;
 }
 
 pub const bglBuffer = wgpu.BindGroupLayoutEntry.buffer;
@@ -1364,7 +1367,7 @@ pub fn checkSystem(comptime content_dir: []const u8) !void {
             // Change directory to where an executable is located.
             {
                 var exe_path_buffer: [1024]u8 = undefined;
-                const exe_path = std.fs.selfExeDirPath(exe_path_buffer[0..]) catch "./";
+                const exe_path = std.fs.selfExeDirPath(exe_path_buffer[0..]) catch ".";
                 std.os.chdir(exe_path) catch {};
             }
             // Make sure font file is a valid data file and not just a Git LFS pointer.
@@ -1375,7 +1378,7 @@ pub fn checkSystem(comptime content_dir: []const u8) !void {
                 ) catch return error.InvalidDataFiles;
                 defer file.close();
 
-                const size = @intCast(usize, file.getEndPos() catch return error.InvalidDataFiles);
+                const size = file.getEndPos() catch return error.InvalidDataFiles;
                 if (size <= 1024) {
                     return error.InvalidDataFiles;
                 }
@@ -1385,9 +1388,8 @@ pub fn checkSystem(comptime content_dir: []const u8) !void {
 
     doSystemCheck() catch |err| switch (err) {
         error.GraphicsApiUnavailable => {
-            std.debug.print(
+            std.log.err("\n" ++
                 \\---------------------------------------------------------------------------
-                \\GRAPHICS ERROR
                 \\
                 \\This program requires:
                 \\
@@ -1396,23 +1398,24 @@ pub fn checkSystem(comptime content_dir: []const u8) !void {
                 \\  * Metal graphics driver on macOS
                 \\
                 \\Please install latest supported driver and try again.
+                \\
                 \\---------------------------------------------------------------------------
                 \\
             , .{});
             return err;
         },
         error.InvalidDataFiles => {
-            std.debug.print(
+            std.log.err("\n" ++
                 \\---------------------------------------------------------------------------
-                \\DATA ERROR
                 \\
                 \\Invalid data files or missing content folder.
                 \\Please install Git LFS (Large File Support) and run (in the repo):
                 \\
-                \\git lfs install
-                \\git lfs pull
+                \\'git lfs install'
+                \\'git lfs pull'
                 \\
-                \\For more info please see: https://git-lfs.github.com/
+                \\For more info see: https://git-lfs.github.com/
+                \\
                 \\---------------------------------------------------------------------------
                 \\
             , .{});
