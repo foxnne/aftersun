@@ -502,7 +502,7 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
         const tree = flecs.ecs_new_entity(world, "Tree03");
         flecs.ecs_set(world, tree, &position);
         flecs.ecs_set(world, tree, &position.toTile(state.counter.count()));
-        flecs.ecs_set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Pine_0_Trunk, .vert_mode = .top_sway});
+        flecs.ecs_set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Pine_0_Trunk, .vert_mode = .top_sway });
         flecs.ecs_set(world, tree, &components.Collider{});
 
         const tree_leaves_01 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
@@ -531,8 +531,12 @@ fn update() void {
 
     // Handle setting mouse cursor as with imgui we need to each frame.
     switch (state.controls.mouse.cursor) {
-        .standard => { zgui.setMouseCursor(.arrow );},
-        .drag => { zgui.setMouseCursor( .hand );},
+        .standard => {
+            zgui.setMouseCursor(.arrow);
+        },
+        .drag => {
+            zgui.setMouseCursor(.hand);
+        },
     }
 
     _ = flecs.ecs_progress(state.world, 0);
@@ -638,41 +642,36 @@ fn update() void {
     // }
     // zgui.end();
 
-    
 }
 
 fn draw() void {
-    // Gui pass.
-    const encoder = state.gctx.device.createCommandEncoder(null);
-    defer encoder.release();
+    const swapchain_texv = state.gctx.swapchain.getCurrentTextureView();
+    defer swapchain_texv.release();
 
-    const back_buffer_view = state.gctx.swapchain.getCurrentTextureView();
-    defer back_buffer_view.release();
+    const zgui_commands = commands: {
+        const encoder = state.gctx.device.createCommandEncoder(null);
+        defer encoder.release();
 
-    {
-        const color_attachments = [_]wgpu.RenderPassColorAttachment{.{
-            .view = back_buffer_view,
-            .load_op = .load,
-            .store_op = .store,
-        }};
-        const render_pass_info = wgpu.RenderPassDescriptor{
-            .color_attachment_count = color_attachments.len,
-            .color_attachments = &color_attachments,
-        };
-        const pass = encoder.beginRenderPass(render_pass_info);
-        defer {
-            pass.end();
-            pass.release();
+        // Gui pass.
+        {
+            const pass = zgpu.util.beginRenderPassSimple(
+                encoder,
+                .load,
+                swapchain_texv,
+                null,
+                null,
+                null,
+            );
+            defer zgpu.util.endRelease(pass);
+            zgui.backend.draw(pass);
         }
 
-        zgui.backend.draw(pass);
-    }
+        break :commands encoder.finish(null);
+    };
+    defer zgui_commands.release();
 
     const batcher_commands = state.batcher.finish() catch unreachable;
     defer batcher_commands.release();
-
-    const zgui_commands = encoder.finish(null);
-    defer zgui_commands.release();
 
     state.gctx.submit(&.{ batcher_commands, zgui_commands });
 
@@ -707,7 +706,6 @@ pub fn main() !void {
     state = try init(allocator, window);
     defer deinit(allocator);
 
-    
     const scale_factor = scale_factor: {
         const scale = window.getContentScale();
         break :scale_factor std.math.max(scale[0], scale[1]);
@@ -721,22 +719,22 @@ pub fn main() !void {
     // TODO: Move GUI styling and color to its own file
     // Base style
     var style = zgui.getStyle();
-    style.window_rounding = 10.0 * scale_factor; 
+    style.window_rounding = 10.0 * scale_factor;
     style.frame_rounding = 10.0 * scale_factor;
     style.window_padding = .{ 4.0 * scale_factor, 4.0 * scale_factor };
-    style.item_spacing = .{ 4.0 * scale_factor, 4.0 * scale_factor};
+    style.item_spacing = .{ 4.0 * scale_factor, 4.0 * scale_factor };
     style.window_title_align = .{ 0.5, 0.5 };
     style.window_menu_button_position = zgui.Direction.none;
 
     const bg = math.Colors.background.toSlice();
 
     // Base colors
-    style.setColor(zgui.StyleCol.border, bg,);
+    style.setColor(zgui.StyleCol.border, bg);
     style.setColor(zgui.StyleCol.menu_bar_bg, bg);
     style.setColor(zgui.StyleCol.header, bg);
     style.setColor(zgui.StyleCol.title_bg, bg);
     style.setColor(zgui.StyleCol.title_bg_active, bg);
-    style.setColor(zgui.StyleCol.window_bg, .{ bg[0], bg[1], bg[2], 0.5});
+    style.setColor(zgui.StyleCol.window_bg, .{ bg[0], bg[1], bg[2], 0.5 });
     style.setColor(zgui.StyleCol.button, .{ bg[0], bg[1], bg[2], 0.6 });
     style.setColor(zgui.StyleCol.button_active, .{ bg[0], bg[1], bg[2], 1.0 });
     style.setColor(zgui.StyleCol.button_hovered, .{ bg[0], bg[1], bg[2], 0.9 });
