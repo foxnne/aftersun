@@ -115,7 +115,6 @@ pub const Drag = struct {
     pub const Modifier = enum { all, half, one };
 };
 pub const Moveable = struct {};
-pub const WaitForRemove = struct { target: flecs.EcsEntity };
 
 pub const Camera = struct {};
 pub const Target = struct {};
