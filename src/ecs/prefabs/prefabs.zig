@@ -52,6 +52,7 @@ pub fn create(prefabs: *Prefabs, world: *flecs.EcsWorld) void {
     flecs.ecs_set(world, prefabs.ham, &components.SpriteRenderer{
         .index = game.assets.aftersun_atlas.Ham_0_Layer,
     });
+    flecs.ecs_set(world, prefabs.ham, &components.Raw{ .cooked_prefab = prefabs.cooked_ham });
 
     // Cooked ham
     flecs.ecs_add_pair(world, prefabs.cooked_ham, flecs.Constants.EcsIsA, prefabs._stackable);

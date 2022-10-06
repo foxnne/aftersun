@@ -123,3 +123,7 @@ pub const Useable = struct {};
 pub const Toggleable = struct { state: bool = false, on_prefab: flecs.EcsEntity, off_prefab: flecs.EcsEntity };
 pub const Use = struct { target: Tile };
 pub const Consumeable = struct {};
+pub const Raw = struct { cooked_prefab: flecs.EcsEntity };
+pub const Cook = struct {};
+
+pub const Trigger = struct {};

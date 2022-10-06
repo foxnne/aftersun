@@ -295,12 +295,14 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     flecs.ecs_system(world, "VelocitySystem", flecs.Constants.EcsOnUpdate, &velocity_system);
 
     // - Other
+    var inspect_system = @import("ecs/systems/inspect.zig").system();
+    flecs.ecs_system(world, "InspectSystem", flecs.Constants.EcsOnUpdate, &inspect_system);
     var stack_system = @import("ecs/systems/stack.zig").system();
     flecs.ecs_system(world, "StackSystem", flecs.Constants.EcsOnUpdate, &stack_system);
     var use_system = @import("ecs/systems/use.zig").system(world);
     flecs.ecs_system(world, "UseSystem", flecs.Constants.EcsOnUpdate, &use_system);
-    var inspect_system = @import("ecs/systems/inspect.zig").system();
-    flecs.ecs_system(world, "InspectSystem", flecs.Constants.EcsOnUpdate, &inspect_system);
+    var cook_system = @import("ecs/systems/cook.zig").system();
+    flecs.ecs_system(world, "CookSystem", flecs.Constants.EcsOnUpdate, &cook_system);
 
     // - Observers
     var tile_observer = @import("ecs/observers/tile.zig").observer();
@@ -388,6 +390,7 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
             .fps = 16,
         });
         flecs.ecs_set(world, campfire, &components.Collider{ .trigger = true });
+        flecs.ecs_add_pair(world, campfire, components.Trigger, components.Cook);
     }
 
     // Create first tree

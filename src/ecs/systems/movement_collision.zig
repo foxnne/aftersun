@@ -67,7 +67,10 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                                 if (flecs.ecs_field(&query_it, components.Collider, 3)) |collisions| {
                                                     if (collisions[j].trigger) {
                                                         // TODO: Handle triggers and what they attach to the entity moving into the trigger.
-
+                                                        const add = flecs.ecs_get_target(world, query_it.entities[j], flecs.ecs_id(components.Trigger), 0);
+                                                        if (add != 0) {
+                                                            flecs.ecs_add_id(world, entity, add);
+                                                        }
                                                     } else {
                                                         if (flecs.ecs_field(it, components.Collider, 3)) |colliders| {
                                                             if (!colliders[i].trigger) {

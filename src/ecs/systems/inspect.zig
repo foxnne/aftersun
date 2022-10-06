@@ -82,7 +82,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.border, .c = .{ 1, 1, 1, 0.0 } });
                 zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.separator, .c = .{ 1, 1, 1, 1 } });
                 defer zgui.popStyleColor(.{ .count = 3 });
-                zgui.pushStyleVar2f(.{ .idx = zgui.StyleVar.item_spacing, .v = .{ 2.0 * scale, 2.0 * scale }});
+                zgui.pushStyleVar2f(.{ .idx = zgui.StyleVar.item_spacing, .v = .{ 2.0 * scale, 2.0 * scale } });
                 defer zgui.popStyleVar(.{ .count = 1 });
 
                 const radius = game.settings.pixels_per_unit / 1.8 * game.state.camera.zoom / 2 * scale;
@@ -189,6 +189,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 }
                 zgui.end();
             }
+        } else {
+            game.state.controls.inspecting = false;
         }
     }
 }
