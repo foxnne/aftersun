@@ -22,8 +22,15 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             if (flecs.ecs_field(it, components.Tile, 1)) |tiles| {
                 const cell = tiles[i].toCell();
                 if (game.state.cells.get(cell)) |cell_entity| {
-                    flecs.ecs_remove_pair(world, entity, components.Cell, flecs.Constants.EcsWildcard);
-                    flecs.ecs_set_pair(world, entity, &cell, cell_entity);
+                    const id = flecs.ecs_get_target(world, entity, flecs.ecs_id(components.Cell), 0);
+                    if (id != 0) {
+                        if (id != cell_entity) {
+                            flecs.ecs_remove_pair(world, entity, components.Cell, flecs.Constants.EcsWildcard);
+                            flecs.ecs_set_pair(world, entity, &cell, cell_entity);
+                        }
+                    } else {
+                        flecs.ecs_set_pair(world, entity, &cell, cell_entity);
+                    }
                 } else {
                     const cell_entity = flecs.ecs_new_id(world);
                     flecs.ecs_set(world, cell_entity, &cell);

@@ -27,7 +27,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                         if (tiles[i].x != movements[i].end.x or tiles[i].y != movements[i].end.y or tiles[i].z != movements[i].end.z) {
                             // Move the tile, only once so counter is only set on the actual move.
                             tiles[i] = movements[i].end;
-                            tiles[i].counter = game.state.counter.count();
+                            if (movements[i].increase_counter)
+                                tiles[i].counter = game.state.counter.count();
 
                             // Set modified so that observers are triggered.
                             flecs.ecs_modified_id(world, entity, flecs.ecs_id(components.Tile));

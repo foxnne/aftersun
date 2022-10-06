@@ -25,7 +25,6 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 }
                 if (flecs.ecs_get(world, entity, components.StackAnimator)) |animator| {
                     if (flecs.ecs_get_mut(world, entity, components.SpriteRenderer)) |renderer| {
-
                         var index: usize = 0;
                         for (animator.counts) |count, j| {
                             if (stacks[i].count >= count) {

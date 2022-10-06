@@ -6,7 +6,7 @@ const components = game.components;
 
 pub fn system() flecs.EcsSystemDesc {
     var desc = std.mem.zeroes(flecs.EcsSystemDesc);
-    desc.query.filter.terms[0] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Raw) });
+    desc.query.filter.terms[0] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Raw), .oper = flecs.EcsOperKind.ecs_optional });
     desc.query.filter.terms[1] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Cook) });
     desc.query.filter.terms[2] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Stack), .oper = flecs.EcsOperKind.ecs_optional });
     desc.query.filter.terms[3] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Position) });
@@ -39,7 +39,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                         });
                         flecs.ecs_set_pair(world, new, &components.Cooldown{ .end = game.settings.movement_cooldown / 2 }, components.Movement);
                         if (flecs.ecs_field(it, components.Stack, 3)) |stacks| {
-                            if (stacks[i].count > 1) {
+                            if (stacks[i].count > 0) {
                                 stacks[i].count -= 1;
                                 flecs.ecs_modified_id(world, entity, flecs.ecs_id(components.Stack));
 
@@ -47,11 +47,9 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                     .start = .{ .x = tiles[i].x, .y = tiles[i].y, .z = tiles[i].z + 1 },
                                     .end = .{ .x = tiles[i].x, .y = tiles[i].y, .z = tiles[i].z },
                                     .curve = .sin,
+                                    .increase_counter = false,
                                 });
                                 flecs.ecs_set_pair(world, entity, &components.Cooldown{ .end = game.settings.movement_cooldown / 2 }, components.Movement);
-                                flecs.ecs_remove(world, entity, components.Cook);
-                            } else {
-                                flecs.ecs_delete(world, entity);
                                 flecs.ecs_remove(world, entity, components.Cook);
                             }
                         } else {
@@ -60,6 +58,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                         }
                     }
                 }
+            } else {
+                flecs.ecs_remove(world, entity, components.Cook);
             }
         }
     }
