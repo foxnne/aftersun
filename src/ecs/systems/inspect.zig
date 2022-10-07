@@ -86,7 +86,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 defer zgui.popStyleVar(.{ .count = 1 });
 
                 const radius = game.settings.pixels_per_unit / 8 * game.state.camera.zoom / 2 * scale;
-                const leader_length = game.settings.pixels_per_unit / 3 * game.state.camera.zoom / 2;
+                const leader_length = game.settings.pixels_per_unit / 3 + (game.settings.pixels_per_unit / 2 - radius) * game.state.camera.zoom / 2 * scale;
 
                 const direction: game.math.Direction = if (screen_position[1] < game.settings.pixels_per_unit * 2 * scale) .ne else .se;
                 const normalized_direction = direction.normalized();
