@@ -101,7 +101,6 @@ pub const Movement = struct {
     start: Tile,
     end: Tile,
     curve: Curve = .linear,
-    increase_counter: bool = true,
 
     pub const Curve = enum {
         linear,

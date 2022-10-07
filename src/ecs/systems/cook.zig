@@ -28,13 +28,15 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 if (flecs.ecs_field(it, components.Position, 4)) |positions| {
                     if (flecs.ecs_field(it, components.Tile, 5)) |tiles| {
                         const new = flecs.ecs_new_w_pair(world, flecs.Constants.EcsIsA, raws[i].cooked_prefab);
+                        var tile = tiles[i];
+                        tile.z += 1;
 
                         flecs.ecs_set(world, new, positions[i]);
-                        flecs.ecs_set(world, new, tiles[i]);
+                        flecs.ecs_set(world, new, &tile);
 
                         flecs.ecs_set_pair_second(world, new, components.Request, &components.Movement{
-                            .start = .{ .x = tiles[i].x, .y = tiles[i].y, .z = tiles[i].z + 1 },
-                            .end = .{ .x = tiles[i].x, .y = tiles[i].y, .z = tiles[i].z },
+                            .start = tile,
+                            .end = tiles[i],
                             .curve = .sin,
                         });
                         flecs.ecs_set_pair(world, new, &components.Cooldown{ .end = game.settings.movement_cooldown / 2 }, components.Movement);
@@ -44,17 +46,15 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                 flecs.ecs_modified_id(world, entity, flecs.ecs_id(components.Stack));
 
                                 flecs.ecs_set_pair_second(world, entity, components.Request, &components.Movement{
-                                    .start = .{ .x = tiles[i].x, .y = tiles[i].y, .z = tiles[i].z + 1 },
-                                    .end = .{ .x = tiles[i].x, .y = tiles[i].y, .z = tiles[i].z },
+                                    .start = tile,
+                                    .end = tiles[i],
                                     .curve = .sin,
-                                    .increase_counter = false,
                                 });
                                 flecs.ecs_set_pair(world, entity, &components.Cooldown{ .end = game.settings.movement_cooldown / 2 }, components.Movement);
                                 flecs.ecs_remove(world, entity, components.Cook);
                             }
                         } else {
                             flecs.ecs_delete(world, entity);
-                            flecs.ecs_remove(world, entity, components.Cook);
                         }
                     }
                 }
