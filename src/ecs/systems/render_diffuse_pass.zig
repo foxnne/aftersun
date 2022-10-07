@@ -12,6 +12,7 @@ pub fn system() flecs.EcsSystemDesc {
     desc.query.filter.terms[1] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Rotation), .oper = flecs.EcsOperKind.ecs_optional });
     desc.query.filter.terms[2] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.SpriteRenderer), .oper = flecs.EcsOperKind.ecs_optional });
     desc.query.filter.terms[3] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.CharacterRenderer), .oper = flecs.EcsOperKind.ecs_optional });
+    desc.query.filter.terms[4] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.ParticleRenderer), .oper = flecs.EcsOperKind.ecs_optional });
     desc.query.order_by_component = flecs.ecs_id(components.Position);
     desc.query.order_by = orderBy;
     desc.run = run;
@@ -30,10 +31,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
     }) catch unreachable;
 
     while (flecs.ecs_query_next(it)) {
-    
         var i: usize = 0;
         while (i < it.count) : (i += 1) {
-
             if (flecs.ecs_field(it, components.Position, 1)) |positions| {
                 const rotation = if (flecs.ecs_field(it, components.Rotation, 2)) |rotations| rotations[i].value else 0.0;
                 var position = positions[i].toF32x4();
@@ -123,6 +122,21 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             .rotation = rotation,
                         },
                     ) catch unreachable;
+                }
+
+                if (flecs.ecs_field(it, components.ParticleRenderer, 5)) |renderers| {
+                    for (renderers[i].particles) |particle| {
+                        if (particle.alive()) {
+                            game.state.batcher.sprite(
+                                zm.f32x4(particle.position[0], particle.position[1], particle.position[2], 0),
+                                game.state.diffusemap,
+                                game.state.atlas.sprites[particle.index],
+                                .{
+                                    .color = particle.color.value,
+                                },
+                            ) catch unreachable;
+                        }
+                    }
                 }
             }
         }

@@ -85,8 +85,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 zgui.pushStyleVar2f(.{ .idx = zgui.StyleVar.item_spacing, .v = .{ 2.0 * scale, 2.0 * scale } });
                 defer zgui.popStyleVar(.{ .count = 1 });
 
-                const radius = game.settings.pixels_per_unit / 1.8 * game.state.camera.zoom / 2 * scale;
-                const leader_length = game.settings.pixels_per_unit / 3;
+                const radius = game.settings.pixels_per_unit / 8 * game.state.camera.zoom / 2 * scale;
+                const leader_length = game.settings.pixels_per_unit / 3 * game.state.camera.zoom / 2;
 
                 const direction: game.math.Direction = if (screen_position[1] < game.settings.pixels_per_unit * 2 * scale) .ne else .se;
                 const normalized_direction = direction.normalized();
@@ -106,11 +106,10 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
 
                     draw_list.pushClipRectFullScreen();
                     defer draw_list.popClipRect();
-                    draw_list.addCircle(.{
+                    draw_list.addCircleFilled(.{
                         .p = .{ screen_position[0], screen_position[1] },
                         .r = game.math.lerp(0.0, radius, game.state.controls.mouse.tile_timer),
-                        .col = 0xff_ff_ff_ff,
-                        .thickness = 1 * scale,
+                        .col = 0x99_ff_ff_ff,
                     });
 
                     draw_list.addPolyline(&[_][2]f32{
@@ -153,7 +152,6 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             zgui.text("{s}", .{description[0..index]});
                         }
                     }
-                    zgui.spacing();
                     zgui.spacing();
                     zgui.spacing();
                     zgui.spacing();

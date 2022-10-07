@@ -321,6 +321,8 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     flecs.ecs_system(world, "AnimatorCharacterSystem", flecs.Constants.EcsOnUpdate, &animation_character_system);
     var animation_sprite_system = @import("ecs/systems/animation_sprite.zig").system();
     flecs.ecs_system(world, "AnimatorSpriteSystem", flecs.Constants.EcsOnUpdate, &animation_sprite_system);
+    var particle_system = @import("ecs/systems/animation_particle.zig").system();
+    flecs.ecs_system(world, "ParticleSystem", flecs.Constants.EcsOnUpdate, &particle_system);
 
     // - Render
     var render_culling_system = @import("ecs/systems/render_culling.zig").system();
@@ -391,6 +393,19 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
         });
         flecs.ecs_set(world, campfire, &components.Collider{ .trigger = true });
         flecs.ecs_add_pair(world, campfire, components.Trigger, components.Cook);
+        flecs.ecs_set(world, campfire, &components.ParticleRenderer{
+            .particles = try allocator.alloc(components.ParticleRenderer.Particle, 32),
+            .offset = zm.f32x4(0, settings.pixels_per_unit / 1.5, 0, 0),
+        });
+        flecs.ecs_set(world, campfire, &components.ParticleAnimator{
+            .animation = &animations.Smoke_Layer,
+            .rate = 8.0,
+            .start_life = 2.0,
+            .velocity_min = .{ -0.05, 0.2 },
+            .velocity_max = .{ 0.05, 0.4 },
+            .start_color = math.Color.initFloats(0.5, 0.5, 0.5, 1.0),
+            .end_color = math.Color.initFloats(1.0, 1.0, 1.0, 1.0),
+        });
     }
 
     // Create first tree
@@ -737,10 +752,10 @@ pub fn main() !void {
     style.setColor(zgui.StyleCol.header, bg);
     style.setColor(zgui.StyleCol.title_bg, bg);
     style.setColor(zgui.StyleCol.title_bg_active, bg);
-    style.setColor(zgui.StyleCol.window_bg, .{ bg[0], bg[1], bg[2], 0.5 });
-    style.setColor(zgui.StyleCol.button, .{ bg[0], bg[1], bg[2], 0.6 });
+    style.setColor(zgui.StyleCol.window_bg, .{ bg[0] * 0.8, bg[1] * 0.8, bg[2] * 0.8, 0.5 });
+    style.setColor(zgui.StyleCol.button, .{ bg[0] * 0.7, bg[1] * 0.7, bg[2] * 0.8, 0.6 });
     style.setColor(zgui.StyleCol.button_active, .{ bg[0], bg[1], bg[2], 1.0 });
-    style.setColor(zgui.StyleCol.button_hovered, .{ bg[0], bg[1], bg[2], 0.9 });
+    style.setColor(zgui.StyleCol.button_hovered, .{ bg[0], bg[1], bg[2], 0.8 });
     style.setColor(zgui.StyleCol.resize_grip, .{ bg[0], bg[1], bg[2], 0.6 });
     style.setColor(zgui.StyleCol.resize_grip_active, .{ bg[0], bg[1], bg[2], 1.0 });
     style.setColor(zgui.StyleCol.resize_grip_hovered, .{ bg[0], bg[1], bg[2], 0.9 });

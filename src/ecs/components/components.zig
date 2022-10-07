@@ -6,6 +6,7 @@ const flecs = @import("flecs");
 const sprites = @import("sprites.zig");
 const characters = @import("characters.zig");
 const stacks = @import("stacks.zig");
+const particles = @import("particles.zig");
 
 pub const SpriteRenderer = sprites.SpriteRenderer;
 pub const SpriteAnimator = sprites.SpriteAnimator;
@@ -15,6 +16,9 @@ pub const CharacterAnimator = characters.CharacterAnimator;
 
 pub const Stack = stacks.Stack;
 pub const StackAnimator = stacks.StackAnimator;
+
+pub const ParticleRenderer = particles.ParticleRenderer;
+pub const ParticleAnimator = particles.ParticleAnimator;
 
 pub const Visible = struct {};
 pub const Player = struct {};
