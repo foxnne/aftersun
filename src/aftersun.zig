@@ -43,6 +43,7 @@ pub var state: *GameState = undefined;
 
 /// Holds the global game state.
 pub const GameState = struct {
+    allocator: std.mem.Allocator,
     gctx: *zgpu.GraphicsContext,
     world: *flecs.EcsWorld,
     entities: Entities = .{},
@@ -224,6 +225,7 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
 
     state = try allocator.create(GameState);
     state.* = .{
+        .allocator = allocator,
         .gctx = gctx,
         .world = world,
         .prefabs = prefabs,
@@ -309,6 +311,8 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     flecs.ecs_observer(world, "TileObserver", &tile_observer);
     var stack_observer = @import("ecs/observers/stack.zig").observer();
     flecs.ecs_observer(world, "StackObserver", &stack_observer);
+    var free_particles_observer = @import("ecs/observers/free_particles.zig").observer();
+    flecs.ecs_observer(world, "FreeParticlesObserver", &free_particles_observer);
 
     // - Camera
     var camera_follow_system = @import("ecs/systems/camera_follow.zig").system();
@@ -536,6 +540,9 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
 }
 
 fn deinit(allocator: std.mem.Allocator) void {
+    // Remove all particle renderers so observer can free particles.
+    flecs.ecs_remove_all(state.world, flecs.ecs_id(components.ParticleRenderer));
+
     state.batcher.deinit();
     state.cells.deinit();
     state.gctx.deinit(allocator);
