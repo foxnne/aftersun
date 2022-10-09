@@ -759,8 +759,8 @@ pub fn main() !void {
     style.setColor(zgui.StyleCol.header, bg);
     style.setColor(zgui.StyleCol.title_bg, bg);
     style.setColor(zgui.StyleCol.title_bg_active, bg);
-    style.setColor(zgui.StyleCol.window_bg, .{ bg[0] * 0.8, bg[1] * 0.8, bg[2] * 0.8, 0.5 });
-    style.setColor(zgui.StyleCol.button, .{ bg[0] * 0.7, bg[1] * 0.7, bg[2] * 0.8, 0.6 });
+    style.setColor(zgui.StyleCol.window_bg, .{ bg[0] * 0.8, bg[1] * 0.8, bg[2] * 0.8, 0.6 });
+    style.setColor(zgui.StyleCol.button, .{ bg[0] * 0.7, bg[1] * 0.7, bg[2] * 0.8, 0.8 });
     style.setColor(zgui.StyleCol.button_active, .{ bg[0], bg[1], bg[2], 1.0 });
     style.setColor(zgui.StyleCol.button_hovered, .{ bg[0], bg[1], bg[2], 0.8 });
     style.setColor(zgui.StyleCol.resize_grip, .{ bg[0], bg[1], bg[2], 0.6 });

@@ -60,7 +60,6 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 }
             }
         }
-
         if (target_entity) |target| {
             const prefab = flecs.ecs_get_target(world, target, flecs.Constants.EcsIsA, 0);
 
@@ -86,13 +85,13 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 defer zgui.popStyleVar(.{ .count = 1 });
 
                 const radius = game.settings.pixels_per_unit / 8 * game.state.camera.zoom / 2 * scale;
-                const leader_length = game.settings.pixels_per_unit / 3 + (game.settings.pixels_per_unit / 2 - radius) * game.state.camera.zoom / 2 * scale;
+                const leader_length = (game.settings.pixels_per_unit / 2) * (game.state.camera.zoom / 1.5) * scale;
 
                 const direction: game.math.Direction = if (screen_position[1] < game.settings.pixels_per_unit * 2 * scale) .ne else .se;
                 const normalized_direction = direction.normalized();
 
                 const pos_1 = screen_position + normalized_direction * zm.f32x4s(game.math.lerp(0.0, radius, game.state.controls.mouse.tile_timer));
-                const pos_2 = pos_1 + normalized_direction * zm.f32x4s(game.math.lerp(0.0, leader_length, game.state.controls.mouse.tile_timer) * scale);
+                const pos_2 = pos_1 + normalized_direction * zm.f32x4s(game.math.lerp(0.0, leader_length, game.state.controls.mouse.tile_timer));
 
                 zgui.setNextWindowPos(.{ .x = pos_2[0], .y = pos_2[1] - text_spacing - window_padding - window_spacing, .cond = .always });
                 if (zgui.begin("Inspect", .{ .flags = zgui.WindowFlags{
@@ -100,7 +99,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     .no_resize = true,
                     .always_auto_resize = true,
                 } })) {
-                    const pos_3 = pos_2 + zm.f32x4(game.math.lerp(0, zgui.getWindowWidth(), game.state.controls.mouse.tile_timer), 0, 0, 0);
+                    var pos_3 = pos_2 + zm.f32x4(game.math.lerp(0, zgui.getWindowWidth(), game.state.controls.mouse.tile_timer), 0, 0, 0);
 
                     const draw_list = zgui.getWindowDrawList();
 
@@ -109,14 +108,14 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     draw_list.addCircleFilled(.{
                         .p = .{ screen_position[0], screen_position[1] },
                         .r = game.math.lerp(0.0, radius, game.state.controls.mouse.tile_timer),
-                        .col = 0x99_ff_ff_ff,
+                        .col = 0x90_ff_ff_ff,
                     });
 
                     draw_list.addPolyline(&[_][2]f32{
                         [_]f32{ pos_1[0], pos_1[1] },
                         [_]f32{ pos_2[0], pos_2[1] },
                         [_]f32{ pos_3[0], pos_3[1] },
-                    }, .{ .col = 0xff_ff_ff_ff, .thickness = 1 * scale });
+                    }, .{ .col = 0x90_ff_ff_ff, .thickness = 1 * scale });
 
                     const prefix = "You see";
 
@@ -170,7 +169,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
 
                             if (flecs.ecs_get_mut(world, game.state.entities.player, components.CharacterAnimator)) |animator| {
                                 animator.top_set = if (rand.boolean()) game.animation_sets.top_f_01 else game.animation_sets.top_f_02;
-                                animator.bottom_set = if (rand.boolean()) game.animation_sets.bottom_f_01 else game.animation_sets.bottom_f_02;
+                                animator.bottom_set = if (rand.boolean()) game.animation_sets.bottom_f_02 else game.animation_sets.bottom_f_01;
                             }
 
                             if (flecs.ecs_get_mut(world, game.state.entities.player, components.CharacterRenderer)) |renderer| {
