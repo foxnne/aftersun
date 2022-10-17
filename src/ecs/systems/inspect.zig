@@ -126,6 +126,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     _ = std.mem.replace(u8, n, "_", " ", &buffer);
                     const fixed_name = buffer[0..n.len];
 
+                    zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.text, .c = .{ 1.0, 1.0, 1.0, 1.0 } });
                     if (count > 1) {
                         const description = zgui.formatZ("{s} {d} {s}s.", .{ prefix, count, fixed_name });
                         const index = @floatToInt(usize, @trunc(game.state.controls.mouse.tile_timer * @intToFloat(f32, description.len)));
@@ -151,6 +152,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             zgui.text("{s}", .{description[0..index]});
                         }
                     }
+                    zgui.popStyleColor(.{ .count = 1 });
                     zgui.spacing();
                     zgui.spacing();
                     zgui.spacing();

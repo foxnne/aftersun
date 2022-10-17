@@ -7,7 +7,7 @@ const zstbi = @import("zstbi");
 const zm = @import("zmath");
 const flecs = @import("flecs");
 
-pub const name: [*:0]const u8 = @typeName(@This())[std.mem.lastIndexOf(u8, @typeName(@This()), ".").? + 1 ..];
+pub const name: [:0]const u8 = "Aftersun";
 pub const settings = @import("settings.zig");
 
 pub const assets = @import("assets.zig");
@@ -115,7 +115,14 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     var prefabs = Prefabs.init(world);
     prefabs.create(world);
 
-    const gctx = try zgpu.GraphicsContext.init(allocator, window);
+    const gctx = try zgpu.GraphicsContext.create(allocator, window);
+
+    var arena_state = std.heap.ArenaAllocator.init(allocator);
+    defer arena_state.deinit();
+    const arena = arena_state.allocator();
+
+    zstbi.init(arena);
+    defer zstbi.deinit();
 
     const batcher = try gfx.Batcher.init(allocator, gctx, settings.batcher_max_sprites);
 
@@ -140,9 +147,9 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
 
     // Build the default bind group.
     const bind_group_layout_default = gctx.createBindGroupLayout(&.{
-        zgpu.bglBuffer(0, .{ .vertex = true }, .uniform, true, 0),
-        zgpu.bglTexture(1, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.bglSampler(2, .{ .fragment = true }, .filtering),
+        zgpu.bufferEntry(0, .{ .vertex = true }, .uniform, true, 0),
+        zgpu.textureEntry(1, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.samplerEntry(2, .{ .fragment = true }, .filtering),
     });
     defer gctx.releaseResource(bind_group_layout_default);
 
@@ -154,11 +161,11 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
 
     // Build the diffuse bind group.
     const bind_group_layout_diffuse = gctx.createBindGroupLayout(&.{
-        zgpu.bglBuffer(0, .{ .vertex = true }, .uniform, true, 0),
-        zgpu.bglTexture(1, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.bglSampler(2, .{ .fragment = true }, .filtering),
-        zgpu.bglTexture(3, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.bglSampler(4, .{ .fragment = true }, .filtering),
+        zgpu.bufferEntry(0, .{ .vertex = true }, .uniform, true, 0),
+        zgpu.textureEntry(1, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.samplerEntry(2, .{ .fragment = true }, .filtering),
+        zgpu.textureEntry(3, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.samplerEntry(4, .{ .fragment = true }, .filtering),
     });
     defer gctx.releaseResource(bind_group_layout_diffuse);
 
@@ -179,11 +186,11 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
 
     // Build the environment bind group.
     const bind_group_layout_environment = gctx.createBindGroupLayout(&.{
-        zgpu.bglBuffer(0, .{ .vertex = true, .fragment = true }, .uniform, true, 0),
-        zgpu.bglTexture(1, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.bglSampler(2, .{ .fragment = true }, .filtering),
-        zgpu.bglTexture(3, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.bglSampler(4, .{ .fragment = true }, .filtering),
+        zgpu.bufferEntry(0, .{ .vertex = true, .fragment = true }, .uniform, true, 0),
+        zgpu.textureEntry(1, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.samplerEntry(2, .{ .fragment = true }, .filtering),
+        zgpu.textureEntry(3, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.samplerEntry(4, .{ .fragment = true }, .filtering),
     });
     defer gctx.releaseResource(bind_group_layout_environment);
 
@@ -198,15 +205,15 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
 
     // Build the final bind group.
     const bind_group_layout_final = gctx.createBindGroupLayout(&.{
-        zgpu.bglBuffer(0, .{ .vertex = true, .fragment = true }, .uniform, true, 0),
-        zgpu.bglTexture(1, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.bglSampler(2, .{ .fragment = true }, .filtering),
-        zgpu.bglTexture(3, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.bglSampler(4, .{ .fragment = true }, .filtering),
-        zgpu.bglTexture(5, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.bglSampler(6, .{ .fragment = true }, .filtering),
-        zgpu.bglTexture(7, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.bglSampler(8, .{ .fragment = true }, .filtering),
+        zgpu.bufferEntry(0, .{ .vertex = true, .fragment = true }, .uniform, true, 0),
+        zgpu.textureEntry(1, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.samplerEntry(2, .{ .fragment = true }, .filtering),
+        zgpu.textureEntry(3, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.samplerEntry(4, .{ .fragment = true }, .filtering),
+        zgpu.textureEntry(5, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.samplerEntry(6, .{ .fragment = true }, .filtering),
+        zgpu.textureEntry(7, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.samplerEntry(8, .{ .fragment = true }, .filtering),
     });
     defer gctx.releaseResource(bind_group_layout_diffuse);
 
@@ -545,9 +552,9 @@ fn deinit(allocator: std.mem.Allocator) void {
 
     state.batcher.deinit();
     state.cells.deinit();
-    state.gctx.deinit(allocator);
     zgui.backend.deinit();
     zgui.deinit();
+    state.gctx.destroy(allocator);
     allocator.destroy(state);
 }
 
@@ -590,83 +597,82 @@ fn update() void {
     }
     zgui.end();
 
-    // if (zgui.begin("Game Settings", .{})) {
-    //     zgui.bulletText(
-    //         "Average :  {d:.3} ms/frame ({d:.1} fps)",
-    //         .{ state.gctx.stats.average_cpu_time, state.gctx.stats.fps },
-    //     );
+    if (zgui.begin("Game Settings", .{})) {
+        zgui.bulletText(
+            "Average :  {d:.3} ms/frame ({d:.1} fps)",
+            .{ state.gctx.stats.average_cpu_time, state.gctx.stats.fps },
+        );
 
-    //     zgui.bulletText("Channel:", .{});
-    //     if (zgui.radioButton("Final", .{ .active = state.output_channel == .final })) state.output_channel = .final;
-    //     zgui.sameLine(.{});
-    //     if (zgui.radioButton("Diffuse", .{ .active = state.output_channel == .diffuse })) state.output_channel = .diffuse;
-    //     if (zgui.radioButton("Height##1", .{ .active = state.output_channel == .height })) state.output_channel = .height;
-    //     zgui.sameLine(.{});
-    //     if (zgui.radioButton("Reverse Height", .{ .active = state.output_channel == .reverse_height })) state.output_channel = .reverse_height;
-    //     if (zgui.radioButton("Environment", .{ .active = state.output_channel == .environment })) state.output_channel = .environment;
+        zgui.bulletText("Channel:", .{});
+        if (zgui.radioButton("Final", .{ .active = state.output_channel == .final })) state.output_channel = .final;
+        zgui.sameLine(.{});
+        if (zgui.radioButton("Diffuse", .{ .active = state.output_channel == .diffuse })) state.output_channel = .diffuse;
+        if (zgui.radioButton("Height##1", .{ .active = state.output_channel == .height })) state.output_channel = .height;
+        zgui.sameLine(.{});
+        if (zgui.radioButton("Reverse Height", .{ .active = state.output_channel == .reverse_height })) state.output_channel = .reverse_height;
+        if (zgui.radioButton("Environment", .{ .active = state.output_channel == .environment })) state.output_channel = .environment;
 
-    //     _ = zgui.sliderFloat("Timescale", .{ .v = &state.time.scale, .min = 0.1, .max = 2400.0 });
-    //     zgui.bulletText("Day: {d:.4}, Hour: {d:.4}", .{ state.time.day(), state.time.hour() });
-    //     zgui.bulletText("Phase: {s}, Next Phase: {s}", .{ state.environment.phase().name, state.environment.nextPhase().name });
-    //     zgui.bulletText("Ambient XY Angle: {d:.4}", .{state.environment.ambientXYAngle()});
-    //     zgui.bulletText("Ambient Z Angle: {d:.4}", .{state.environment.ambientZAngle()});
+        _ = zgui.sliderFloat("Timescale", .{ .v = &state.time.scale, .min = 0.1, .max = 2400.0 });
+        zgui.bulletText("Day: {d:.4}, Hour: {d:.4}", .{ state.time.day(), state.time.hour() });
+        zgui.bulletText("Phase: {s}, Next Phase: {s}", .{ state.environment.phase().name, state.environment.nextPhase().name });
+        zgui.bulletText("Ambient XY Angle: {d:.4}", .{state.environment.ambientXYAngle()});
+        zgui.bulletText("Ambient Z Angle: {d:.4}", .{state.environment.ambientZAngle()});
 
-    //     zgui.bulletText("Movement Input: {s}", .{state.controls.movement().fmt()});
+        zgui.bulletText("Movement Input: {s}", .{state.controls.movement().fmt()});
 
-    //     if (flecs.ecs_get(state.world, state.entities.player, components.Velocity)) |velocity| {
-    //         zgui.bulletText("Velocity: x: {d} y: {d}", .{ velocity.x, velocity.y });
-    //     }
+        if (flecs.ecs_get(state.world, state.entities.player, components.Velocity)) |velocity| {
+            zgui.bulletText("Velocity: x: {d} y: {d}", .{ velocity.x, velocity.y });
+        }
 
-    //     if (flecs.ecs_get(state.world, state.entities.player, components.Tile)) |tile| {
-    //         zgui.bulletText("Tile: x: {d}, y: {d}, z: {d}", .{ tile.x, tile.y, tile.z });
-    //     }
+        if (flecs.ecs_get(state.world, state.entities.player, components.Tile)) |tile| {
+            zgui.bulletText("Tile: x: {d}, y: {d}, z: {d}", .{ tile.x, tile.y, tile.z });
+        }
 
-    //     if (flecs.ecs_get_pair(state.world, state.entities.player, components.Cell, flecs.Constants.EcsWildcard)) |cell| {
-    //         zgui.bulletText("Cell: x: {d}, y: {d}, z: {d}", .{ cell.x, cell.y, cell.z });
-    //     }
+        if (flecs.ecs_get_pair(state.world, state.entities.player, components.Cell, flecs.Constants.EcsWildcard)) |cell| {
+            zgui.bulletText("Cell: x: {d}, y: {d}, z: {d}", .{ cell.x, cell.y, cell.z });
+        }
 
-    //     if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Movement)) |direction| {
-    //         zgui.bulletText("Movement Direction: {s}", .{direction.fmt()});
-    //     }
+        if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Movement)) |direction| {
+            zgui.bulletText("Movement Direction: {s}", .{direction.fmt()});
+        }
 
-    //     if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Head)) |direction| {
-    //         zgui.bulletText("Head Direction: {s}", .{direction.fmt()});
-    //     }
+        if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Head)) |direction| {
+            zgui.bulletText("Head Direction: {s}", .{direction.fmt()});
+        }
 
-    //     if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Body)) |direction| {
-    //         zgui.bulletText("Body Direction: {s}", .{direction.fmt()});
-    //     }
+        if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Body)) |direction| {
+            zgui.bulletText("Body Direction: {s}", .{direction.fmt()});
+        }
 
-    //     if (flecs.ecs_get_mut(state.world, state.entities.player, components.Position)) |position| {
-    //         var z = position.z;
-    //         _ = zgui.sliderFloat("Height##2", .{ .v = &z, .min = 0.0, .max = 128.0 });
-    //         position.z = z;
-    //     }
+        if (flecs.ecs_get_mut(state.world, state.entities.player, components.Position)) |position| {
+            var z = position.z;
+            _ = zgui.sliderFloat("Height##2", .{ .v = &z, .min = 0.0, .max = 128.0 });
+            position.z = z;
+        }
 
-    //     if (flecs.ecs_get_mut(state.world, state.entities.player, components.CharacterAnimator)) |animator| {
-    //         zgui.bulletText("Player Clothing:", .{});
-    //         if (zgui.radioButton("TopF01", .{ .active = top == 0 })) {
-    //             top = 0;
-    //             animator.top_set = animation_sets.top_f_01;
-    //         }
-    //         zgui.sameLine(.{});
-    //         if (zgui.radioButton("TopF02", .{ .active = top == 1 })) {
-    //             top = 1;
-    //             animator.top_set = animation_sets.top_f_02;
-    //         }
-    //         if (zgui.radioButton("BottomF01", .{ .active = bottom == 0 })) {
-    //             bottom = 0;
-    //             animator.bottom_set = animation_sets.bottom_f_01;
-    //         }
-    //         zgui.sameLine(.{});
-    //         if (zgui.radioButton("BottomF02", .{ .active = bottom == 1 })) {
-    //             bottom = 1;
-    //             animator.bottom_set = animation_sets.bottom_f_02;
-    //         }
-    //     }
-    // }
-    // zgui.end();
-
+        if (flecs.ecs_get_mut(state.world, state.entities.player, components.CharacterAnimator)) |animator| {
+            zgui.bulletText("Player Clothing:", .{});
+            if (zgui.radioButton("TopF01", .{ .active = top == 0 })) {
+                top = 0;
+                animator.top_set = animation_sets.top_f_01;
+            }
+            zgui.sameLine(.{});
+            if (zgui.radioButton("TopF02", .{ .active = top == 1 })) {
+                top = 1;
+                animator.top_set = animation_sets.top_f_02;
+            }
+            if (zgui.radioButton("BottomF01", .{ .active = bottom == 0 })) {
+                bottom = 0;
+                animator.bottom_set = animation_sets.bottom_f_01;
+            }
+            zgui.sameLine(.{});
+            if (zgui.radioButton("BottomF02", .{ .active = bottom == 1 })) {
+                bottom = 1;
+                animator.bottom_set = animation_sets.bottom_f_02;
+            }
+        }
+    }
+    zgui.end();
 }
 
 fn draw() void {
@@ -679,15 +685,8 @@ fn draw() void {
 
         // Gui pass.
         {
-            const pass = zgpu.util.beginRenderPassSimple(
-                encoder,
-                .load,
-                swapchain_texv,
-                null,
-                null,
-                null,
-            );
-            defer zgpu.util.endRelease(pass);
+            const pass = zgpu.beginRenderPassSimple(encoder, .load, swapchain_texv, null, null, null);
+            defer zgpu.endReleasePass(pass);
             zgui.backend.draw(pass);
         }
 
@@ -752,21 +751,30 @@ pub fn main() !void {
     style.window_menu_button_position = zgui.Direction.none;
 
     const bg = math.Colors.background.toSlice();
+    const bg_dark = math.Colors.background.toSlice();
+    const text = math.Colors.text.toSlice();
 
     // Base colors
+    style.setColor(zgui.StyleCol.text, text);
+    style.setColor(zgui.StyleCol.text_disabled, text);
     style.setColor(zgui.StyleCol.border, bg);
     style.setColor(zgui.StyleCol.menu_bar_bg, bg);
     style.setColor(zgui.StyleCol.header, bg);
     style.setColor(zgui.StyleCol.title_bg, bg);
     style.setColor(zgui.StyleCol.title_bg_active, bg);
-    style.setColor(zgui.StyleCol.window_bg, .{ bg[0] * 0.8, bg[1] * 0.8, bg[2] * 0.8, 0.6 });
+    style.setColor(zgui.StyleCol.window_bg, .{ bg_dark[0], bg_dark[1], bg_dark[2], 0.8 });
+    style.setColor(zgui.StyleCol.frame_bg, .{ bg_dark[0] * 0.8, bg_dark[1] * 0.8, bg_dark[2] * 0.8, 0.6 });
+    style.setColor(zgui.StyleCol.frame_bg_hovered, .{ bg_dark[0] * 0.6, bg[1] * 0.6, bg[2] * 0.6, 0.8 });
+    style.setColor(zgui.StyleCol.frame_bg_active, .{ bg_dark[0] * 0.6, bg_dark[1] * 0.6, bg_dark[2] * 0.6, 1.0 });
     style.setColor(zgui.StyleCol.button, .{ bg[0] * 0.7, bg[1] * 0.7, bg[2] * 0.8, 0.8 });
     style.setColor(zgui.StyleCol.button_active, .{ bg[0], bg[1], bg[2], 1.0 });
     style.setColor(zgui.StyleCol.button_hovered, .{ bg[0], bg[1], bg[2], 0.8 });
+    style.setColor(zgui.StyleCol.slider_grab, .{ bg[0], bg[1], bg[2], 0.8 });
+    style.setColor(zgui.StyleCol.slider_grab_active, .{ bg[0], bg[1], bg[2], 1.0 });
+    style.setColor(zgui.StyleCol.child_bg, .{ bg[0], bg[1], bg[2], 0.8 });
     style.setColor(zgui.StyleCol.resize_grip, .{ bg[0], bg[1], bg[2], 0.6 });
     style.setColor(zgui.StyleCol.resize_grip_active, .{ bg[0], bg[1], bg[2], 1.0 });
     style.setColor(zgui.StyleCol.resize_grip_hovered, .{ bg[0], bg[1], bg[2], 0.9 });
-    style.setColor(zgui.StyleCol.text, .{ 1.0, 1.0, 1.0, 1.0 });
 
     while (!window.shouldClose()) {
         zglfw.pollEvents();

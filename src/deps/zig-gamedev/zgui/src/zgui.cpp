@@ -218,6 +218,10 @@ ZGUI_API void zguiSetCursorScreenPos(float screen_x, float screen_y) {
     ImGui::SetCursorScreenPos({ screen_x, screen_y });
 }
 
+ZGUI_API int zguiGetMouseCursor(void) {
+    return ImGui::GetMouseCursor();
+}
+
 ZGUI_API void zguiSetMouseCursor(int cursor) {
     ImGui::SetMouseCursor(cursor);
 }
@@ -1122,6 +1126,19 @@ ZGUI_API ImFont* zguiIoAddFontFromFile(const char* filename, float size_pixels) 
     return ImGui::GetIO().Fonts->AddFontFromFileTTF(filename, size_pixels, nullptr, nullptr);
 }
 
+ZGUI_API ImFont* zguiIoAddFontFromFileWithConfig(
+    const char* filename,
+    float size_pixels,
+    const ImFontConfig* config,
+    const ImWchar* ranges
+) {
+    return ImGui::GetIO().Fonts->AddFontFromFileTTF(filename, size_pixels, config, ranges);
+}
+
+ZGUI_API ImFontConfig zguiFontConfig_Init(void) {
+    return ImFontConfig();
+}
+
 ZGUI_API ImFont* zguiIoGetFont(unsigned int index) {
     return ImGui::GetIO().Fonts->Fonts[index];
 }
@@ -1234,6 +1251,34 @@ ZGUI_API void zguiEndTabBar(void) {
 
 ZGUI_API void zguiSetTabItemClosed(const char* tab_or_docked_window_label) {
     ImGui::SetTabItemClosed(tab_or_docked_window_label);
+}
+
+ZGUI_API bool zguiBeginMenuBar(void) {
+    return ImGui::BeginMenuBar();
+}
+
+ZGUI_API void zguiEndMenuBar(void) {
+    ImGui::EndMenuBar();
+}
+
+ZGUI_API bool zguiBeginMainMenuBar(void) {
+    return ImGui::BeginMainMenuBar();
+}
+
+ZGUI_API void zguiEndMainMenuBar(void) {
+    ImGui::EndMainMenuBar();
+}
+
+ZGUI_API bool zguiBeginMenu(const char* label, bool enabled) {
+    return ImGui::BeginMenu(label, enabled);
+}
+
+ZGUI_API void zguiEndMenu(void) {
+    ImGui::EndMenu();
+} 
+
+ZGUI_API bool zguiMenuItem(const char* label, const char* shortcut, bool selected, bool enabled) {
+    return ImGui::MenuItem(label, shortcut, selected, enabled);
 }
 //--------------------------------------------------------------------------------------------------
 //

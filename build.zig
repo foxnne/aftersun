@@ -29,20 +29,20 @@ pub fn build(b: *Builder) !void {
     var exe = createExe(b, target, "run", "src/aftersun.zig");
     b.default_step.dependOn(&exe.step);
 
-    const zgpu_pkg = zgpu.getPkg(&.{ zpool.pkg, zglfw.pkg });
-    const zgui_pkg = zgui.getPkg(&.{zglfw.pkg});
+    const zgpu_options = zgpu.BuildOptionsStep.init(b, .{});
+    const zgpu_pkg = zgpu.getPkg(&.{ zgpu_options.getPkg(), zpool.pkg, zglfw.pkg });
 
     const tests = b.step("test", "Run all tests");
     const aftersun_tests = b.addTest(aftersun_pkg.source.path);
     aftersun_tests.addPackage(aftersun_pkg);
     aftersun_tests.addPackage(zgpu_pkg);
     aftersun_tests.addPackage(zglfw.pkg);
-    aftersun_tests.addPackage(zgui_pkg);
+    aftersun_tests.addPackage(zgui.pkg);
     aftersun_tests.addPackage(zstbi.pkg);
     aftersun_tests.addPackage(zmath.pkg);
     aftersun_tests.addPackage(flecs.pkg);
 
-    zgpu.link(aftersun_tests);
+    zgpu.link(aftersun_tests, zgpu_options);
     zglfw.link(aftersun_tests);
     zstbi.link(aftersun_tests);
     zgui.link(aftersun_tests);
@@ -61,8 +61,6 @@ pub fn build(b: *Builder) !void {
     exe.step.dependOn(&install_content_step.step);
 }
 
-
-
 fn createExe(b: *Builder, target: std.zig.CrossTarget, name: []const u8, source: []const u8) *std.build.LibExeObjStep {
     var exe = b.addExecutable(name, source);
     exe.setBuildMode(b.standardReleaseOptions());
@@ -78,8 +76,8 @@ fn createExe(b: *Builder, target: std.zig.CrossTarget, name: []const u8, source:
         }
     }
 
-    const zgpu_pkg = zgpu.getPkg(&.{ zpool.pkg, zglfw.pkg });
-    const zgui_pkg = zgui.getPkg(&.{zglfw.pkg});
+    const zgpu_options = zgpu.BuildOptionsStep.init(b, .{});
+    const zgpu_pkg = zgpu.getPkg(&.{ zgpu_options.getPkg(), zpool.pkg, zglfw.pkg });
 
     exe.install();
 
@@ -90,12 +88,12 @@ fn createExe(b: *Builder, target: std.zig.CrossTarget, name: []const u8, source:
     exe.addPackage(aftersun_pkg);
     exe.addPackage(zgpu_pkg);
     exe.addPackage(zglfw.pkg);
-    exe.addPackage(zgui_pkg);
+    exe.addPackage(zgui.pkg);
     exe.addPackage(zstbi.pkg);
     exe.addPackage(zmath.pkg);
     exe.addPackage(flecs.pkg);
 
-    zgpu.link(exe);
+    zgpu.link(exe, zgpu_options);
     zglfw.link(exe);
     zstbi.link(exe);
     zgui.link(exe);

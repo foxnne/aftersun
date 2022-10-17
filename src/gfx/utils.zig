@@ -13,8 +13,12 @@ pub const PipelineSettings = struct {
     fragment_shader: [*:0]const u8 = game.shaders.default_fs,
 };
 
-pub fn createPipelineAsync(allocator: std.mem.Allocator, layout: zgpu.BindGroupLayoutHandle, settings: PipelineSettings, result: *zgpu.RenderPipelineHandle,) void {
-
+pub fn createPipelineAsync(
+    allocator: std.mem.Allocator,
+    layout: zgpu.BindGroupLayoutHandle,
+    settings: PipelineSettings,
+    result: *zgpu.RenderPipelineHandle,
+) void {
     const gctx = game.state.gctx;
 
     const pipeline_layout = gctx.createPipelineLayout(&.{
@@ -22,10 +26,10 @@ pub fn createPipelineAsync(allocator: std.mem.Allocator, layout: zgpu.BindGroupL
     });
     defer gctx.releaseResource(pipeline_layout);
 
-    const vs_module = zgpu.util.createWgslShaderModule(gctx.device, settings.vertex_shader, "vs");
+    const vs_module = zgpu.createWgslShaderModule(gctx.device, settings.vertex_shader, "vs");
     defer vs_module.release();
 
-    const fs_module = zgpu.util.createWgslShaderModule(gctx.device, settings.fragment_shader, "fs");
+    const fs_module = zgpu.createWgslShaderModule(gctx.device, settings.fragment_shader, "fs");
     defer fs_module.release();
 
     // Set blend mode so sprites can overlap
