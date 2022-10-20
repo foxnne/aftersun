@@ -413,8 +413,8 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
             .animation = &animations.Smoke_Layer,
             .rate = 8.0,
             .start_life = 2.0,
-            .velocity_min = .{ -0.05, 0.2 },
-            .velocity_max = .{ 0.05, 0.4 },
+            .velocity_min = .{ -12.0, 28.0 },
+            .velocity_max = .{ 0.0, 46.0 },
             .start_color = math.Color.initFloats(0.5, 0.5, 0.5, 1.0),
             .end_color = math.Color.initFloats(1.0, 1.0, 1.0, 1.0),
         });
