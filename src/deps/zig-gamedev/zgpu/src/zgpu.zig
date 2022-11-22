@@ -1,6 +1,5 @@
+pub const version = @import("std").SemanticVersion{ .major = 0, .minor = 9, .patch = 0 };
 //--------------------------------------------------------------------------------------------------
-// zgpu v0.9
-//
 // zgpu is a small helper library built on top of native wgpu implementation (Dawn).
 //
 // It supports Windows 10+ (DirectX 12), macOS 12+ (Metal) and Linux (Vulkan).
@@ -18,7 +17,7 @@ pub const wgpu = @import("wgpu.zig");
 pub const GraphicsContext = struct {
     pub const swapchain_format = wgpu.TextureFormat.bgra8_unorm;
 
-    window: zglfw.Window,
+    window: *zglfw.Window,
     stats: FrameStats = .{},
 
     native_instance: DawnNativeInstance,
@@ -52,14 +51,14 @@ pub const GraphicsContext = struct {
         } = .{},
     } = .{},
 
-    pub fn create(allocator: std.mem.Allocator, window: zglfw.Window) !*GraphicsContext {
+    pub fn create(allocator: std.mem.Allocator, window: *zglfw.Window) !*GraphicsContext {
         const checkGraphicsApiSupport = (struct {
             fn impl() error{VulkanNotSupported}!void {
                 // TODO: On Windows we should check if DirectX 12 is supported (Windows 10+).
 
                 // On Linux we require Vulkan support.
                 if (@import("builtin").target.os.tag == .linux) {
-                    if (!zglfw.vulkanSupported()) {
+                    if (!zglfw.isVulkanSupported()) {
                         return error.VulkanNotSupported;
                     }
                     _ = zglfw.getRequiredInstanceExtensions() catch return error.VulkanNotSupported;
@@ -130,6 +129,7 @@ pub const GraphicsContext = struct {
         errdefer adapter.release();
 
         var properties: wgpu.AdapterProperties = undefined;
+        properties.next_in_chain = null;
         adapter.getProperties(&properties);
         std.log.info("[zgpu] High-performance device has been selected:", .{});
         std.log.info("[zgpu]   Name: {s}", .{properties.name});
@@ -192,7 +192,7 @@ pub const GraphicsContext = struct {
         const framebuffer_size = window.getFramebufferSize();
 
         const swapchain_descriptor = wgpu.SwapChainDescriptor{
-            .label = "main window swap chain",
+            .label = "zig-gamedev-gctx-swapchain",
             .usage = .{ .render_attachment = true },
             .format = swapchain_format,
             .width = @intCast(u32, framebuffer_size[0]),
@@ -436,17 +436,19 @@ pub const GraphicsContext = struct {
         if (gctx.swapchain_descriptor.width != fb_size[0] or
             gctx.swapchain_descriptor.height != fb_size[1])
         {
-            gctx.swapchain_descriptor.width = @intCast(u32, fb_size[0]);
-            gctx.swapchain_descriptor.height = @intCast(u32, fb_size[1]);
-            gctx.swapchain.release();
+            if (fb_size[0] != 0 and fb_size[1] != 0) {
+                gctx.swapchain_descriptor.width = @intCast(u32, fb_size[0]);
+                gctx.swapchain_descriptor.height = @intCast(u32, fb_size[1]);
+                gctx.swapchain.release();
 
-            gctx.swapchain = gctx.device.createSwapChain(gctx.surface, gctx.swapchain_descriptor);
+                gctx.swapchain = gctx.device.createSwapChain(gctx.surface, gctx.swapchain_descriptor);
 
-            std.log.info(
-                "[zgpu] Window has been resized to: {d}x{d}.",
-                .{ gctx.swapchain_descriptor.width, gctx.swapchain_descriptor.height },
-            );
-            return .swap_chain_resized;
+                std.log.info(
+                    "[zgpu] Window has been resized to: {d}x{d}.",
+                    .{ gctx.swapchain_descriptor.width, gctx.swapchain_descriptor.height },
+                );
+                return .swap_chain_resized;
+            }
         }
 
         return .normal_execution;
@@ -1525,23 +1527,23 @@ const SurfaceDescriptor = union(SurfaceDescriptorTag) {
     },
 };
 
-fn createSurfaceForWindow(instance: wgpu.Instance, window: zglfw.Window) wgpu.Surface {
+fn createSurfaceForWindow(instance: wgpu.Instance, window: *zglfw.Window) wgpu.Surface {
     const os_tag = @import("builtin").target.os.tag;
 
     const descriptor = if (os_tag == .windows) SurfaceDescriptor{
         .windows_hwnd = .{
             .label = "basic surface",
             .hinstance = std.os.windows.kernel32.GetModuleHandleW(null).?,
-            .hwnd = zglfw.getWin32Window(window) catch unreachable,
+            .hwnd = zglfw.native.getWin32Window(window) catch unreachable,
         },
     } else if (os_tag == .linux) SurfaceDescriptor{
         .xlib = .{
             .label = "basic surface",
-            .display = zglfw.getX11Display() catch unreachable,
-            .window = zglfw.getX11Window(window) catch unreachable,
+            .display = zglfw.native.getX11Display() catch unreachable,
+            .window = zglfw.native.getX11Window(window) catch unreachable,
         },
     } else if (os_tag == .macos) blk: {
-        const ns_window = zglfw.getCocoaWindow(window) catch unreachable;
+        const ns_window = zglfw.native.getCocoaWindow(window) catch unreachable;
         const ns_view = msgSend(ns_window, "contentView", .{}, *anyopaque); // [nsWindow contentView]
 
         // Create a CAMetalLayer that covers the whole window that will be passed to CreateSurface.
@@ -1654,6 +1656,7 @@ fn logUnhandledError(
         .validation => std.log.err("[zgpu] Validation: {?s}", .{message}),
         .out_of_memory => std.log.err("[zgpu] Out of memory: {?s}", .{message}),
         .device_lost => std.log.err("[zgpu] Device lost: {?s}", .{message}),
+        .internal => std.log.err("[zgpu] Internal error: {?s}", .{message}),
         .unknown => std.log.err("[zgpu] Unknown error: {?s}", .{message}),
     }
 
@@ -1754,6 +1757,7 @@ test "zgpu.wgpu.init" {
         _ = num_adapter_features;
 
         var properties: wgpu.AdapterProperties = undefined;
+        properties.next_in_chain = null;
         adapter.getProperties(&properties);
 
         break :adapter adapter;

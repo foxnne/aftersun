@@ -67,7 +67,7 @@ pub const GameState = struct {
     bind_group_environment: zgpu.BindGroupHandle,
     bind_group_final: zgpu.BindGroupHandle,
     batcher: gfx.Batcher,
-    cursor_drag: zglfw.Cursor,
+    cursor_drag: *zglfw.Cursor,
     diffusemap: gfx.Texture,
     palettemap: gfx.Texture,
     heightmap: gfx.Texture,
@@ -106,7 +106,7 @@ fn register(world: *flecs.EcsWorld, comptime T: type) void {
     }
 }
 
-fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
+fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     const world = flecs.ecs_init().?;
     // Ensure that auto-generated IDs are well above anything we will need.
     flecs.ecs_set_entity_range(world, 8000, 0);
@@ -141,7 +141,7 @@ fn init(allocator: std.mem.Allocator, window: zglfw.Window) !*GameState {
     const environment_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
 
     // Create cursors
-    const cursor_drag = try zglfw.createStandardCursor(.hand);
+    const cursor_drag = try zglfw.Cursor.createStandard(.hand);
 
     const window_size = gctx.window.getSize();
     var camera = gfx.Camera.init(settings.design_size, .{ .w = window_size[0], .h = window_size[1] }, zm.f32x4(0, 0, 0, 0));
@@ -710,10 +710,10 @@ pub fn main() !void {
     defer zglfw.terminate();
 
     // Create window
-    zglfw.defaultWindowHints();
-    zglfw.windowHint(.cocoa_retina_framebuffer, 1);
-    zglfw.windowHint(.client_api, 0);
-    const window = try zglfw.createWindow(settings.design_width, settings.design_height, name, null, null);
+    zglfw.Window.Hint.reset();
+    zglfw.Window.Hint.set(.cocoa_retina_framebuffer, 1);
+    zglfw.Window.Hint.set(.client_api, 0);
+    const window = try zglfw.Window.create(settings.design_width, settings.design_height, name, null, null);
     defer window.destroy();
     window.setSizeLimits(400, 400, -1, -1);
 
