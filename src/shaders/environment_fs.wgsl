@@ -16,8 +16,8 @@ fn approx(a: f32, b: f32) -> bool {
     return abs(b-a) < 0.01;
 }
 
-// Finds the target uv of the given step
-fn target(x_step: f32, y_step: f32, step: i32) -> vec2<f32> {
+// Finds the findTarget uv of the given step
+fn findTarget(x_step: f32, y_step: f32, step: i32) -> vec2<f32> {
     let x_steps = cos(radians(uniforms.ambient_xy_angle)) * f32(step) * x_step;
     let y_steps = sin(radians(uniforms.ambient_xy_angle)) * f32(step) * y_step;
 
@@ -25,15 +25,15 @@ fn target(x_step: f32, y_step: f32, step: i32) -> vec2<f32> {
 }
 
 // Finds the shadow color for the given uv
-fn find_shadow(x_step: f32, y_step: f32, uv: vec2<f32>, ambient_color: vec4<f32>) -> vec4<f32> {
+fn findShadow(x_step: f32, y_step: f32, uv: vec2<f32>, ambient_color: vec4<f32>) -> vec4<f32> {
     let shadow_color = vec4(uniforms.shadow_color, 1.0);
     let height_sample = textureSample(height_texture, height_sampler, uv);
     let height = height_sample.r + (height_sample.g * 255.0);
 
     for(var i: i32 = 0; i < uniforms.shadow_steps; i++) {
-        let other_uv = uv + target(x_step, y_step, i);
+        let other_uv = uv + findTarget(x_step, y_step, i);
         let distance = distance(other_uv, uv);
-        var other_height_sample = textureSample(height_texture, height_sampler, other_uv);
+        var other_height_sample = textureSampleLevel(height_texture, height_sampler, other_uv, 0.0);
         var other_height = other_height_sample.r + (other_height_sample.g * 255.0);
 
         if (other_height > height) {
@@ -41,7 +41,7 @@ fn find_shadow(x_step: f32, y_step: f32, uv: vec2<f32>, ambient_color: vec4<f32>
             if (approx(trace_height, other_height)) {
                 return shadow_color * ambient_color;
             } else {
-                other_height_sample = textureSample(reverse_height_texture, reverse_height_sampler, other_uv);
+                other_height_sample = textureSampleLevel(reverse_height_texture, reverse_height_sampler, other_uv, 0.0);
                 other_height = other_height_sample.r + (other_height_sample.g * 255.0);
 
                 if (other_height > height) {
@@ -67,7 +67,7 @@ fn find_shadow(x_step: f32, y_step: f32, uv: vec2<f32>, ambient_color: vec4<f32>
     let tex_step_x = 1.0 / f32(tex_size.x);
     let tex_step_y = 1.0 / f32(tex_size.y);
 
-    var shadow = find_shadow(tex_step_x, tex_step_y, uv, ambient_color);
+    var shadow = findShadow(tex_step_x, tex_step_y, uv, ambient_color);
 
     return shadow;
 }
