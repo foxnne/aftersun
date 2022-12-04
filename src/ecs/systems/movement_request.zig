@@ -10,6 +10,7 @@ pub fn system() flecs.EcsSystemDesc {
     desc.query.filter.terms[1] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Tile) });
     desc.query.filter.terms[2] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Request, components.Movement), .oper = flecs.EcsOperKind.ecs_not });
     desc.query.filter.terms[3] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Cooldown, components.Movement), .oper = flecs.EcsOperKind.ecs_not });
+    desc.no_staging = true;
     desc.run = run;
     return desc;
 }
