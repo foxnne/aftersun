@@ -95,11 +95,11 @@ pub const Entities = struct {
 /// Registers all public declarations within the passed type
 /// as components.
 fn register(world: *flecs.EcsWorld, comptime T: type) void {
-    const decls = @typeInfo(T).Struct.decls;
+    const decls = comptime std.meta.declarations(T);
     inline for (decls) |decl| {
         if (decl.is_pub) {
             const Type = @field(T, decl.name);
-            if (@TypeOf(T) == type) {
+            if (@TypeOf(Type) == type) {
                 flecs.ecs_component(world, Type);
             }
         }
