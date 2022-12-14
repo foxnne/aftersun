@@ -20,14 +20,13 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             const entity = it.entities[i];
 
             if (flecs.ecs_field(it, components.Cooldown, 1)) |cooldowns| {
-                
                 if (cooldowns[i].current >= cooldowns[i].end) {
                     const pair_id = flecs.ecs_field_id(it, 1);
                     flecs.ecs_remove_id(world, entity, pair_id);
                 } else if (cooldowns[i].current >= cooldowns[i].end - it.delta_time) {
                     cooldowns[i].current = cooldowns[i].end;
-                    //const pair_id = flecs.ecs_field_id(it, 1);
-                    //flecs.ecs_remove_id(world, entity, pair_id);
+                    const pair_id = flecs.ecs_field_id(it, 1);
+                    flecs.ecs_remove_id(world, entity, pair_id);
                 } else {
                     cooldowns[i].current += it.delta_time;
                 }

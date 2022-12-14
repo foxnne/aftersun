@@ -50,8 +50,12 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             const position = zm.lerp(start_position, end_position, t);
                             positions[i].x = position[0];
                             positions[i].y = position[1];
-                            positions[i].z = if (movements[i].curve == .sin) @sin(std.math.pi * t) * 10 else position[2];
+                            positions[i].z = if (movements[i].curve == .sin) @sin(std.math.pi * t) * 10.0 else position[2];
                         } else {
+                            const end_position = movements[i].end.toPosition().toF32x4();
+                            positions[i].x = end_position[0];
+                            positions[i].y = end_position[1];
+                            positions[i].z = end_position[2];
                             flecs.ecs_remove_pair(world, entity, components.Request, components.Movement);
                         }
                     }
