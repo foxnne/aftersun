@@ -710,10 +710,7 @@ pub fn main() !void {
     defer zglfw.terminate();
 
     // Create window
-    zglfw.Window.Hint.reset();
-    zglfw.Window.Hint.set(.cocoa_retina_framebuffer, 1);
-    zglfw.Window.Hint.set(.client_api, 0);
-    const window = try zglfw.Window.create(settings.design_width, settings.design_height, name, null, null);
+    const window = try zglfw.Window.create(settings.design_width, settings.design_height, name, null);
     defer window.destroy();
     window.setSizeLimits(400, 400, -1, -1);
 
