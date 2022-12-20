@@ -78,9 +78,9 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 const window_spacing = game.settings.inspect_window_spacing * scale;
 
                 // zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.window_bg, .c = .{ 0, 0, 0, 0.0 } });
-                // zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.border, .c = .{ 1, 1, 1, 0.0 } });
+                //zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.border, .c = .{ 1, 1, 1, 0.0 } });
                 // zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.separator, .c = .{ 1, 1, 1, 1 } });
-                // defer zgui.popStyleColor(.{ .count = 3 });
+                //defer zgui.popStyleColor(.{ .count = 3 });
                 zgui.pushStyleVar2f(.{ .idx = zgui.StyleVar.item_spacing, .v = .{ 2.0 * scale, 2.0 * scale } });
                 defer zgui.popStyleVar(.{ .count = 1 });
 
@@ -94,7 +94,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 const pos_2 = pos_1 + normalized_direction * zm.f32x4s(game.math.lerp(0.0, leader_length, game.state.controls.mouse.tile_timer));
 
                 zgui.setNextWindowPos(.{ .x = pos_2[0], .y = pos_2[1] - text_spacing - window_padding - window_spacing, .cond = .always });
-                if (zgui.begin("Inspect", .{ .flags = zgui.WindowFlags{
+                if (zgui.begin(name[0..std.mem.len(name) :0], .{ .flags = zgui.WindowFlags{
                     .no_title_bar = true,
                     .no_resize = true,
                     .always_auto_resize = true,
@@ -156,7 +156,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                         if (zgui.button("Use with", .{ .w = -1 })) {}
                     }
 
-                    _ = zgui.invisibleButton("test", .{ .w = -1, .h = 1.0 });
+                    _ = zgui.invisibleButton("Placeholder", .{ .w = -1, .h = 1.0 });
 
                     if (target == game.state.entities.player) {
                         if (zgui.button("Change", .{ .w = -1 })) {
