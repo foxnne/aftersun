@@ -1,3 +1,4 @@
+const std = @import("std");
 const zm = @import("zmath");
 
 pub const Color = struct {
@@ -23,6 +24,24 @@ pub const Color = struct {
         var slice: [4]f32 = undefined;
         zm.storeArr4(&slice, self.value);
         return slice;
+    }
+
+    pub fn toU32(self: Color) u32 {
+        const Packed = packed struct(u32) {
+            r: u8,
+            g: u8,
+            b: u8,
+            a: u8,
+        };
+
+        const p = Packed{
+            .r = @floatToInt(u8, self.value[0] * 255.0),
+            .g = @floatToInt(u8, self.value[1] * 255.0),
+            .b = @floatToInt(u8, self.value[2] * 255.0),
+            .a = @floatToInt(u8, self.value[3] * 255.0),
+        };
+
+        return @bitCast(u32, p);
     }
 };
 

@@ -29,9 +29,9 @@ pub fn system() flecs.EcsSystemDesc {
 pub fn run(it: *flecs.EcsIter) callconv(.C) void {
     if (game.state.controls.inspect() or game.state.controls.inspecting) {
         if (game.state.controls.mouse.tile_timer < 1.0) {
-            game.state.controls.mouse.tile_timer += it.delta_time * 3;
-            game.state.controls.mouse.tile_timer = std.math.clamp(game.state.controls.mouse.tile_timer, 0.0, 1.0);
+            game.state.controls.mouse.tile_timer += it.delta_time * 4.0;
         }
+        game.state.controls.mouse.tile_timer = std.math.clamp(game.state.controls.mouse.tile_timer, 0.0, 1.0);
 
         const world = it.world.?;
 
@@ -77,17 +77,17 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 const window_padding = game.settings.inspect_window_padding * scale;
                 const window_spacing = game.settings.inspect_window_spacing * scale;
 
-                zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.window_bg, .c = .{ 0, 0, 0, 0.0 } });
-                zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.border, .c = .{ 1, 1, 1, 0.0 } });
-                zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.separator, .c = .{ 1, 1, 1, 1 } });
-                defer zgui.popStyleColor(.{ .count = 3 });
+                // zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.window_bg, .c = .{ 0, 0, 0, 0.0 } });
+                // zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.border, .c = .{ 1, 1, 1, 0.0 } });
+                // zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.separator, .c = .{ 1, 1, 1, 1 } });
+                // defer zgui.popStyleColor(.{ .count = 3 });
                 zgui.pushStyleVar2f(.{ .idx = zgui.StyleVar.item_spacing, .v = .{ 2.0 * scale, 2.0 * scale } });
                 defer zgui.popStyleVar(.{ .count = 1 });
 
                 const radius = game.settings.pixels_per_unit / 8 * game.state.camera.zoom / 2 * scale;
                 const leader_length = (game.settings.pixels_per_unit / 2) * (game.state.camera.zoom / 1.5) * scale;
 
-                const direction: game.math.Direction = if (screen_position[1] < game.settings.pixels_per_unit * 2 * scale) .ne else .se;
+                const direction: game.math.Direction = .e;
                 const normalized_direction = direction.normalized();
 
                 const pos_1 = screen_position + normalized_direction * zm.f32x4s(game.math.lerp(0.0, radius, game.state.controls.mouse.tile_timer));
@@ -99,23 +99,17 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     .no_resize = true,
                     .always_auto_resize = true,
                 } })) {
-                    var pos_3 = pos_2 + zm.f32x4(game.math.lerp(0, zgui.getWindowWidth(), game.state.controls.mouse.tile_timer), 0, 0, 0);
-
                     const draw_list = zgui.getWindowDrawList();
 
                     draw_list.pushClipRectFullScreen();
                     defer draw_list.popClipRect();
-                    draw_list.addCircleFilled(.{
-                        .p = .{ screen_position[0], screen_position[1] },
-                        .r = game.math.lerp(0.0, radius, game.state.controls.mouse.tile_timer),
-                        .col = 0x90_ff_ff_ff,
-                    });
 
-                    draw_list.addPolyline(&[_][2]f32{
-                        [_]f32{ pos_1[0], pos_1[1] },
-                        [_]f32{ pos_2[0], pos_2[1] },
-                        [_]f32{ pos_3[0], pos_3[1] },
-                    }, .{ .col = 0x90_ff_ff_ff, .thickness = 1 * scale });
+                    draw_list.addTriangleFilled(.{
+                        .p1 = .{ pos_2[0], pos_2[1] },
+                        .p2 = .{ pos_2[0] - (10.0 * scale), pos_2[1] - (5.0 * scale) },
+                        .p3 = .{ pos_2[0], pos_2[1] - (10.0 * scale) },
+                        .col = game.math.Color.initBytes(225, 225, 225, 225).toU32(),
+                    });
 
                     const prefix = "You see";
 
@@ -126,7 +120,6 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     _ = std.mem.replace(u8, n, "_", " ", &buffer);
                     const fixed_name = buffer[0..n.len];
 
-                    zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.text, .c = .{ 1.0, 1.0, 1.0, 1.0 } });
                     if (count > 1) {
                         const description = zgui.formatZ("{s} {d} {s}s.", .{ prefix, count, fixed_name });
                         const index = @floatToInt(usize, @trunc(game.state.controls.mouse.tile_timer * @intToFloat(f32, description.len)));
@@ -152,7 +145,6 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             zgui.text("{s}", .{description[0..index]});
                         }
                     }
-                    zgui.popStyleColor(.{ .count = 1 });
                     zgui.spacing();
                     zgui.spacing();
                     zgui.spacing();
@@ -163,6 +155,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                         }
                         if (zgui.button("Use with", .{ .w = -1 })) {}
                     }
+
+                    _ = zgui.invisibleButton("test", .{ .w = -1, .h = 1.0 });
 
                     if (target == game.state.entities.player) {
                         if (zgui.button("Change", .{ .w = -1 })) {
@@ -191,6 +185,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
         } else {
             game.state.controls.inspecting = false;
         }
+    } else {
+        game.state.controls.mouse.tile_timer = 0.0;
     }
 }
 
