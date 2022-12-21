@@ -750,13 +750,13 @@ pub fn main() !void {
 
     const bg = math.Color.initBytes(225, 225, 225, 225).toSlice();
     const fg = math.Color.initBytes(245, 245, 245, 225).toSlice();
-    const text = math.Color.initBytes(25, 25, 25, 225).toSlice();
+    const text = math.Color.initBytes(0, 0, 0, 225).toSlice();
     const text_disabled = math.Color.initBytes(80, 80, 80, 255).toSlice();
 
     // Base colors
     style.setColor(zgui.StyleCol.text, text);
     style.setColor(zgui.StyleCol.text_disabled, text_disabled);
-    style.setColor(zgui.StyleCol.border, bg);
+    style.setColor(zgui.StyleCol.border, .{ 0.0, 0.0, 0.0, 0.0 });
     style.setColor(zgui.StyleCol.menu_bar_bg, bg);
     style.setColor(zgui.StyleCol.header, bg);
     style.setColor(zgui.StyleCol.title_bg, bg);
@@ -765,15 +765,15 @@ pub fn main() !void {
     style.setColor(zgui.StyleCol.frame_bg, .{ bg[0] * 0.8, bg[1] * 0.8, bg[2] * 0.8, 0.6 });
     style.setColor(zgui.StyleCol.frame_bg_hovered, .{ bg[0] * 0.6, bg[1] * 0.6, bg[2] * 0.6, 0.8 });
     style.setColor(zgui.StyleCol.frame_bg_active, .{ bg[0] * 0.6, bg[1] * 0.6, bg[2] * 0.6, 1.0 });
-    style.setColor(zgui.StyleCol.button, .{ bg[0] * 0.7, bg[1] * 0.7, bg[2] * 0.8, 0.8 });
-    style.setColor(zgui.StyleCol.button_active, fg);
-    style.setColor(zgui.StyleCol.button_hovered, fg);
-    style.setColor(zgui.StyleCol.slider_grab, text_disabled);
+    style.setColor(zgui.StyleCol.button, fg);
+    style.setColor(zgui.StyleCol.button_hovered, bg);
+    style.setColor(zgui.StyleCol.button_active, .{ bg[0] * 0.8, bg[1] * 0.8, bg[2] * 0.8, 0.8 });
+    style.setColor(zgui.StyleCol.slider_grab, text);
     style.setColor(zgui.StyleCol.slider_grab_active, text);
-    style.setColor(zgui.StyleCol.child_bg, .{ bg[0], bg[1], bg[2], 0.8 });
-    style.setColor(zgui.StyleCol.resize_grip, .{ bg[0], bg[1], bg[2], 0.6 });
-    style.setColor(zgui.StyleCol.resize_grip_active, .{ bg[0], bg[1], bg[2], 1.0 });
-    style.setColor(zgui.StyleCol.resize_grip_hovered, .{ bg[0], bg[1], bg[2], 0.9 });
+    style.setColor(zgui.StyleCol.child_bg, bg);
+    style.setColor(zgui.StyleCol.resize_grip, text);
+    style.setColor(zgui.StyleCol.resize_grip_active, text);
+    style.setColor(zgui.StyleCol.resize_grip_hovered, text);
     style.setColor(zgui.StyleCol.check_mark, text);
 
     while (!window.shouldClose()) {

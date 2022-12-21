@@ -77,10 +77,10 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 const window_padding = game.settings.inspect_window_padding * scale;
                 const window_spacing = game.settings.inspect_window_spacing * scale;
 
-                // zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.window_bg, .c = .{ 0, 0, 0, 0.0 } });
-                //zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.border, .c = .{ 1, 1, 1, 0.0 } });
-                // zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.separator, .c = .{ 1, 1, 1, 1 } });
-                //defer zgui.popStyleColor(.{ .count = 3 });
+                const bg = game.math.Color.initBytes(225, 225, 225, @floatToInt(u8, 225.0 * game.state.controls.mouse.tile_timer));
+
+                zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.window_bg, .c = bg.toSlice() });
+                defer zgui.popStyleColor(.{ .count = 1 });
                 zgui.pushStyleVar2f(.{ .idx = zgui.StyleVar.item_spacing, .v = .{ 2.0 * scale, 2.0 * scale } });
                 defer zgui.popStyleVar(.{ .count = 1 });
 
@@ -108,7 +108,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                         .p1 = .{ pos_2[0], pos_2[1] },
                         .p2 = .{ pos_2[0] - (10.0 * scale), pos_2[1] - (5.0 * scale) },
                         .p3 = .{ pos_2[0], pos_2[1] - (10.0 * scale) },
-                        .col = game.math.Color.initBytes(225, 225, 225, 225).toU32(),
+                        .col = bg.toU32(),
                     });
 
                     const prefix = "You see";
@@ -148,6 +148,12 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     zgui.spacing();
                     zgui.spacing();
                     zgui.spacing();
+
+                    zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.text, .c = game.math.Color.initBytes(225, 225, 225, 255).toSlice() });
+                    zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.button, .c = game.math.Color.initBytes(0, 0, 0, 255).toSlice() });
+                    zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.button_hovered, .c = game.math.Color.initBytes(60, 60, 60, 255).toSlice() });
+                    zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.button_active, .c = game.math.Color.initBytes(0, 0, 0, 255).toSlice() });
+                    defer zgui.popStyleColor(.{ .count = 4 });
 
                     if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Useable))) {
                         if (zgui.button(if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Consumeable))) "Consume" else "Use", .{ .w = -1 })) {
