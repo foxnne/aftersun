@@ -24,7 +24,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
         .pipeline_handle = game.state.pipeline_default,
         .bind_group_handle = game.state.bind_group_light,
         .output_handle = game.state.light_output.view_handle,
-        .clear_color = math.Color.initBytes(0, 0, 0, 0).value,
+        .clear_color = math.Color.initBytes(0, 0, 0, 255).value,
     }) catch unreachable;
 
     while (flecs.ecs_iter_next(it)) {

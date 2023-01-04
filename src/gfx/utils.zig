@@ -36,10 +36,14 @@ pub fn createPipelineAsync(
     const blend_state = wgpu.BlendState{
         .color = wgpu.BlendComponent{
             .operation = .add,
-            .src_factor = .one,
+            .src_factor = .src_alpha,
             .dst_factor = .one_minus_src_alpha,
         },
-        .alpha = wgpu.BlendComponent{},
+        .alpha = wgpu.BlendComponent{
+            .operation = .add,
+            .src_factor = .src_alpha,
+            .dst_factor = .one_minus_src_alpha,
+        },
     };
 
     const color_targets = [_]wgpu.ColorTargetState{.{
