@@ -5,5 +5,6 @@
     @location(1) color: vec4<f32>,
     @location(2) data: vec3<f32>,
 ) -> @location(0) vec4<f32> {
-    return textureSample(diffuse, diffuse_sampler, uv) * color;
+    let sample = textureSample(diffuse, diffuse_sampler, uv);
+    return sample * color * sample.a;
 }

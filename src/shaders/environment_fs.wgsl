@@ -68,7 +68,7 @@ fn findShadow(x_step: f32, y_step: f32, uv: vec2<f32>, ambient_color: vec4<f32>)
     let tex_step_x = 1.0 / f32(tex_size.x);
     let tex_step_y = 1.0 / f32(tex_size.y);
 
-    let light = textureSample(light_texture, light_sampler, uv);
+    let light = textureSample(light_texture, height_sampler, uv);
     var shadow = findShadow(tex_step_x, tex_step_y, uv, ambient_color);
 
     return shadow + light;
