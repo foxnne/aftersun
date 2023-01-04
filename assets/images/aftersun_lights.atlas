@@ -1,0 +1,31 @@
+{
+    "sprites": [
+        {
+            "name": "point128.png",
+            "source": {
+                "x": 256,
+                "y": 0,
+                "width": 128,
+                "height": 128
+            },
+            "origin": {
+                "x": 64,
+                "y": 64
+            }
+        },
+        {
+            "name": "point256.png",
+            "source": {
+                "x": 0,
+                "y": 0,
+                "width": 256,
+                "height": 256
+            },
+            "origin": {
+                "x": 128,
+                "y": 128
+            }
+        }
+    ],
+    "animations": []
+}

@@ -65,17 +65,21 @@ pub const GameState = struct {
     bind_group_diffuse: zgpu.BindGroupHandle,
     bind_group_height: zgpu.BindGroupHandle,
     bind_group_environment: zgpu.BindGroupHandle,
+    bind_group_light: zgpu.BindGroupHandle,
     bind_group_final: zgpu.BindGroupHandle,
     batcher: gfx.Batcher,
     cursor_drag: *zglfw.Cursor,
     diffusemap: gfx.Texture,
     palettemap: gfx.Texture,
     heightmap: gfx.Texture,
+    lightmap: gfx.Texture,
     diffuse_output: gfx.Texture,
     height_output: gfx.Texture,
     reverse_height_output: gfx.Texture,
     environment_output: gfx.Texture,
+    light_output: gfx.Texture,
     atlas: gfx.Atlas,
+    light_atlas: gfx.Atlas,
 };
 
 pub const Channel = enum(i32) {
@@ -84,6 +88,7 @@ pub const Channel = enum(i32) {
     height,
     reverse_height,
     environment,
+    light,
 };
 
 /// Holds global entities.
@@ -128,17 +133,24 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     const batcher = try gfx.Batcher.init(allocator, gctx, settings.batcher_max_sprites);
 
     const atlas = try gfx.Atlas.initFromFile(std.heap.c_allocator, assets.aftersun_atlas.path);
+    const light_atlas = try gfx.Atlas.initFromFile(std.heap.c_allocator, assets.aftersun_lights_atlas.path);
 
     // Load game textures.
     const diffusemap = try gfx.Texture.initFromFile(gctx, assets.aftersun_png.path, .{});
     const palettemap = try gfx.Texture.initFromFile(gctx, assets.aftersun_palette_png.path, .{});
     const heightmap = try gfx.Texture.initFromFile(gctx, assets.aftersun_h_png.path, .{});
+    const lightmap = try gfx.Texture.initFromFile(gctx, assets.aftersun_lights_png.path, .{
+        .filter = wgpu.FilterMode.linear,
+    });
 
     // Create textures to render to.
     const diffuse_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
     const height_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
     const reverse_height_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
     const environment_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
+    const light_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{
+        .filter = wgpu.FilterMode.linear,
+    });
 
     // Create cursors
     const cursor_drag = try zglfw.Cursor.createStandard(.hand);
@@ -160,13 +172,18 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         .{ .binding = 2, .sampler_handle = diffusemap.sampler_handle },
     });
 
+    const bind_group_light = gctx.createBindGroup(bind_group_layout_default, &[_]zgpu.BindGroupEntryInfo{
+        .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(gfx.Uniforms) },
+        .{ .binding = 1, .texture_view_handle = lightmap.view_handle },
+        .{ .binding = 2, .sampler_handle = lightmap.sampler_handle },
+    });
+
     // Build the diffuse bind group.
     const bind_group_layout_diffuse = gctx.createBindGroupLayout(&.{
         zgpu.bufferEntry(0, .{ .vertex = true }, .uniform, true, 0),
         zgpu.textureEntry(1, .{ .fragment = true }, .float, .tvdim_2d, false),
         zgpu.samplerEntry(2, .{ .fragment = true }, .filtering),
         zgpu.textureEntry(3, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.samplerEntry(4, .{ .fragment = true }, .filtering),
     });
     defer gctx.releaseResource(bind_group_layout_diffuse);
 
@@ -175,7 +192,6 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         .{ .binding = 1, .texture_view_handle = diffusemap.view_handle },
         .{ .binding = 2, .sampler_handle = diffusemap.sampler_handle },
         .{ .binding = 3, .texture_view_handle = palettemap.view_handle },
-        .{ .binding = 4, .sampler_handle = palettemap.sampler_handle },
     });
 
     // Build the height bind group.
@@ -191,7 +207,8 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         zgpu.textureEntry(1, .{ .fragment = true }, .float, .tvdim_2d, false),
         zgpu.samplerEntry(2, .{ .fragment = true }, .filtering),
         zgpu.textureEntry(3, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.samplerEntry(4, .{ .fragment = true }, .filtering),
+        zgpu.textureEntry(4, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.samplerEntry(5, .{ .fragment = true }, .filtering),
     });
     defer gctx.releaseResource(bind_group_layout_environment);
 
@@ -201,7 +218,8 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         .{ .binding = 1, .texture_view_handle = height_output.view_handle },
         .{ .binding = 2, .sampler_handle = height_output.sampler_handle },
         .{ .binding = 3, .texture_view_handle = reverse_height_output.view_handle },
-        .{ .binding = 4, .sampler_handle = reverse_height_output.sampler_handle },
+        .{ .binding = 4, .texture_view_handle = light_output.view_handle },
+        .{ .binding = 5, .sampler_handle = light_output.sampler_handle },
     });
 
     // Build the final bind group.
@@ -210,11 +228,10 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         zgpu.textureEntry(1, .{ .fragment = true }, .float, .tvdim_2d, false),
         zgpu.samplerEntry(2, .{ .fragment = true }, .filtering),
         zgpu.textureEntry(3, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.samplerEntry(4, .{ .fragment = true }, .filtering),
+        zgpu.textureEntry(4, .{ .fragment = true }, .float, .tvdim_2d, false),
         zgpu.textureEntry(5, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.samplerEntry(6, .{ .fragment = true }, .filtering),
-        zgpu.textureEntry(7, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.samplerEntry(8, .{ .fragment = true }, .filtering),
+        zgpu.textureEntry(6, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.samplerEntry(7, .{ .fragment = true }, .filtering),
     });
     defer gctx.releaseResource(bind_group_layout_diffuse);
 
@@ -224,11 +241,10 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         .{ .binding = 1, .texture_view_handle = diffuse_output.view_handle },
         .{ .binding = 2, .sampler_handle = diffuse_output.sampler_handle },
         .{ .binding = 3, .texture_view_handle = environment_output.view_handle },
-        .{ .binding = 4, .sampler_handle = environment_output.sampler_handle },
-        .{ .binding = 5, .texture_view_handle = height_output.view_handle },
-        .{ .binding = 6, .sampler_handle = height_output.sampler_handle },
-        .{ .binding = 7, .texture_view_handle = reverse_height_output.view_handle },
-        .{ .binding = 8, .sampler_handle = reverse_height_output.sampler_handle },
+        .{ .binding = 4, .texture_view_handle = height_output.view_handle },
+        .{ .binding = 5, .texture_view_handle = reverse_height_output.view_handle },
+        .{ .binding = 6, .texture_view_handle = light_output.view_handle },
+        .{ .binding = 7, .sampler_handle = light_output.sampler_handle },
     });
 
     state = try allocator.create(GameState);
@@ -241,17 +257,21 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         .batcher = batcher,
         .cells = std.AutoArrayHashMap(components.Cell, flecs.EcsEntity).init(allocator),
         .atlas = atlas,
+        .light_atlas = light_atlas,
         .diffusemap = diffusemap,
         .palettemap = palettemap,
         .heightmap = heightmap,
+        .lightmap = lightmap,
         .diffuse_output = diffuse_output,
         .height_output = height_output,
         .reverse_height_output = reverse_height_output,
         .environment_output = environment_output,
+        .light_output = light_output,
         .bind_group_default = bind_group_default,
         .bind_group_diffuse = bind_group_diffuse,
         .bind_group_height = bind_group_height,
         .bind_group_environment = bind_group_environment,
+        .bind_group_light = bind_group_light,
         .bind_group_final = bind_group_final,
         .cursor_drag = cursor_drag,
     };
@@ -341,6 +361,8 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     flecs.ecs_system(world, "RenderCullingSystem", flecs.Constants.EcsPostUpdate, &render_culling_system);
     var render_diffuse_system = @import("ecs/systems/render_diffuse_pass.zig").system();
     flecs.ecs_system(world, "RenderDiffuseSystem", flecs.Constants.EcsPostUpdate, &render_diffuse_system);
+    var render_light_system = @import("ecs/systems/render_light_pass.zig").system();
+    flecs.ecs_system(world, "RenderLightSystem", flecs.Constants.EcsPostUpdate, &render_light_system);
     var render_height_system = @import("ecs/systems/render_height_pass.zig").system();
     flecs.ecs_system(world, "RenderHeightSystem", flecs.Constants.EcsPostUpdate, &render_height_system);
     var render_reverse_height_system = @import("ecs/systems/render_reverse_height_pass.zig").system();
@@ -417,6 +439,10 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
             .velocity_max = .{ 0.0, 46.0 },
             .start_color = math.Color.initFloats(0.5, 0.5, 0.5, 1.0),
             .end_color = math.Color.initFloats(1.0, 1.0, 1.0, 1.0),
+        });
+        flecs.ecs_set(world, campfire, &components.LightRenderer{
+            .index = assets.aftersun_lights_atlas.point256_png,
+            .color = math.Color.initFloats(0.7, 0.6, 0.3, 1.0),
         });
     }
 
@@ -612,6 +638,8 @@ fn update() void {
         zgui.sameLine(.{});
         if (zgui.radioButton("Reverse Height", .{ .active = state.output_channel == .reverse_height })) state.output_channel = .reverse_height;
         if (zgui.radioButton("Environment", .{ .active = state.output_channel == .environment })) state.output_channel = .environment;
+        zgui.sameLine(.{});
+        if (zgui.radioButton("Light", .{ .active = state.output_channel == .light })) state.output_channel = .light;
 
         _ = zgui.sliderFloat("Timescale", .{ .v = &state.time.scale, .min = 0.1, .max = 2400.0 });
         zgui.bulletText("Day: {d:.4}, Hour: {d:.4}", .{ state.time.day(), state.time.hour() });

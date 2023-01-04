@@ -7,11 +7,10 @@ struct FinalUniforms {
 @group(0) @binding(1) var diffuse: texture_2d<f32>;
 @group(0) @binding(2) var diffuse_sampler: sampler;
 @group(0) @binding(3) var environment: texture_2d<f32>;
-@group(0) @binding(4) var environment_sampler: sampler;
-@group(0) @binding(5) var height: texture_2d<f32>;
-@group(0) @binding(6) var height_sampler: sampler;
-@group(0) @binding(7) var reverse_height: texture_2d<f32>;
-@group(0) @binding(8) var reverse_height_sampler: sampler;
+@group(0) @binding(4) var height: texture_2d<f32>;
+@group(0) @binding(5) var reverse_height: texture_2d<f32>;
+@group(0) @binding(6) var light: texture_2d<f32>;
+@group(0) @binding(7) var light_sampler: sampler;
 @stage(fragment) fn main(
     @location(0) uv: vec2<f32>,
     @location(1) color: vec4<f32>,
@@ -20,12 +19,14 @@ struct FinalUniforms {
     if (uniforms.output_channel == 1) {
         return textureSample(diffuse, diffuse_sampler, uv);
     } else if (uniforms.output_channel == 2) {
-        return textureSample(height, height_sampler, uv);
+        return textureSample(height, diffuse_sampler, uv);
     } else if ( uniforms.output_channel == 3) {
-        return textureSample(reverse_height, reverse_height_sampler, uv);
+        return textureSample(reverse_height, diffuse_sampler, uv);
     } else if ( uniforms.output_channel == 4) {
-        return textureSample(environment, environment_sampler, uv);
+        return textureSample(environment, diffuse_sampler, uv);
+    } else if ( uniforms.output_channel == 5) {
+        return textureSample(light, light_sampler, uv);
     } 
     
-    return textureSample(diffuse, diffuse_sampler, uv) * textureSample(environment, environment_sampler, uv) * color;
+    return textureSample(diffuse, diffuse_sampler, uv) * textureSample(environment, diffuse_sampler, uv) * color;
 }

@@ -10,7 +10,8 @@ struct EnvironmentUniforms {
 @group(0) @binding(1) var height_texture: texture_2d<f32>;
 @group(0) @binding(2) var height_sampler: sampler;
 @group(0) @binding(3) var reverse_height_texture: texture_2d<f32>;
-@group(0) @binding(4) var reverse_height_sampler: sampler;
+@group(0) @binding(4) var light_texture: texture_2d<f32>;
+@group(0) @binding(5) var light_sampler: sampler;
 
 fn approx(a: f32, b: f32) -> bool {
     return abs(b-a) < 0.01;
@@ -41,7 +42,7 @@ fn findShadow(x_step: f32, y_step: f32, uv: vec2<f32>, ambient_color: vec4<f32>)
             if (approx(trace_height, other_height)) {
                 return shadow_color * ambient_color;
             } else {
-                other_height_sample = textureSampleLevel(reverse_height_texture, reverse_height_sampler, other_uv, 0.0);
+                other_height_sample = textureSampleLevel(reverse_height_texture, height_sampler, other_uv, 0.0);
                 other_height = other_height_sample.r + (other_height_sample.g * 255.0);
 
                 if (other_height > height) {
@@ -67,7 +68,8 @@ fn findShadow(x_step: f32, y_step: f32, uv: vec2<f32>, ambient_color: vec4<f32>)
     let tex_step_x = 1.0 / f32(tex_size.x);
     let tex_step_y = 1.0 / f32(tex_size.y);
 
+    let light = textureSample(light_texture, light_sampler, uv);
     var shadow = findShadow(tex_step_x, tex_step_y, uv, ambient_color);
 
-    return shadow;
+    return shadow + light;
 }

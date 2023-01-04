@@ -123,6 +123,11 @@ pub fn create(prefabs: *Prefabs, world: *flecs.EcsWorld) void {
         .on_prefab = prefabs.lit_torch,
         .off_prefab = prefabs.torch,
     });
+    flecs.ecs_set(world, prefabs.lit_torch, &components.LightRenderer{
+        .index = game.assets.aftersun_lights_atlas.point128_png,
+        .color = game.math.Color.initFloats(0.7, 0.6, 0.3, 1.0),
+    });
+    flecs.ecs_override(world, prefabs.lit_torch, components.LightRenderer);
 
     // Torch
     flecs.ecs_add_pair(world, prefabs.torch, flecs.Constants.EcsIsA, prefabs._item);

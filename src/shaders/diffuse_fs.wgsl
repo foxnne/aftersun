@@ -1,7 +1,6 @@
 @group(0) @binding(1) var diffuse: texture_2d<f32>;
 @group(0) @binding(2) var diffuse_sampler: sampler;
 @group(0) @binding(3) var palette: texture_2d<f32>;
-@group(0) @binding(4) var palette_sampler: sampler;
 
 let multiplier = 65025.0;
 
@@ -33,7 +32,7 @@ fn paletteCoord(base: vec3<f32>, vert: vec3<f32>) -> vec2<f32> {
     if (frag_mode == 1) {
         let palette_size = textureDimensions(palette);
         let palette_coord = paletteCoord(base_color.rgb, (color.rgb * 255.0) / f32(palette_size.y - 1));
-        return textureSample(palette, palette_sampler, palette_coord) * base_color.a;
+        return textureSample(palette, diffuse_sampler, palette_coord) * base_color.a;
     } else {
         return base_color * color;
     }
