@@ -47,7 +47,6 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             }
         }
     }
-
     game.state.batcher.end(uniforms) catch unreachable;
 }
 
