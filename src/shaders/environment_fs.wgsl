@@ -39,8 +39,10 @@ fn findShadow(x_step: f32, y_step: f32, uv: vec2<f32>, ambient_color: vec4<f32>)
         var other_height = other_height_sample.r + (other_height_sample.g * 255.0);
 
         if (other_height > height) {
-            let luminosity = dot(vec3(0.30, 0.59, 0.11), ambient_color.rgb);
-            let shadow_color_adjust = shadow_color + (clamp(1.0 - luminosity, 0.2, 0.8) * light_color);
+            let luminosity_ambient = dot(vec3(0.30, 0.59, 0.11), ambient_color.rgb);
+            let luminosity_light = dot(vec3(0.30, 0.59, 0.11), light_color.rgb);
+            let luminosity_difference = abs(luminosity_ambient - luminosity_light);
+            let shadow_color_adjust = shadow_color + (1.0 - luminosity_difference) * light_color;
             var trace_height = distance * tan(radians(uniforms.ambient_z_angle)) + height * 1.5;
             if (approx(trace_height, other_height)) {
                 return shadow_color_adjust;

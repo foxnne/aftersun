@@ -39,7 +39,7 @@ pub const Environment = struct {
             .start = 21.0,
             .end = 6.0,
             .ambient_color = game.math.Color.initBytes(50, 50, 120, 255),
-            .shadow_color = game.math.Color.initFloats(0.5, 0.5, 0.9, 1.0),
+            .shadow_color = game.math.Color.initFloats(0.6, 0.6, 1.0, 1.0),
         },
     },
 
