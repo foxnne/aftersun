@@ -243,6 +243,9 @@ pub const io = struct {
     pub const addKeyEvent = zguiIoAddKeyEvent;
     extern fn zguiIoAddKeyEvent(key: Key, down: bool) void;
 
+    pub const addInputCharactersUTF8 = zguiIoAddInputCharactersUTF8;
+    extern fn zguiIoAddInputCharactersUTF8(utf8_chars: ?[*:0]const u8) void;
+
     pub const setKeyEventNativeData = zguiIoSetKeyEventNativeData;
     extern fn zguiIoSetKeyEventNativeData(key: Key, keycode: i32, scancode: i32) void;
 
@@ -298,7 +301,7 @@ pub const Key = enum(u32) {
     four,
     five,
     six,
-    severn,
+    seven,
     eight,
     nine,
     a,
@@ -407,11 +410,11 @@ pub const Key = enum(u32) {
     mouse_wheel_x,
     mouse_wheel_y,
 
-    pub const mod_ctrl: u32 = 1 << 12;
-    pub const mod_shift: u32 = 1 << 13;
-    pub const mod_alt: u32 = 1 << 14;
-    pub const mod_super: u32 = 1 << 15;
-    pub const mod_mask_: u32 = 0xf000;
+    mod_ctrl = 1 << 12,
+    mod_shift = 1 << 13,
+    mod_alt = 1 << 14,
+    mod_super = 1 << 15,
+    mod_mask_ = 0xf000,
 };
 //--------------------------------------------------------------------------------------------------
 pub const WindowFlags = packed struct(u32) {
@@ -1097,6 +1100,19 @@ extern fn zguiGetTextLineHeight() f32;
 extern fn zguiGetTextLineHeightWithSpacing() f32;
 extern fn zguiGetFrameHeight() f32;
 extern fn zguiGetFrameHeightWithSpacing() f32;
+//--------------------------------------------------------------------------------------------------
+pub fn getItemRectMax() [2]f32 {
+    var rect: [2]f32 = undefined;
+    zguiGetItemRectMax(&rect);
+    return rect;
+}
+pub fn getItemRectMin() [2]f32 {
+    var rect: [2]f32 = undefined;
+    zguiGetItemRectMin(&rect);
+    return rect;
+}
+extern fn zguiGetItemRectMax(rect: *[2]f32) void;
+extern fn zguiGetItemRectMin(rect: *[2]f32) void;
 //--------------------------------------------------------------------------------------------------
 //
 // ID stack/scopes
@@ -2763,14 +2779,21 @@ pub const TableBgTarget = enum(u32) {
 };
 
 pub const BeginTable = struct {
+    column: i32,
     flags: TableFlags = .{},
     outer_size: [2]f32 = .{ 0, 0 },
     inner_width: f32 = 0,
 };
 pub fn beginTable(name: [:0]const u8, args: BeginTable) void {
-    zguiBeginTable(name, args.flags, args.outer_size, args.inner_width);
+    zguiBeginTable(name, args.column, args.flags, &args.outer_size, args.inner_width);
 }
-extern fn zguiBeginTable(str_id: [*:0]const u8, column: i32, flags: TableFlags, outer_size: [2]f32, inner_width: f32) void;
+extern fn zguiBeginTable(
+    str_id: [*:0]const u8,
+    column: i32,
+    flags: TableFlags,
+    outer_size: *const [2]f32,
+    inner_width: f32,
+) void;
 
 pub fn endTable() void {
     zguiEndTable();
@@ -3233,11 +3256,33 @@ pub const getWindowDrawList = zguiGetWindowDrawList;
 pub const getBackgroundDrawList = zguiGetBackgroundDrawList;
 pub const getForegroundDrawList = zguiGetForegroundDrawList;
 
+pub const createDrawList = zguiCreateDrawList;
+pub fn destroyDrawList(draw_list: DrawList) void {
+    if (draw_list.getOwnerName()) |owner| {
+        @panic(format("zgui: illegally destroying DrawList of {s}", .{owner}));
+    }
+    zguiDestroyDrawList(draw_list);
+}
+
 extern fn zguiGetWindowDrawList() DrawList;
 extern fn zguiGetBackgroundDrawList() DrawList;
 extern fn zguiGetForegroundDrawList() DrawList;
+extern fn zguiCreateDrawList() DrawList;
+extern fn zguiDestroyDrawList(draw_list: DrawList) void;
 
 pub const DrawList = *opaque {
+    pub const getOwnerName = zguiDrawList_GetOwnerName;
+    extern fn zguiDrawList_GetOwnerName(draw_list: DrawList) ?[*:0]const u8;
+
+    pub fn reset(draw_list: DrawList) void {
+        if (draw_list.getOwnerName()) |owner| {
+            @panic(format("zgui: illegally resetting DrawList of {s}", .{owner}));
+        }
+        zguiDrawList_ResetForNewFrame(draw_list);
+    }
+    extern fn zguiDrawList_ResetForNewFrame(draw_list: DrawList) void;
+
+    //----------------------------------------------------------------------------------------------
     pub const getVertexBufferLength = zguiDrawList_GetVertexBufferLength;
     extern fn zguiDrawList_GetVertexBufferLength(draw_list: DrawList) i32;
     pub const getVertexBufferData = zguiDrawList_GetVertexBufferData;
@@ -3259,9 +3304,11 @@ pub const DrawList = *opaque {
         anti_aliased_fill: bool = false,
         allow_vtx_offset: bool = false,
 
-        _padding: u28,
+        _padding: u28 = 0,
     };
 
+    pub const setDrawListFlags = zguiDrawList_SetFlags;
+    extern fn zguiDrawList_SetFlags(draw_list: DrawList, flags: DrawListFlags) void;
     pub const getDrawListFlags = zguiDrawList_GetFlags;
     extern fn zguiDrawList_GetFlags(draw_list: DrawList) DrawListFlags;
 
