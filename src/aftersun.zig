@@ -442,7 +442,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         });
         flecs.ecs_set(world, campfire, &components.LightRenderer{
             .index = assets.aftersun_lights_atlas.point256_png,
-            .color = math.Color.initFloats(0.7, 0.6, 0.3, 1.0),
+            .color = math.Color.initFloats(0.6, 0.4, 0.1, 1.0),
         });
     }
 
