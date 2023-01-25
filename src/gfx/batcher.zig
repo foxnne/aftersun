@@ -325,7 +325,7 @@ pub const Batcher = struct {
             }
 
             // Draw only the quads appended this cycle
-            pass.drawIndexed(@intCast(u32, quad_count * 6), @intCast(u32, quad_count), @intCast(u32, self.start_count * 6), 0, 0);
+            pass.drawIndexed(@intCast(u32, quad_count * 6), 1, @intCast(u32, self.start_count * 6), 0, 0);
         }
     }
 
