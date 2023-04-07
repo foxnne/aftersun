@@ -1,6 +1,6 @@
 const std = @import("std");
 const zm = @import("zmath");
-const game = @import("game");
+const game = @import("root");
 
 pub const Environment = struct {
     transition: f32 = 2.0,
@@ -140,7 +140,7 @@ pub const Environment = struct {
 
     pub fn nextPhase(self: Environment) Phase {
         const time = game.state.time.hour();
-        for (self.phases) |p, i| {
+        for (self.phases, 0..) |p, i| {
             if (p.start < p.end) {
                 if (time >= p.start and time < p.end) {
                     if (i < self.phases.len - 1) {

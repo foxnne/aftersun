@@ -5,7 +5,7 @@ const wgpu = zgpu.wgpu;
 const zgui = @import("zgui");
 const zstbi = @import("zstbi");
 const zm = @import("zmath");
-const flecs = @import("flecs");
+const ecs = @import("zflecs");
 
 pub const name: [:0]const u8 = "Aftersun";
 pub const settings = @import("settings.zig");
@@ -34,7 +34,7 @@ test {
 }
 
 const Counter = @import("tools/counter.zig").Counter;
-const Prefabs = @import("ecs/prefabs/prefabs.zig");
+//const Prefabs = @import("ecs/prefabs/prefabs.zig");
 
 // TODO: Find somewhere to keep track of the characters outfit and choices.
 var top: u32 = 1;
@@ -46,15 +46,15 @@ pub var state: *GameState = undefined;
 pub const GameState = struct {
     allocator: std.mem.Allocator,
     gctx: *zgpu.GraphicsContext,
-    world: *flecs.EcsWorld,
+    world: *ecs.world_t,
     entities: Entities = .{},
-    prefabs: Prefabs,
+    //prefabs: Prefabs,
     camera: gfx.Camera,
     controls: input.Controls = .{},
     time: time.Time = .{},
     environment: environment.Environment = .{},
     counter: Counter = .{},
-    cells: std.AutoArrayHashMap(components.Cell, flecs.EcsEntity),
+    cells: std.AutoArrayHashMap(components.Cell, ecs.entity_t),
     output_channel: Channel = .final,
     pipeline_default: zgpu.RenderPipelineHandle = .{},
     pipeline_diffuse: zgpu.RenderPipelineHandle = .{},
@@ -93,33 +93,37 @@ pub const Channel = enum(i32) {
 
 /// Holds global entities.
 pub const Entities = struct {
-    player: flecs.EcsEntity = 5000,
-    debug: flecs.EcsEntity = 5001,
+    player: ecs.entity_t = 5000,
+    debug: ecs.entity_t = 5001,
 };
 
 /// Registers all public declarations within the passed type
 /// as components.
-fn register(world: *flecs.EcsWorld, comptime T: type) void {
+fn register(world: *ecs.world_t, comptime T: type) void {
     const decls = comptime std.meta.declarations(T);
     inline for (decls) |decl| {
         if (decl.is_pub) {
             const Type = @field(T, decl.name);
             if (@TypeOf(Type) == type) {
-                flecs.ecs_component(world, Type);
+                if (@sizeOf(Type) > 0) {
+                    ecs.COMPONENT(world, Type);
+                } else ecs.TAG(world, Type);
             }
         }
     }
 }
 
 fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
-    const world = flecs.ecs_init().?;
+    const world = ecs.init();
     // Ensure that auto-generated IDs are well above anything we will need.
-    flecs.ecs_set_entity_range(world, 8000, 0);
+    ecs.set_entity_range(world, 8000, 0);
+
+    //ecs.set_entity_range(world, 8000, 0);
     register(world, components);
 
     // Create all of our prefabs.
-    var prefabs = Prefabs.init(world);
-    prefabs.create(world);
+    //var prefabs = Prefabs.init(world);
+    //prefabs.create(world);
 
     const gctx = try zgpu.GraphicsContext.create(allocator, window);
 
@@ -132,14 +136,14 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
 
     const batcher = try gfx.Batcher.init(allocator, gctx, settings.batcher_max_sprites);
 
-    const atlas = try gfx.Atlas.initFromFile(std.heap.c_allocator, assets.aftersun_atlas.path);
-    const light_atlas = try gfx.Atlas.initFromFile(std.heap.c_allocator, assets.aftersun_lights_atlas.path);
+    const atlas = try gfx.Atlas.loadFromFile(std.heap.c_allocator, assets.aftersun_atlas.path);
+    const light_atlas = try gfx.Atlas.loadFromFile(std.heap.c_allocator, assets.aftersun_lights_atlas.path);
 
     // Load game textures.
-    const diffusemap = try gfx.Texture.initFromFile(gctx, assets.aftersun_png.path, .{});
-    const palettemap = try gfx.Texture.initFromFile(gctx, assets.aftersun_palette_png.path, .{});
-    const heightmap = try gfx.Texture.initFromFile(gctx, assets.aftersun_h_png.path, .{});
-    const lightmap = try gfx.Texture.initFromFile(gctx, assets.aftersun_lights_png.path, .{
+    const diffusemap = try gfx.Texture.loadFromFile(gctx, assets.aftersun_png.path, .{});
+    const palettemap = try gfx.Texture.loadFromFile(gctx, assets.aftersun_palette_png.path, .{});
+    const heightmap = try gfx.Texture.loadFromFile(gctx, assets.aftersun_h_png.path, .{});
+    const lightmap = try gfx.Texture.loadFromFile(gctx, assets.aftersun_lights_png.path, .{
         .filter = wgpu.FilterMode.linear,
     });
 
@@ -252,10 +256,10 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         .allocator = allocator,
         .gctx = gctx,
         .world = world,
-        .prefabs = prefabs,
+        //.prefabs = prefabs,
         .camera = camera,
         .batcher = batcher,
-        .cells = std.AutoArrayHashMap(components.Cell, flecs.EcsEntity).init(allocator),
+        .cells = std.AutoArrayHashMap(components.Cell, ecs.entity_t).init(allocator),
         .atlas = atlas,
         .light_atlas = light_atlas,
         .diffusemap = diffusemap,
@@ -307,275 +311,278 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     }
 
     // - Cooldown
-    var cooldown_system = @import("ecs/systems/cooldown.zig").system();
-    flecs.ecs_system(world, "CooldownSystem", flecs.Constants.EcsOnUpdate, &cooldown_system);
+    //var cooldown_system = @import("ecs/systems/cooldown.zig").system();
 
-    // - Input
-    var movement_drag_system = @import("ecs/systems/movement_drag.zig").system(world);
-    flecs.ecs_system(world, "MovementDragSystem", flecs.Constants.EcsOnUpdate, &movement_drag_system);
-    var movement_request_system = @import("ecs/systems/movement_request.zig").system();
-    flecs.ecs_system(world, "MovementRequestSystem", flecs.Constants.EcsOnUpdate, &movement_request_system);
+    // ecs.ecs_system(world, "CooldownSystem", ecs.Constants.EcsOnUpdate, &cooldown_system);
 
-    // - Movement
-    var movement_collision_system = @import("ecs/systems/movement_collision.zig").system(world);
-    flecs.ecs_system(world, "MovementCollisionSystem", flecs.Constants.EcsOnUpdate, &movement_collision_system);
-    var movement_system = @import("ecs/systems/movement.zig").system();
-    flecs.ecs_system(world, "MovementSystem", flecs.Constants.EcsOnUpdate, &movement_system);
-    var velocity_system = @import("ecs/systems/velocity.zig").system();
-    flecs.ecs_system(world, "VelocitySystem", flecs.Constants.EcsOnUpdate, &velocity_system);
+    // // - Input
+    // var movement_drag_system = @import("ecs/systems/movement_drag.zig").system(world);
+    // ecs.ecs_system(world, "MovementDragSystem", ecs.Constants.EcsOnUpdate, &movement_drag_system);
+    // var movement_request_system = @import("ecs/systems/movement_request.zig").system();
+    // ecs.ecs_system(world, "MovementRequestSystem", ecs.Constants.EcsOnUpdate, &movement_request_system);
 
-    // - Other
-    var inspect_system = @import("ecs/systems/inspect.zig").system();
-    flecs.ecs_system(world, "InspectSystem", flecs.Constants.EcsOnUpdate, &inspect_system);
-    var stack_system = @import("ecs/systems/stack.zig").system();
-    flecs.ecs_system(world, "StackSystem", flecs.Constants.EcsOnUpdate, &stack_system);
-    var use_system = @import("ecs/systems/use.zig").system(world);
-    flecs.ecs_system(world, "UseSystem", flecs.Constants.EcsOnUpdate, &use_system);
-    var cook_system = @import("ecs/systems/cook.zig").system();
-    flecs.ecs_system(world, "CookSystem", flecs.Constants.EcsOnUpdate, &cook_system);
+    // // - Movement
+    // var movement_collision_system = @import("ecs/systems/movement_collision.zig").system(world);
+    // ecs.ecs_system(world, "MovementCollisionSystem", ecs.Constants.EcsOnUpdate, &movement_collision_system);
+    // var movement_system = @import("ecs/systems/movement.zig").system();
+    // ecs.ecs_system(world, "MovementSystem", ecs.Constants.EcsOnUpdate, &movement_system);
+    // var velocity_system = @import("ecs/systems/velocity.zig").system();
+    // ecs.ecs_system(world, "VelocitySystem", ecs.Constants.EcsOnUpdate, &velocity_system);
 
-    // - Observers
-    var tile_observer = @import("ecs/observers/tile.zig").observer();
-    flecs.ecs_observer(world, "TileObserver", &tile_observer);
-    var stack_observer = @import("ecs/observers/stack.zig").observer();
-    flecs.ecs_observer(world, "StackObserver", &stack_observer);
-    var free_particles_observer = @import("ecs/observers/free_particles.zig").observer();
-    flecs.ecs_observer(world, "FreeParticlesObserver", &free_particles_observer);
+    // // - Other
+    // var inspect_system = @import("ecs/systems/inspect.zig").system();
+    // ecs.ecs_system(world, "InspectSystem", ecs.Constants.EcsOnUpdate, &inspect_system);
+    // var stack_system = @import("ecs/systems/stack.zig").system();
+    // ecs.ecs_system(world, "StackSystem", ecs.Constants.EcsOnUpdate, &stack_system);
+    // var use_system = @import("ecs/systems/use.zig").system(world);
+    // ecs.ecs_system(world, "UseSystem", ecs.Constants.EcsOnUpdate, &use_system);
+    // var cook_system = @import("ecs/systems/cook.zig").system();
+    // ecs.ecs_system(world, "CookSystem", ecs.Constants.EcsOnUpdate, &cook_system);
 
-    // - Camera
-    var camera_follow_system = @import("ecs/systems/camera_follow.zig").system();
-    flecs.ecs_system(world, "CameraFollowSystem", flecs.Constants.EcsOnUpdate, &camera_follow_system);
-    var camera_zoom_system = @import("ecs/systems/camera_zoom.zig").system();
-    flecs.ecs_system(world, "CameraZoomSystem", flecs.Constants.EcsOnUpdate, &camera_zoom_system);
+    // // - Observers
+    // var tile_observer = @import("ecs/observers/tile.zig").observer();
+    // ecs.ecs_observer(world, "TileObserver", &tile_observer);
+    // var stack_observer = @import("ecs/observers/stack.zig").observer();
+    // ecs.ecs_observer(world, "StackObserver", &stack_observer);
+    // var free_particles_observer = @import("ecs/observers/free_particles.zig").observer();
+    // ecs.ecs_observer(world, "FreeParticlesObserver", &free_particles_observer);
 
-    // - Animation
-    var animation_character_system = @import("ecs/systems/animation_character.zig").system();
-    flecs.ecs_system(world, "AnimatorCharacterSystem", flecs.Constants.EcsOnUpdate, &animation_character_system);
-    var animation_sprite_system = @import("ecs/systems/animation_sprite.zig").system();
-    flecs.ecs_system(world, "AnimatorSpriteSystem", flecs.Constants.EcsOnUpdate, &animation_sprite_system);
-    var particle_system = @import("ecs/systems/animation_particle.zig").system();
-    flecs.ecs_system(world, "ParticleSystem", flecs.Constants.EcsOnUpdate, &particle_system);
+    // // - Camera
+    // var camera_follow_system = @import("ecs/systems/camera_follow.zig").system();
+    // ecs.ecs_system(world, "CameraFollowSystem", ecs.Constants.EcsOnUpdate, &camera_follow_system);
+    // var camera_zoom_system = @import("ecs/systems/camera_zoom.zig").system();
+    // ecs.ecs_system(world, "CameraZoomSystem", ecs.Constants.EcsOnUpdate, &camera_zoom_system);
 
-    // - Render
-    var render_culling_system = @import("ecs/systems/render_culling.zig").system();
-    flecs.ecs_system(world, "RenderCullingSystem", flecs.Constants.EcsPostUpdate, &render_culling_system);
-    var render_diffuse_system = @import("ecs/systems/render_diffuse_pass.zig").system();
-    flecs.ecs_system(world, "RenderDiffuseSystem", flecs.Constants.EcsPostUpdate, &render_diffuse_system);
-    var render_light_system = @import("ecs/systems/render_light_pass.zig").system();
-    flecs.ecs_system(world, "RenderLightSystem", flecs.Constants.EcsPostUpdate, &render_light_system);
-    var render_height_system = @import("ecs/systems/render_height_pass.zig").system();
-    flecs.ecs_system(world, "RenderHeightSystem", flecs.Constants.EcsPostUpdate, &render_height_system);
-    var render_reverse_height_system = @import("ecs/systems/render_reverse_height_pass.zig").system();
-    flecs.ecs_system(world, "RenderReverseHeightSystem", flecs.Constants.EcsPostUpdate, &render_reverse_height_system);
-    var render_environment_system = @import("ecs/systems/render_environment_pass.zig").system();
-    flecs.ecs_system(world, "RenderEnvironmentSystem", flecs.Constants.EcsPostUpdate, &render_environment_system);
-    var render_final_system = @import("ecs/systems/render_final_pass.zig").system();
-    flecs.ecs_system(world, "RenderFinalSystem", flecs.Constants.EcsPostUpdate, &render_final_system);
+    // // - Animation
+    // var animation_character_system = @import("ecs/systems/animation_character.zig").system();
+    // ecs.ecs_system(world, "AnimatorCharacterSystem", ecs.Constants.EcsOnUpdate, &animation_character_system);
+    // var animation_sprite_system = @import("ecs/systems/animation_sprite.zig").system();
+    // ecs.ecs_system(world, "AnimatorSpriteSystem", ecs.Constants.EcsOnUpdate, &animation_sprite_system);
+    // var particle_system = @import("ecs/systems/animation_particle.zig").system();
+    // ecs.ecs_system(world, "ParticleSystem", ecs.Constants.EcsOnUpdate, &particle_system);
 
-    const player = state.entities.player;
-    flecs.ecs_add(world, player, components.Player);
-    flecs.ecs_set(world, player, &components.Position{ .x = 0.0, .y = -32.0 });
-    flecs.ecs_set(world, player, &components.Tile{ .x = 0, .y = -1, .counter = state.counter.count() });
-    flecs.ecs_set(world, player, &components.Collider{});
-    flecs.ecs_set(world, player, &components.Velocity{});
-    flecs.ecs_set(world, player, &components.CharacterRenderer{
-        .body_index = assets.aftersun_atlas.Idle_SE_0_Body,
-        .head_index = assets.aftersun_atlas.Idle_SE_0_Head,
-        .bottom_index = assets.aftersun_atlas.Idle_SE_0_BottomF02,
-        .top_index = assets.aftersun_atlas.Idle_SE_0_TopF02,
-        .hair_index = assets.aftersun_atlas.Idle_SE_0_HairF01,
-        .body_color = math.Color.initBytes(5, 0, 0, 255),
-        .head_color = math.Color.initBytes(5, 0, 0, 255),
-        .bottom_color = math.Color.initBytes(2, 0, 0, 255),
-        .top_color = math.Color.initBytes(3, 0, 0, 255),
-        .hair_color = math.Color.initBytes(1, 0, 0, 255),
-        .flip_head = true,
-    });
-    flecs.ecs_set(world, player, &components.CharacterAnimator{
-        .head_set = animation_sets.head,
-        .body_set = animation_sets.body,
-        .top_set = animation_sets.top_f_02,
-        .bottom_set = animation_sets.bottom_f_02,
-        .hair_set = animation_sets.hair_f_01,
-    });
-    flecs.ecs_add_pair(world, player, components.Direction.none, components.Movement);
-    flecs.ecs_add_pair(world, player, components.Direction.se, components.Head);
-    flecs.ecs_add_pair(world, player, components.Direction.se, components.Body);
-    flecs.ecs_add_pair(world, player, components.Camera, components.Target);
+    // // - Render
+    // var render_culling_system = @import("ecs/systems/render_culling.zig").system();
+    // ecs.ecs_system(world, "RenderCullingSystem", ecs.Constants.EcsPostUpdate, &render_culling_system);
+    // var render_diffuse_system = @import("ecs/systems/render_diffuse_pass.zig").system();
+    // ecs.ecs_system(world, "RenderDiffuseSystem", ecs.Constants.EcsPostUpdate, &render_diffuse_system);
+    // var render_light_system = @import("ecs/systems/render_light_pass.zig").system();
+    // ecs.ecs_system(world, "RenderLightSystem", ecs.Constants.EcsPostUpdate, &render_light_system);
+    // var render_height_system = @import("ecs/systems/render_height_pass.zig").system();
+    // ecs.ecs_system(world, "RenderHeightSystem", ecs.Constants.EcsPostUpdate, &render_height_system);
+    // var render_reverse_height_system = @import("ecs/systems/render_reverse_height_pass.zig").system();
+    // ecs.ecs_system(world, "RenderReverseHeightSystem", ecs.Constants.EcsPostUpdate, &render_reverse_height_system);
+    // var render_environment_system = @import("ecs/systems/render_environment_pass.zig").system();
+    // ecs.ecs_system(world, "RenderEnvironmentSystem", ecs.Constants.EcsPostUpdate, &render_environment_system);
+    // var render_final_system = @import("ecs/systems/render_final_pass.zig").system();
+    // ecs.ecs_system(world, "RenderFinalSystem", ecs.Constants.EcsPostUpdate, &render_final_system);
 
-    const debug = state.entities.debug;
-    flecs.ecs_add_pair(world, debug, flecs.Constants.EcsIsA, state.prefabs.ham);
-    flecs.ecs_set(world, debug, &components.Position{ .x = 0.0, .y = -64.0 });
-    flecs.ecs_set(world, debug, &components.Tile{ .x = 0, .y = -2, .counter = state.counter.count() });
+    // state.entities.player = ecs.new_entity(world, "Player");
+    // const player = state.entities.player;
+    // ecs.ecs_add(world, player, components.Player);
+    // ecs.set(world, player, &components.Position{ .x = 0.0, .y = -32.0 });
+    // ecs.set(world, player, &components.Tile{ .x = 0, .y = -1, .counter = state.counter.count() });
+    // ecs.set(world, player, &components.Collider{});
+    // ecs.set(world, player, &components.Velocity{});
+    // ecs.set(world, player, &components.CharacterRenderer{
+    //     .body_index = assets.aftersun_atlas.Idle_SE_0_Body,
+    //     .head_index = assets.aftersun_atlas.Idle_SE_0_Head,
+    //     .bottom_index = assets.aftersun_atlas.Idle_SE_0_BottomF02,
+    //     .top_index = assets.aftersun_atlas.Idle_SE_0_TopF02,
+    //     .hair_index = assets.aftersun_atlas.Idle_SE_0_HairF01,
+    //     .body_color = math.Color.initBytes(5, 0, 0, 255),
+    //     .head_color = math.Color.initBytes(5, 0, 0, 255),
+    //     .bottom_color = math.Color.initBytes(2, 0, 0, 255),
+    //     .top_color = math.Color.initBytes(3, 0, 0, 255),
+    //     .hair_color = math.Color.initBytes(1, 0, 0, 255),
+    //     .flip_head = true,
+    // });
+    // ecs.set(world, player, &components.CharacterAnimator{
+    //     .head_set = animation_sets.head,
+    //     .body_set = animation_sets.body,
+    //     .top_set = animation_sets.top_f_02,
+    //     .bottom_set = animation_sets.bottom_f_02,
+    //     .hair_set = animation_sets.hair_f_01,
+    // });
+    // ecs.ecs_add_pair(world, player, components.Direction.none, components.Movement);
+    // ecs.ecs_add_pair(world, player, components.Direction.se, components.Head);
+    // ecs.ecs_add_pair(world, player, components.Direction.se, components.Body);
+    // ecs.ecs_add_pair(world, player, components.Camera, components.Target);
 
-    const ham = flecs.ecs_new(world, null);
-    flecs.ecs_add_pair(world, ham, flecs.Constants.EcsIsA, state.prefabs.ham);
-    flecs.ecs_set(world, ham, &components.Position{ .x = 0.0, .y = -96.0 });
-    flecs.ecs_set(world, ham, &components.Tile{ .x = 0, .y = -3, .counter = state.counter.count() });
-    flecs.ecs_set(world, ham, &components.Stack{ .count = 3, .max = 5 });
+    // state.entities.debug = ecs.new_entity(world, "Debug");
+    // const debug = state.entities.debug;
+    // ecs.ecs_add_pair(world, debug, ecs.Constants.EcsIsA, state.prefabs.ham);
+    // ecs.set(world, debug, &components.Position{ .x = 0.0, .y = -64.0 });
+    // ecs.set(world, debug, &components.Tile{ .x = 0, .y = -2, .counter = state.counter.count() });
 
-    // Create campfire
-    {
-        const campfire = flecs.ecs_new_entity(world, "campfire");
-        flecs.ecs_set(world, campfire, &components.Position{ .x = 32.0, .y = -64.0 });
-        flecs.ecs_set(world, campfire, &components.Tile{ .x = 1, .y = -2, .counter = state.counter.count() });
-        flecs.ecs_set(world, campfire, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Campfire_0_Layer_0 });
-        flecs.ecs_set(world, campfire, &components.SpriteAnimator{
-            .state = .play,
-            .animation = &animations.Campfire_Layer_0,
-            .fps = 16,
-        });
-        flecs.ecs_set(world, campfire, &components.Collider{ .trigger = true });
-        flecs.ecs_add_pair(world, campfire, components.Trigger, components.Cook);
-        flecs.ecs_set(world, campfire, &components.ParticleRenderer{
-            .particles = try allocator.alloc(components.ParticleRenderer.Particle, 32),
-            .offset = zm.f32x4(0, settings.pixels_per_unit / 1.5, 0, 0),
-        });
-        flecs.ecs_set(world, campfire, &components.ParticleAnimator{
-            .animation = &animations.Smoke_Layer,
-            .rate = 8.0,
-            .start_life = 2.0,
-            .velocity_min = .{ -12.0, 28.0 },
-            .velocity_max = .{ 0.0, 46.0 },
-            .start_color = math.Color.initFloats(0.5, 0.5, 0.5, 1.0),
-            .end_color = math.Color.initFloats(1.0, 1.0, 1.0, 1.0),
-        });
-        flecs.ecs_set(world, campfire, &components.LightRenderer{
-            .index = assets.aftersun_lights_atlas.point256_png,
-            .color = math.Color.initFloats(0.6, 0.4, 0.1, 1.0),
-        });
-    }
+    // const ham = ecs.new_id(world);
+    // ecs.ecs_add_pair(world, ham, ecs.Constants.EcsIsA, state.prefabs.ham);
+    // ecs.set(world, ham, &components.Position{ .x = 0.0, .y = -96.0 });
+    // ecs.set(world, ham, &components.Tile{ .x = 0, .y = -3, .counter = state.counter.count() });
+    // ecs.set(world, ham, &components.Stack{ .count = 3, .max = 5 });
 
-    // Create first tree
-    {
-        const tree = flecs.ecs_new_entity(world, "Tree01");
-        flecs.ecs_set(world, tree, &components.Position{});
-        flecs.ecs_set(world, tree, &components.Tile{ .counter = state.counter.count() });
-        flecs.ecs_set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Oak_0_Trunk });
-        flecs.ecs_set(world, tree, &components.Collider{});
+    // // Create campfire
+    // {
+    //     const campfire = ecs.new_entity(world, "campfire");
+    //     ecs.set(world, campfire, &components.Position{ .x = 32.0, .y = -64.0 });
+    //     ecs.set(world, campfire, &components.Tile{ .x = 1, .y = -2, .counter = state.counter.count() });
+    //     ecs.set(world, campfire, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Campfire_0_Layer_0 });
+    //     ecs.set(world, campfire, &components.SpriteAnimator{
+    //         .state = .play,
+    //         .animation = &animations.Campfire_Layer_0,
+    //         .fps = 16,
+    //     });
+    //     ecs.set(world, campfire, &components.Collider{ .trigger = true });
+    //     ecs.ecs_add_pair(world, campfire, components.Trigger, components.Cook);
+    //     ecs.set(world, campfire, &components.ParticleRenderer{
+    //         .particles = try allocator.alloc(components.ParticleRenderer.Particle, 32),
+    //         .offset = zm.f32x4(0, settings.pixels_per_unit / 1.5, 0, 0),
+    //     });
+    //     ecs.set(world, campfire, &components.ParticleAnimator{
+    //         .animation = &animations.Smoke_Layer,
+    //         .rate = 8.0,
+    //         .start_life = 2.0,
+    //         .velocity_min = .{ -12.0, 28.0 },
+    //         .velocity_max = .{ 0.0, 46.0 },
+    //         .start_color = math.Color.initFloats(0.5, 0.5, 0.5, 1.0),
+    //         .end_color = math.Color.initFloats(1.0, 1.0, 1.0, 1.0),
+    //     });
+    //     ecs.set(world, campfire, &components.LightRenderer{
+    //         .index = assets.aftersun_lights_atlas.point256_png,
+    //         .color = math.Color.initFloats(0.6, 0.4, 0.1, 1.0),
+    //     });
+    // }
 
-        const leaf_color = math.Color.initBytes(16, 0, 0, 255);
+    // // Create first tree
+    // {
+    //     const tree = ecs.new_entity(world, "Tree01");
+    //     ecs.set(world, tree, &components.Position{});
+    //     ecs.set(world, tree, &components.Tile{ .counter = state.counter.count() });
+    //     ecs.set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Oak_0_Trunk });
+    //     ecs.set(world, tree, &components.Collider{});
 
-        const tree_leaves_01 = flecs.ecs_new_entity(world, "TreeLeaves01");
-        flecs.ecs_set(world, tree_leaves_01, &components.Position{});
-        flecs.ecs_set(world, tree_leaves_01, &components.Tile{ .counter = state.counter.count() });
-        flecs.ecs_set(world, tree_leaves_01, &components.SpriteRenderer{
-            .index = assets.aftersun_atlas.Oak_0_Leaves04,
-            .color = leaf_color,
-            .frag_mode = .palette,
-            .vert_mode = .top_sway,
-        });
+    //     const leaf_color = math.Color.initBytes(16, 0, 0, 255);
 
-        const tree_leaves_02 = flecs.ecs_new_entity(world, "TreeLeaves02");
-        flecs.ecs_set(world, tree_leaves_02, &components.Position{});
-        flecs.ecs_set(world, tree_leaves_02, &components.Tile{ .counter = state.counter.count() });
-        flecs.ecs_set(world, tree_leaves_02, &components.SpriteRenderer{
-            .index = assets.aftersun_atlas.Oak_0_Leaves03,
-            .color = leaf_color,
-            .frag_mode = .palette,
-            .vert_mode = .top_sway,
-        });
+    //     const tree_leaves_01 = ecs.new_entity(world, "TreeLeaves01");
+    //     ecs.set(world, tree_leaves_01, &components.Position{});
+    //     ecs.set(world, tree_leaves_01, &components.Tile{ .counter = state.counter.count() });
+    //     ecs.set(world, tree_leaves_01, &components.SpriteRenderer{
+    //         .index = assets.aftersun_atlas.Oak_0_Leaves04,
+    //         .color = leaf_color,
+    //         .frag_mode = .palette,
+    //         .vert_mode = .top_sway,
+    //     });
 
-        const tree_leaves_03 = flecs.ecs_new_entity(world, "TreeLeaves03");
-        flecs.ecs_set(world, tree_leaves_03, &components.Position{});
-        flecs.ecs_set(world, tree_leaves_03, &components.Tile{ .counter = state.counter.count() });
-        flecs.ecs_set(world, tree_leaves_03, &components.SpriteRenderer{
-            .index = assets.aftersun_atlas.Oak_0_Leaves02,
-            .color = leaf_color,
-            .frag_mode = .palette,
-            .vert_mode = .top_sway,
-        });
+    //     const tree_leaves_02 = ecs.new_entity(world, "TreeLeaves02");
+    //     ecs.set(world, tree_leaves_02, &components.Position{});
+    //     ecs.set(world, tree_leaves_02, &components.Tile{ .counter = state.counter.count() });
+    //     ecs.set(world, tree_leaves_02, &components.SpriteRenderer{
+    //         .index = assets.aftersun_atlas.Oak_0_Leaves03,
+    //         .color = leaf_color,
+    //         .frag_mode = .palette,
+    //         .vert_mode = .top_sway,
+    //     });
 
-        const tree_leaves_04 = flecs.ecs_new_entity(world, "TreeLeaves04");
-        flecs.ecs_set(world, tree_leaves_04, &components.Position{});
-        flecs.ecs_set(world, tree_leaves_04, &components.Tile{ .counter = state.counter.count() });
-        flecs.ecs_set(world, tree_leaves_04, &components.SpriteRenderer{
-            .index = assets.aftersun_atlas.Oak_0_Leaves01,
-            .color = leaf_color,
-            .frag_mode = .palette,
-            .vert_mode = .top_sway,
-        });
-    }
+    //     const tree_leaves_03 = ecs.new_entity(world, "TreeLeaves03");
+    //     ecs.set(world, tree_leaves_03, &components.Position{});
+    //     ecs.set(world, tree_leaves_03, &components.Tile{ .counter = state.counter.count() });
+    //     ecs.set(world, tree_leaves_03, &components.SpriteRenderer{
+    //         .index = assets.aftersun_atlas.Oak_0_Leaves02,
+    //         .color = leaf_color,
+    //         .frag_mode = .palette,
+    //         .vert_mode = .top_sway,
+    //     });
 
-    // Create second tree
-    {
-        const position = components.Position{ .x = 64.0, .y = -32.0 };
+    //     const tree_leaves_04 = ecs.new_entity(world, "TreeLeaves04");
+    //     ecs.set(world, tree_leaves_04, &components.Position{});
+    //     ecs.set(world, tree_leaves_04, &components.Tile{ .counter = state.counter.count() });
+    //     ecs.set(world, tree_leaves_04, &components.SpriteRenderer{
+    //         .index = assets.aftersun_atlas.Oak_0_Leaves01,
+    //         .color = leaf_color,
+    //         .frag_mode = .palette,
+    //         .vert_mode = .top_sway,
+    //     });
+    // }
 
-        const tree = flecs.ecs_new_entity(world, "Tree02");
-        flecs.ecs_set(world, tree, &position);
-        flecs.ecs_set(world, tree, &position.toTile(state.counter.count()));
-        flecs.ecs_set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Oak_0_Trunk });
-        flecs.ecs_set(world, tree, &components.Collider{});
+    // // Create second tree
+    // {
+    //     const position = components.Position{ .x = 64.0, .y = -32.0 };
 
-        const leaf_color = math.Color.initBytes(15, 0, 0, 255);
+    //     const tree = ecs.new_entity(world, "Tree02");
+    //     ecs.set(world, tree, &position);
+    //     ecs.set(world, tree, &position.toTile(state.counter.count()));
+    //     ecs.set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Oak_0_Trunk });
+    //     ecs.set(world, tree, &components.Collider{});
 
-        const tree_leaves_01 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
-        flecs.ecs_set(world, tree_leaves_01, &position);
-        flecs.ecs_set(world, tree_leaves_01, &position.toTile(state.counter.count()));
-        flecs.ecs_set(world, tree_leaves_01, &components.SpriteRenderer{
-            .index = assets.aftersun_atlas.Oak_0_Leaves04,
-            .color = leaf_color,
-            .frag_mode = .palette,
-            .vert_mode = .top_sway,
-        });
+    //     const leaf_color = math.Color.initBytes(15, 0, 0, 255);
 
-        const tree_leaves_02 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
-        flecs.ecs_set(world, tree_leaves_02, &position);
-        flecs.ecs_set(world, tree_leaves_02, &position.toTile(state.counter.count()));
-        flecs.ecs_set(world, tree_leaves_02, &components.SpriteRenderer{
-            .index = assets.aftersun_atlas.Oak_0_Leaves03,
-            .color = leaf_color,
-            .frag_mode = .palette,
-            .vert_mode = .top_sway,
-        });
+    //     const tree_leaves_01 = ecs.ecs_new_w_pair(world, ecs.Constants.EcsChildOf, tree);
+    //     ecs.set(world, tree_leaves_01, &position);
+    //     ecs.set(world, tree_leaves_01, &position.toTile(state.counter.count()));
+    //     ecs.set(world, tree_leaves_01, &components.SpriteRenderer{
+    //         .index = assets.aftersun_atlas.Oak_0_Leaves04,
+    //         .color = leaf_color,
+    //         .frag_mode = .palette,
+    //         .vert_mode = .top_sway,
+    //     });
 
-        const tree_leaves_03 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
-        flecs.ecs_set(world, tree_leaves_03, &position);
-        flecs.ecs_set(world, tree_leaves_03, &position.toTile(state.counter.count()));
-        flecs.ecs_set(world, tree_leaves_03, &components.SpriteRenderer{
-            .index = assets.aftersun_atlas.Oak_0_Leaves02,
-            .color = leaf_color,
-            .frag_mode = .palette,
-            .vert_mode = .top_sway,
-        });
+    //     const tree_leaves_02 = ecs.ecs_new_w_pair(world, ecs.Constants.EcsChildOf, tree);
+    //     ecs.set(world, tree_leaves_02, &position);
+    //     ecs.set(world, tree_leaves_02, &position.toTile(state.counter.count()));
+    //     ecs.set(world, tree_leaves_02, &components.SpriteRenderer{
+    //         .index = assets.aftersun_atlas.Oak_0_Leaves03,
+    //         .color = leaf_color,
+    //         .frag_mode = .palette,
+    //         .vert_mode = .top_sway,
+    //     });
 
-        const tree_leaves_04 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
-        flecs.ecs_set(world, tree_leaves_04, &position);
-        flecs.ecs_set(world, tree_leaves_04, &position.toTile(state.counter.count()));
-        flecs.ecs_set(world, tree_leaves_04, &components.SpriteRenderer{
-            .index = assets.aftersun_atlas.Oak_0_Leaves01,
-            .color = leaf_color,
-            .frag_mode = .palette,
-            .vert_mode = .top_sway,
-        });
-    }
+    //     const tree_leaves_03 = ecs.ecs_new_w_pair(world, ecs.Constants.EcsChildOf, tree);
+    //     ecs.set(world, tree_leaves_03, &position);
+    //     ecs.set(world, tree_leaves_03, &position.toTile(state.counter.count()));
+    //     ecs.set(world, tree_leaves_03, &components.SpriteRenderer{
+    //         .index = assets.aftersun_atlas.Oak_0_Leaves02,
+    //         .color = leaf_color,
+    //         .frag_mode = .palette,
+    //         .vert_mode = .top_sway,
+    //     });
 
-    // Create third tree
-    {
-        // Make sure its within another cell
-        const position = components.Position{ .x = @intToFloat(f32, settings.cell_size + 2) * settings.pixels_per_unit, .y = 0.0 };
+    //     const tree_leaves_04 = ecs.ecs_new_w_pair(world, ecs.Constants.EcsChildOf, tree);
+    //     ecs.set(world, tree_leaves_04, &position);
+    //     ecs.set(world, tree_leaves_04, &position.toTile(state.counter.count()));
+    //     ecs.set(world, tree_leaves_04, &components.SpriteRenderer{
+    //         .index = assets.aftersun_atlas.Oak_0_Leaves01,
+    //         .color = leaf_color,
+    //         .frag_mode = .palette,
+    //         .vert_mode = .top_sway,
+    //     });
+    // }
 
-        const tree = flecs.ecs_new_entity(world, "Tree03");
-        flecs.ecs_set(world, tree, &position);
-        flecs.ecs_set(world, tree, &position.toTile(state.counter.count()));
-        flecs.ecs_set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Pine_0_Trunk, .vert_mode = .top_sway });
-        flecs.ecs_set(world, tree, &components.Collider{});
+    // // Create third tree
+    // {
+    //     // Make sure its within another cell
+    //     const position = components.Position{ .x = @intToFloat(f32, settings.cell_size + 2) * settings.pixels_per_unit, .y = 0.0 };
 
-        const tree_leaves_01 = flecs.ecs_new_w_pair(world, flecs.Constants.EcsChildOf, tree);
-        flecs.ecs_set(world, tree_leaves_01, &position);
-        flecs.ecs_set(world, tree_leaves_01, &position.toTile(state.counter.count()));
-        flecs.ecs_set(world, tree_leaves_01, &components.SpriteRenderer{
-            .index = assets.aftersun_atlas.Pine_0_Needles,
-            .vert_mode = .top_sway,
-        });
-    }
+    //     const tree = ecs.new_entity(world, "Tree03");
+    //     ecs.set(world, tree, &position);
+    //     ecs.set(world, tree, &position.toTile(state.counter.count()));
+    //     ecs.set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Pine_0_Trunk, .vert_mode = .top_sway });
+    //     ecs.set(world, tree, &components.Collider{});
+
+    //     const tree_leaves_01 = ecs.ecs_new_w_pair(world, ecs.Constants.EcsChildOf, tree);
+    //     ecs.set(world, tree_leaves_01, &position);
+    //     ecs.set(world, tree_leaves_01, &position.toTile(state.counter.count()));
+    //     ecs.set(world, tree_leaves_01, &components.SpriteRenderer{
+    //         .index = assets.aftersun_atlas.Pine_0_Needles,
+    //         .vert_mode = .top_sway,
+    //     });
+    // }
 
     return state;
 }
 
 fn deinit(allocator: std.mem.Allocator) void {
     // Remove all particle renderers so observer can free particles.
-    flecs.ecs_remove_all(state.world, flecs.ecs_id(components.ParticleRenderer));
+    //ecs.ecs_remove_all(state.world, ecs.ecs_id(components.ParticleRenderer));
 
     state.batcher.deinit();
     state.cells.deinit();
@@ -598,110 +605,110 @@ fn update() void {
         },
     }
 
-    _ = flecs.ecs_progress(state.world, 0);
+    _ = ecs.progress(state.world, 0);
 
-    if (zgui.begin("Prefabs", .{})) {
-        const prefab_names = std.meta.fieldNames(Prefabs);
-        for (prefab_names) |n| {
-            if (std.mem.indexOf(u8, n, "_")) |delimiter| {
-                if (delimiter == 0) continue;
-            }
+    // if (zgui.begin("Prefabs", .{})) {
+    //     const prefab_names = std.meta.fieldNames(Prefabs);
+    //     for (prefab_names) |n| {
+    //         if (std.mem.indexOf(u8, n, "_")) |delimiter| {
+    //             if (delimiter == 0) continue;
+    //         }
 
-            if (zgui.button(zgui.formatZ("{s}", .{n}), .{ .w = -1 })) {
-                if (flecs.ecs_get(state.world, state.entities.player, components.Tile)) |tile| {
-                    if (flecs.ecs_get(state.world, state.entities.player, components.Position)) |position| {
-                        const new = flecs.ecs_new_w_pair(state.world, flecs.Constants.EcsIsA, flecs.ecs_lookup(state.world, n.ptr));
-                        flecs.ecs_set(state.world, new, position);
-                        const end = tile.*;
-                        const start: components.Tile = .{ .x = end.x, .y = end.y, .z = end.z + 1 };
-                        flecs.ecs_set(state.world, new, start);
-                        flecs.ecs_set_pair_second(state.world, new, components.Request, &components.Movement{ .start = start, .end = end, .curve = .sin });
-                        flecs.ecs_set_pair(state.world, new, &components.Cooldown{ .end = settings.movement_cooldown / 2 }, components.Movement);
-                    }
-                }
-            }
-        }
-    }
-    zgui.end();
+    //         if (zgui.button(zgui.formatZ("{s}", .{n}), .{ .w = -1 })) {
+    //             if (ecs.ecs_get(state.world, state.entities.player, components.Tile)) |tile| {
+    //                 if (ecs.ecs_get(state.world, state.entities.player, components.Position)) |position| {
+    //                     const new = ecs.ecs_new_w_pair(state.world, ecs.Constants.EcsIsA, ecs.ecs_lookup(state.world, n.ptr));
+    //                     ecs.set(state.world, new, position);
+    //                     const end = tile.*;
+    //                     const start: components.Tile = .{ .x = end.x, .y = end.y, .z = end.z + 1 };
+    //                     ecs.set(state.world, new, start);
+    //                     ecs.set_pair_second(state.world, new, components.Request, &components.Movement{ .start = start, .end = end, .curve = .sin });
+    //                     ecs.set_pair(state.world, new, &components.Cooldown{ .end = settings.movement_cooldown / 2 }, components.Movement);
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+    // zgui.end();
 
-    if (zgui.begin("Game Settings", .{})) {
-        zgui.bulletText(
-            "Average :  {d:.3} ms/frame ({d:.1} fps)",
-            .{ state.gctx.stats.average_cpu_time, state.gctx.stats.fps },
-        );
+    // if (zgui.begin("Game Settings", .{})) {
+    //     zgui.bulletText(
+    //         "Average :  {d:.3} ms/frame ({d:.1} fps)",
+    //         .{ state.gctx.stats.average_cpu_time, state.gctx.stats.fps },
+    //     );
 
-        zgui.bulletText("Channel:", .{});
-        if (zgui.radioButton("Final", .{ .active = state.output_channel == .final })) state.output_channel = .final;
-        zgui.sameLine(.{});
-        if (zgui.radioButton("Diffuse", .{ .active = state.output_channel == .diffuse })) state.output_channel = .diffuse;
-        if (zgui.radioButton("Height##1", .{ .active = state.output_channel == .height })) state.output_channel = .height;
-        zgui.sameLine(.{});
-        if (zgui.radioButton("Reverse Height", .{ .active = state.output_channel == .reverse_height })) state.output_channel = .reverse_height;
-        if (zgui.radioButton("Environment", .{ .active = state.output_channel == .environment })) state.output_channel = .environment;
-        zgui.sameLine(.{});
-        if (zgui.radioButton("Light", .{ .active = state.output_channel == .light })) state.output_channel = .light;
+    //     zgui.bulletText("Channel:", .{});
+    //     if (zgui.radioButton("Final", .{ .active = state.output_channel == .final })) state.output_channel = .final;
+    //     zgui.sameLine(.{});
+    //     if (zgui.radioButton("Diffuse", .{ .active = state.output_channel == .diffuse })) state.output_channel = .diffuse;
+    //     if (zgui.radioButton("Height##1", .{ .active = state.output_channel == .height })) state.output_channel = .height;
+    //     zgui.sameLine(.{});
+    //     if (zgui.radioButton("Reverse Height", .{ .active = state.output_channel == .reverse_height })) state.output_channel = .reverse_height;
+    //     if (zgui.radioButton("Environment", .{ .active = state.output_channel == .environment })) state.output_channel = .environment;
+    //     zgui.sameLine(.{});
+    //     if (zgui.radioButton("Light", .{ .active = state.output_channel == .light })) state.output_channel = .light;
 
-        _ = zgui.sliderFloat("Timescale", .{ .v = &state.time.scale, .min = 0.1, .max = 2400.0 });
-        zgui.bulletText("Day: {d:.4}, Hour: {d:.4}", .{ state.time.day(), state.time.hour() });
-        zgui.bulletText("Phase: {s}, Next Phase: {s}", .{ state.environment.phase().name, state.environment.nextPhase().name });
-        zgui.bulletText("Ambient XY Angle: {d:.4}", .{state.environment.ambientXYAngle()});
-        zgui.bulletText("Ambient Z Angle: {d:.4}", .{state.environment.ambientZAngle()});
+    //     _ = zgui.sliderFloat("Timescale", .{ .v = &state.time.scale, .min = 0.1, .max = 2400.0 });
+    //     zgui.bulletText("Day: {d:.4}, Hour: {d:.4}", .{ state.time.day(), state.time.hour() });
+    //     zgui.bulletText("Phase: {s}, Next Phase: {s}", .{ state.environment.phase().name, state.environment.nextPhase().name });
+    //     zgui.bulletText("Ambient XY Angle: {d:.4}", .{state.environment.ambientXYAngle()});
+    //     zgui.bulletText("Ambient Z Angle: {d:.4}", .{state.environment.ambientZAngle()});
 
-        zgui.bulletText("Movement Input: {s}", .{state.controls.movement().fmt()});
+    //     zgui.bulletText("Movement Input: {s}", .{state.controls.movement().fmt()});
 
-        if (flecs.ecs_get(state.world, state.entities.player, components.Velocity)) |velocity| {
-            zgui.bulletText("Velocity: x: {d} y: {d}", .{ velocity.x, velocity.y });
-        }
+    //     if (ecs.ecs_get(state.world, state.entities.player, components.Velocity)) |velocity| {
+    //         zgui.bulletText("Velocity: x: {d} y: {d}", .{ velocity.x, velocity.y });
+    //     }
 
-        if (flecs.ecs_get(state.world, state.entities.player, components.Tile)) |tile| {
-            zgui.bulletText("Tile: x: {d}, y: {d}, z: {d}", .{ tile.x, tile.y, tile.z });
-        }
+    //     if (ecs.ecs_get(state.world, state.entities.player, components.Tile)) |tile| {
+    //         zgui.bulletText("Tile: x: {d}, y: {d}, z: {d}", .{ tile.x, tile.y, tile.z });
+    //     }
 
-        if (flecs.ecs_get_pair(state.world, state.entities.player, components.Cell, flecs.Constants.EcsWildcard)) |cell| {
-            zgui.bulletText("Cell: x: {d}, y: {d}, z: {d}", .{ cell.x, cell.y, cell.z });
-        }
+    //     if (ecs.ecs_get_pair(state.world, state.entities.player, components.Cell, ecs.Constants.EcsWildcard)) |cell| {
+    //         zgui.bulletText("Cell: x: {d}, y: {d}, z: {d}", .{ cell.x, cell.y, cell.z });
+    //     }
 
-        if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Movement)) |direction| {
-            zgui.bulletText("Movement Direction: {s}", .{direction.fmt()});
-        }
+    //     if (ecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Movement)) |direction| {
+    //         zgui.bulletText("Movement Direction: {s}", .{direction.fmt()});
+    //     }
 
-        if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Head)) |direction| {
-            zgui.bulletText("Head Direction: {s}", .{direction.fmt()});
-        }
+    //     if (ecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Head)) |direction| {
+    //         zgui.bulletText("Head Direction: {s}", .{direction.fmt()});
+    //     }
 
-        if (flecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Body)) |direction| {
-            zgui.bulletText("Body Direction: {s}", .{direction.fmt()});
-        }
+    //     if (ecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Body)) |direction| {
+    //         zgui.bulletText("Body Direction: {s}", .{direction.fmt()});
+    //     }
 
-        if (flecs.ecs_get_mut(state.world, state.entities.player, components.Position)) |position| {
-            var z = position.z;
-            _ = zgui.sliderFloat("Height##2", .{ .v = &z, .min = 0.0, .max = 128.0 });
-            position.z = z;
-        }
+    //     if (ecs.ecs_get_mut(state.world, state.entities.player, components.Position)) |position| {
+    //         var z = position.z;
+    //         _ = zgui.sliderFloat("Height##2", .{ .v = &z, .min = 0.0, .max = 128.0 });
+    //         position.z = z;
+    //     }
 
-        if (flecs.ecs_get_mut(state.world, state.entities.player, components.CharacterAnimator)) |animator| {
-            zgui.bulletText("Player Clothing:", .{});
-            if (zgui.radioButton("TopF01", .{ .active = top == 0 })) {
-                top = 0;
-                animator.top_set = animation_sets.top_f_01;
-            }
-            zgui.sameLine(.{});
-            if (zgui.radioButton("TopF02", .{ .active = top == 1 })) {
-                top = 1;
-                animator.top_set = animation_sets.top_f_02;
-            }
-            if (zgui.radioButton("BottomF01", .{ .active = bottom == 0 })) {
-                bottom = 0;
-                animator.bottom_set = animation_sets.bottom_f_01;
-            }
-            zgui.sameLine(.{});
-            if (zgui.radioButton("BottomF02", .{ .active = bottom == 1 })) {
-                bottom = 1;
-                animator.bottom_set = animation_sets.bottom_f_02;
-            }
-        }
-    }
-    zgui.end();
+    //     if (ecs.ecs_get_mut(state.world, state.entities.player, components.CharacterAnimator)) |animator| {
+    //         zgui.bulletText("Player Clothing:", .{});
+    //         if (zgui.radioButton("TopF01", .{ .active = top == 0 })) {
+    //             top = 0;
+    //             animator.top_set = animation_sets.top_f_01;
+    //         }
+    //         zgui.sameLine(.{});
+    //         if (zgui.radioButton("TopF02", .{ .active = top == 1 })) {
+    //             top = 1;
+    //             animator.top_set = animation_sets.top_f_02;
+    //         }
+    //         if (zgui.radioButton("BottomF01", .{ .active = bottom == 0 })) {
+    //             bottom = 0;
+    //             animator.bottom_set = animation_sets.bottom_f_01;
+    //         }
+    //         zgui.sameLine(.{});
+    //         if (zgui.radioButton("BottomF02", .{ .active = bottom == 1 })) {
+    //             bottom = 1;
+    //             animator.bottom_set = animation_sets.bottom_f_02;
+    //         }
+    //     }
+    // }
+    // zgui.end();
 }
 
 fn draw() void {

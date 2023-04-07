@@ -2,7 +2,7 @@ const std = @import("std");
 const zm = @import("zmath");
 const flecs = @import("flecs");
 const zgui = @import("zgui");
-const game = @import("game");
+const game = @import("root");
 const components = game.components;
 
 pub fn groupBy(world: ?*flecs.EcsWorld, table: ?*flecs.EcsTable, id: flecs.EcsId, ctx: ?*anyopaque) callconv(.C) flecs.EcsId {

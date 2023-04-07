@@ -659,7 +659,7 @@ pub const GraphicsContext = struct {
         var bind_group_info = BindGroupInfo{ .num_entries = @intCast(u32, entries.len) };
         var gpu_bind_group_entries: [max_num_bindings_per_group]wgpu.BindGroupEntry = undefined;
 
-        for (entries) |entry, i| {
+        for (entries, 0..) |entry, i| {
             bind_group_info.entries[i] = entry;
 
             if (entries[i].buffer_handle) |handle| {
@@ -712,7 +712,7 @@ pub const GraphicsContext = struct {
             }),
             .num_entries = @intCast(u32, entries.len),
         };
-        for (entries) |entry, i| {
+        for (entries, 0..) |entry, i| {
             bind_group_layout_info.entries[i] = entry;
             bind_group_layout_info.entries[i].next_in_chain = null;
             bind_group_layout_info.entries[i].buffer.next_in_chain = null;
@@ -741,7 +741,7 @@ pub const GraphicsContext = struct {
         var info: PipelineLayoutInfo = .{ .num_bind_group_layouts = @intCast(u32, bind_group_layouts.len) };
         var gpu_bind_group_layouts: [max_num_bind_groups_per_pipeline]wgpu.BindGroupLayout = undefined;
 
-        for (bind_group_layouts) |bgl, i| {
+        for (bind_group_layouts, 0..) |bgl, i| {
             info.bind_group_layouts[i] = bgl;
             gpu_bind_group_layouts[i] = gctx.lookupResource(bgl).?;
         }
@@ -935,7 +935,7 @@ pub const GraphicsContext = struct {
                 .sample_count = 1,
             });
 
-            for (mipgen.scratch_texture_views) |*view, i| {
+            for (&mipgen.scratch_texture_views, 0..) |*view, i| {
                 view.* = gctx.createTextureView(mipgen.scratch_texture, .{
                     .base_mip_level = @intCast(u32, i),
                     .mip_level_count = 1,
@@ -1704,94 +1704,4 @@ fn formatToShaderFormat(format: wgpu.TextureFormat) []const u8 {
         .rgba32_float => "rgba32float",
         else => unreachable,
     };
-}
-
-const expect = std.testing.expect;
-
-test "zgpu.wgpu.init" {
-    dawnProcSetProcs(dnGetProcs());
-
-    const native_instance = dniCreate();
-    defer dniDestroy(native_instance);
-
-    dniDiscoverDefaultAdapters(native_instance);
-
-    const instance = dniGetWgpuInstance(native_instance).?;
-
-    instance.reference();
-    instance.release();
-
-    const adapter = adapter: {
-        const Response = struct {
-            status: wgpu.RequestAdapterStatus = .unknown,
-            adapter: wgpu.Adapter = undefined,
-        };
-
-        const callback = (struct {
-            fn callback(
-                status: wgpu.RequestAdapterStatus,
-                adapter: wgpu.Adapter,
-                message: ?[*:0]const u8,
-                userdata: ?*anyopaque,
-            ) callconv(.C) void {
-                _ = message;
-                var response = @ptrCast(*Response, @alignCast(@sizeOf(usize), userdata));
-                response.status = status;
-                response.adapter = adapter;
-            }
-        }).callback;
-
-        var response = Response{};
-        instance.requestAdapter(
-            .{ .power_preference = .high_performance },
-            callback,
-            @ptrCast(*anyopaque, &response),
-        );
-        try expect(response.status == .success);
-
-        const adapter = response.adapter;
-
-        var features: [32]wgpu.FeatureName = undefined;
-        const num_adapter_features = std.math.min(adapter.enumerateFeatures(null), features.len);
-        _ = adapter.enumerateFeatures(&features);
-        _ = num_adapter_features;
-
-        var properties: wgpu.AdapterProperties = undefined;
-        properties.next_in_chain = null;
-        adapter.getProperties(&properties);
-
-        break :adapter adapter;
-    };
-    defer adapter.release();
-
-    const device = device: {
-        const Response = struct {
-            status: wgpu.RequestDeviceStatus = .unknown,
-            device: wgpu.Device = undefined,
-        };
-
-        const callback = (struct {
-            fn callback(
-                status: wgpu.RequestDeviceStatus,
-                device: wgpu.Device,
-                message: ?[*:0]const u8,
-                userdata: ?*anyopaque,
-            ) callconv(.C) void {
-                _ = message;
-                var response = @ptrCast(*Response, @alignCast(@sizeOf(usize), userdata));
-                response.status = status;
-                response.device = device;
-            }
-        }).callback;
-
-        var response = Response{};
-        adapter.requestDevice(
-            wgpu.DeviceDescriptor{},
-            callback,
-            @ptrCast(*anyopaque, &response),
-        );
-        try expect(response.status == .success);
-        break :device response.device;
-    };
-    defer device.release();
 }

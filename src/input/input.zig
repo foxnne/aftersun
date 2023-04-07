@@ -2,7 +2,7 @@ const std = @import("std");
 const zm = @import("zmath");
 const zglfw = @import("zglfw");
 const math = @import("../math/math.zig");
-const game = @import("game");
+const game = @import("root");
 const components = game.components;
 
 pub const callbacks = @import("callbacks.zig");

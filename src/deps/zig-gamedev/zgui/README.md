@@ -1,4 +1,4 @@
-# zgui v0.9.5 - dear imgui bindings
+# zgui v0.9.6 - dear imgui (1.89.4) bindings
 
 Easy to use, hand-crafted API with default arguments, named parameters and Zig style text formatting. For a test application please see [here](https://github.com/michal-z/zig-gamedev/tree/main/samples/gui_test_wgpu).
 
@@ -24,24 +24,26 @@ const zglfw = @import("libs/zglfw/build.zig");
 const zgpu = @import("libs/zgpu/build.zig");
 const zpool = @import("libs/zpool/build.zig");
 
-pub fn build(b: *std.build.Builder) void {
+pub fn build(b: *std.Build) void {
     ...
-    const zgui_options = zgui.BuildOptionsStep.init(b, .{ .backend = .glfw_wgpu });
-    const zgui_pkg = zgui.getPkg(&.{zgui_options.getPkg()});
+    const optimize = b.standardOptimizeOption(.{});
+    const target = b.standardTargetOptions(.{});
 
-    exe.addPackage(zgui_pkg);
+    const zgui_pkg = zgui.package(b, target, optimize, .{
+        .options = .{ .backend = .glfw_wgpu },
+    });
 
-    zgui.link(exe, zgui_options);
+    zgui_pkg.link(exe);
     
     // Needed for glfw/wgpu rendering backend
-    const zgpu_options = zgpu.BuildOptionsStep.init(b, .{});
-    const zgpu_pkg = zgpu.getPkg(&.{ zgpu_options.getPkg(), zpool.pkg, zglfw.pkg });
+    const zglfw_pkg = zglfw.package(b, target, optimize, .{});
+    const zpool_pkg = zpool.package(b, target, optimize, .{});
+    const zgpu_pkg = zgpu.package(b, target, optimize, .{
+        .deps = .{ .zpool = zpool_pkg.zpool, .zglfw = zglfw_pkg.zglfw },
+    });
 
-    exe.addPackage(zglfw.pkg);
-    exe.addPackage(zgpu_pkg);
-
-    zglfw.link(exe);
-    zgpu.link(exe, zgpu_options);
+    zglfw_pkg.link(exe);
+    zgpu_pkg.link(exe);
 }
 ```
 Now in your code you may import and use `zgui`:
@@ -87,6 +89,26 @@ while (...) {
 
     zgui.backend.draw(pass);
 }
+```
+
+### Building a shared library
+
+If your project spans multiple zig modules that both use ImGui, such as an exe paired with a dll, you may want to build the `zgui` dependencies (`zgui_pkg.zgui_c_cpp`) as a shared library. This can be enabled with the `shared` build option. Then, in `build.zig`, use `zgui_pkg.link` to link `zgui` to all the modules that use ImGui.
+
+When built this way, the ImGui context will be located in the shared library. However, the `zgui` zig code (which is compiled separately into each module) requires its own memory buffer which has to be initialized separately with `initNoContext`.
+
+In your executable:
+```zig
+const zgui = @import("zgui");
+zgui.init(allocator);
+defer zgui.deinit();
+```
+
+In your shared library:
+```zig
+const zgui = @import("zgui");
+zgui.initNoContext(allocator);
+defer zgui.deinitNoContxt();
 ```
 
 ### DrawList API

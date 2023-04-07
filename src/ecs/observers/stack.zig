@@ -1,7 +1,7 @@
 const std = @import("std");
 const zm = @import("zmath");
 const flecs = @import("flecs");
-const game = @import("game");
+const game = @import("root");
 const components = game.components;
 
 pub fn observer() flecs.EcsObserverDesc {
@@ -26,7 +26,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                 if (flecs.ecs_get(world, entity, components.StackAnimator)) |animator| {
                     if (flecs.ecs_get_mut(world, entity, components.SpriteRenderer)) |renderer| {
                         var index: usize = 0;
-                        for (animator.counts) |count, j| {
+                        for (animator.counts, 0..) |count, j| {
                             if (stacks[i].count >= count) {
                                 index = j;
                             }

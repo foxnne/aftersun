@@ -5,7 +5,7 @@ const wgpu = zgpu.wgpu;
 const zgui = zgpu.zgui;
 const zm = @import("zmath");
 const flecs = @import("flecs");
-const game = @import("game");
+const game = @import("root");
 const gfx = game.gfx;
 
 pub const PipelineSettings = struct {

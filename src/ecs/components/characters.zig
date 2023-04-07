@@ -1,5 +1,5 @@
 const zm = @import("zmath");
-const game = @import("game");
+const game = @import("root");
 
 const AnimationSet = game.animation_sets.AnimationSet;
 
@@ -14,10 +14,7 @@ pub const CharacterAnimator = struct {
     fps: usize = 8,
     state: State = State.idle,
 
-    pub const State = enum {
-        idle,
-        walk
-    };
+    pub const State = enum { idle, walk };
 };
 
 pub const CharacterRenderer = struct {

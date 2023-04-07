@@ -1,7 +1,11 @@
 #include "./imgui/imgui.h"
 #include "./imgui/implot.h"
 
-#define ZGUI_API extern "C"
+#ifndef ZGUI_API
+#define ZGUI_API
+#endif
+
+extern "C" {
 
 /*
 #include <stdio.h>
@@ -42,6 +46,10 @@ ZGUI_API void zguiSetNextWindowFocus(void) {
 
 ZGUI_API void zguiSetNextWindowBgAlpha(float alpha) {
     ImGui::SetNextWindowBgAlpha(alpha);
+}
+
+ZGUI_API void zguiSetKeyboardFocusHere(int offset) {
+    ImGui::SetKeyboardFocusHere(offset);
 }
 
 ZGUI_API bool zguiBegin(const char* name, bool* p_open, ImGuiWindowFlags flags) {
@@ -168,6 +176,10 @@ ZGUI_API void zguiUnindent(float indent_w) {
 
 ZGUI_API void zguiSeparator(void) {
     ImGui::Separator();
+}
+
+ZGUI_API void zguiSeparatorText(const char* label) {
+    ImGui::SeparatorText(label);
 }
 
 ZGUI_API void zguiSameLine(float offset_from_start_x, float spacing) {
@@ -1036,12 +1048,22 @@ ZGUI_API void zguiSetNextItemWidth(float item_width) {
     ImGui::SetNextItemWidth(item_width);
 }
 
+ZGUI_API void zguiSetItemDefaultFocus(void) {
+    ImGui::SetItemDefaultFocus();
+}
+
 ZGUI_API ImFont* zguiGetFont(void) {
     return ImGui::GetFont();
 }
 
 ZGUI_API float zguiGetFontSize(void) {
     return ImGui::GetFontSize();
+}
+
+ZGUI_API void zguiGetFontTexUvWhitePixel(float uv[2]) {
+    const ImVec2 cs = ImGui::GetFontTexUvWhitePixel();
+    uv[0] = cs[0];
+    uv[1] = cs[1];
 }
 
 ZGUI_API void zguiPushFont(ImFont* font) {
@@ -1142,6 +1164,14 @@ ZGUI_API ImGuiID zguiGetStrIdZ(const char* str_id) {
 
 ZGUI_API ImGuiID zguiGetPtrId(const void* ptr_id) {
     return ImGui::GetID(ptr_id);
+}
+
+ZGUI_API void zguiSetClipboardText(const char* text) {
+    ImGui::SetClipboardText(text);
+}
+
+ZGUI_API const char* zguiGetClipboardText(void) {
+    return ImGui::GetClipboardText();
 }
 
 ZGUI_API ImFont* zguiIoAddFontFromFileWithConfig(
@@ -1285,6 +1315,10 @@ ZGUI_API bool zguiIsItemClicked(ImGuiMouseButton mouse_button) {
     return ImGui::IsItemClicked(mouse_button);
 }
 
+ZGUI_API bool zguiIsMouseDoubleClicked(ImGuiMouseButton button) {
+    return ImGui::IsMouseDoubleClicked(button);
+}
+
 ZGUI_API bool zguiIsItemVisible(void) {
     return ImGui::IsItemVisible();
 }
@@ -1349,6 +1383,10 @@ ZGUI_API void zguiPushTextWrapPos(float wrap_pos_x) {
     ImGui::PushTextWrapPos(wrap_pos_x);
 }
 
+ZGUI_API void zguiPopTextWrapPos(void) {
+    ImGui::PopTextWrapPos();
+}
+
 ZGUI_API bool zguiBeginTabBar(const char* string, ImGuiTabBarFlags flags) {
     return ImGui::BeginTabBar(string, flags);
 }
@@ -1397,12 +1435,24 @@ ZGUI_API bool zguiMenuItem(const char* label, const char* shortcut, bool selecte
     return ImGui::MenuItem(label, shortcut, selected, enabled);
 }
 
-ZGUI_API void zguiBeginTooltip(void) {
-    ImGui::BeginTooltip();
+ZGUI_API bool zguiMenuItemPtr(const char* label, const char* shortcut, bool* selected, bool enabled) {
+    return ImGui::MenuItem(label, shortcut, selected, enabled);
+}
+
+ZGUI_API bool zguiBeginTooltip(void) {
+    return ImGui::BeginTooltip();
 }
 
 ZGUI_API void zguiEndTooltip(void) {
     ImGui::EndTooltip();
+}
+
+ZGUI_API bool zguiBeginPopupContextWindow(void) {
+    return ImGui::BeginPopupContextWindow();
+}
+
+ZGUI_API bool zguiBeginPopupContextItem(void) {
+    return ImGui::BeginPopupContextItem();
 }
 
 ZGUI_API bool zguiBeginPopupModal(const char* name, bool* p_open, ImGuiWindowFlags flags) {
@@ -1560,6 +1610,10 @@ ZGUI_API void zguiDrawList_ResetForNewFrame(ImDrawList *draw_list) {
     draw_list->_ResetForNewFrame();
 }
 
+ZGUI_API void zguiDrawList_ClearFreeMemory(ImDrawList *draw_list) {
+    draw_list->_ClearFreeMemory();
+}
+
 ZGUI_API int zguiDrawList_GetVertexBufferLength(ImDrawList *draw_list) {
     return draw_list->VtxBuffer.size();
 }
@@ -1572,6 +1626,9 @@ ZGUI_API int zguiDrawList_GetIndexBufferLength(ImDrawList *draw_list) {
 }
 ZGUI_API ImDrawIdx *zguiDrawList_GetIndexBufferData(ImDrawList *draw_list) {
     return draw_list->IdxBuffer.begin();
+}
+ZGUI_API unsigned int zguiDrawList_GetCurrentIndex(ImDrawList *draw_list) {
+    return draw_list->_VtxCurrentIdx;
 }
 
 ZGUI_API int zguiDrawList_GetCmdBufferLength(ImDrawList *draw_list) {
@@ -1964,6 +2021,66 @@ ZGUI_API void zguiDrawList_PathRect(
 ) {
     draw_list->PathRect({ rect_min[0], rect_min[1] }, { rect_max[0], rect_max[1] }, rounding, flags);
 }
+
+ZGUI_API void zguiDrawList_PrimReserve( ImDrawList* draw_list, int idx_count, int vtx_count) {
+    draw_list->PrimReserve(idx_count, vtx_count);
+}
+
+ZGUI_API void zguiDrawList_PrimUnreserve( ImDrawList* draw_list, int idx_count, int vtx_count) {
+    draw_list->PrimUnreserve(idx_count, vtx_count);
+}
+
+ZGUI_API void zguiDrawList_PrimRect(
+    ImDrawList* draw_list,
+    const float a[2],
+    const float b[2],
+    unsigned int col
+) {
+    draw_list->PrimRect({ a[0], a[1] }, { b[0], b[1] }, col);
+}
+
+ZGUI_API void zguiDrawList_PrimRectUV(
+    ImDrawList* draw_list,
+    const float a[2],
+    const float b[2],
+    const float uv_a[2],
+    const float uv_b[2],
+    unsigned int col
+) {
+    draw_list->PrimRectUV({ a[0], a[1] }, { b[0], b[1] }, { uv_a[0], uv_a[1] }, { uv_b[0], uv_b[1] }, col);
+}
+
+ZGUI_API void zguiDrawList_PrimQuadUV(
+    ImDrawList* draw_list,
+    const float a[2],
+    const float b[2],
+    const float c[2],
+    const float d[2],
+    const float uv_a[2],
+    const float uv_b[2],
+    const float uv_c[2],
+    const float uv_d[2],
+    unsigned int col
+) {
+    draw_list->PrimQuadUV(
+        { a[0], a[1] }, { b[0], b[1] }, { c[0], c[1] }, { d[0], d[1] },
+        { uv_a[0], uv_a[1] }, { uv_b[0], uv_b[1] }, { uv_c[0], uv_c[1] }, { uv_d[0], uv_d[1] },
+        col
+    );
+}
+
+ZGUI_API void zguiDrawList_PrimWriteVtx(
+    ImDrawList* draw_list,
+    const float pos[2],
+    const float uv[2],
+    unsigned int col
+) {
+    draw_list->PrimWriteVtx({ pos[0], pos[1] }, { uv[0], uv[1] }, col);
+}
+
+ZGUI_API void zguiDrawList_PrimWriteIdx( ImDrawList* draw_list, ImDrawIdx idx) {
+    draw_list->PrimWriteIdx(idx);
+}
 //--------------------------------------------------------------------------------------------------
 //
 // Viewport
@@ -2195,3 +2312,4 @@ ZGUI_API void zguiPlot_EndPlot(void) {
     ImPlot::EndPlot();
 }
 //--------------------------------------------------------------------------------------------------
+} /* extern "C" */

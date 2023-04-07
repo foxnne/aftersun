@@ -1,7 +1,7 @@
 const std = @import("std");
 const zm = @import("zmath");
 const flecs = @import("flecs");
-const game = @import("game");
+const game = @import("root");
 const gfx = game.gfx;
 const components = game.components;
 
@@ -17,10 +17,9 @@ pub const FinalUniforms = extern struct {
 };
 
 pub fn callback(it: *flecs.EcsIter) callconv(.C) void {
-
     if (it.count > 0) return;
 
-    const uniforms = FinalUniforms{ .mvp = zm.transpose(game.state.camera.frameBufferMatrix()), .output_channel = @enumToInt(game.state.output_channel)};
+    const uniforms = FinalUniforms{ .mvp = zm.transpose(game.state.camera.frameBufferMatrix()), .output_channel = @enumToInt(game.state.output_channel) };
 
     game.state.batcher.begin(.{
         .pipeline_handle = game.state.pipeline_final,

@@ -1,7 +1,7 @@
 const std = @import("std");
 const zm = @import("zmath");
 const flecs = @import("flecs");
-const game = @import("game");
+const game = @import("root");
 const components = game.components;
 
 pub fn system() flecs.EcsSystemDesc {
@@ -33,7 +33,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                         }
                     }
 
-                    for (renderers[i].particles) |*particle, j| {
+                    for (renderers[i].particles, 0..) |*particle, j| {
                         if (particle.alive()) {
                             particle.life -= it.delta_time;
                             const t = (start_life - particle.life) / start_life;

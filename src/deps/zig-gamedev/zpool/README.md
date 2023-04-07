@@ -31,9 +31,14 @@ Then in your `build.zig` add:
 const std = @import("std");
 const zpool = @import("libs/zpool/build.zig");
 
-pub fn build(b: *std.build.Builder) void {
+pub fn build(b: *std.Build) void {
     ...
-    exe.addPackage(zpool.pkg);
+    const optimize = b.standardOptimizeOption(.{});
+    const target = b.standardTargetOptions(.{});
+
+    const zpool_pkg = zpool.package(b, target, optimize, .{});
+
+    zpool_pkg.link(exe);
 }
 ```
 
@@ -48,7 +53,7 @@ const ImageInfo = graphics.ImageInfo;
 pub const ImagePool = Pool(16, 16, ImagePtr, struct {
     ptr: ImagePtr,
     info: ImageInfo,
-})
+});
 pub const ImageHandle = ImagePool.Handle;
 ```
 

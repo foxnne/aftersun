@@ -1,7 +1,7 @@
 const std = @import("std");
 const zm = @import("zmath");
 const flecs = @import("flecs");
-const game = @import("game");
+const game = @import("root");
 const components = game.components;
 
 pub fn system() flecs.EcsSystemDesc {
@@ -24,15 +24,13 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
             const entity = it.entities[i];
             if (flecs.ecs_field(it, components.Stack, 1)) |stacks| {
                 if (flecs.ecs_field(it, components.Stack, 2)) |requests| {
-
                     if (flecs.ecs_field(it, components.RequestZeroOther, 3)) |request_others| {
                         if (flecs.ecs_get_mut(world, request_others[i].target, components.Stack)) |stack| {
                             stack.count = 0;
                             flecs.ecs_modified_id(world, request_others[i].target, flecs.ecs_id(components.Stack));
-                        } 
+                        }
                         flecs.ecs_remove_pair(world, entity, components.RequestZeroOther, components.Stack);
                     }
-                    
 
                     stacks[i].count = requests[i].count;
                     stacks[i].max = requests[i].max;

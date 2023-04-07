@@ -1,5 +1,5 @@
 const std = @import("std");
-const game = @import("game");
+const game = @import("root");
 
 pub const Counter = struct {
     var value: u64 = 0;

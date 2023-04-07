@@ -1,11 +1,11 @@
 const std = @import("std");
 const zglfw = @import("zglfw");
-const game = @import("game");
+const game = @import("root");
 const input = @import("input.zig");
 const zgpu = @import("zgpu");
 const zgui = @import("zgui");
 
-const flecs = @import("flecs");
+const ecs = @import("zflecs");
 const components = game.components;
 
 pub fn cursor(window: *zglfw.Window, x: f64, y: f64) callconv(.C) void {
@@ -58,6 +58,7 @@ pub fn scroll(_: *zglfw.Window, _: f64, y: f64) callconv(.C) void {
 }
 
 pub fn button(_: *zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Action, mods: zglfw.Mods) callconv(.C) void {
+    _ = mods;
     if (zgui.io.getWantCaptureMouse()) return;
 
     const tile = game.state.controls.mouse.tile;
@@ -94,11 +95,11 @@ pub fn button(_: *zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Ac
     if (game.state.controls.mouse.primary.down_tile) |down| {
         if (game.state.controls.mouse.primary.up_tile) |up| {
             if (down.x != up.x or down.y != up.y) {
-                flecs.ecs_set_pair_second(game.state.world, game.state.entities.player, components.Request, &components.Drag{
-                    .start = down,
-                    .end = up,
-                    .modifier = if (mods.super or mods.control) .half else if (mods.shift) .one else .all,
-                });
+                // ecs.ecs_set_pair_second(game.state.world, game.state.entities.player, components.Request, &components.Drag{
+                //     .start = down,
+                //     .end = up,
+                //     .modifier = if (mods.super or mods.control) .half else if (mods.shift) .one else .all,
+                // });
             }
             game.state.controls.mouse.primary.down_tile = null;
             game.state.controls.mouse.primary.up_tile = null;
@@ -121,7 +122,7 @@ pub fn button(_: *zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Ac
 
 pub fn key(_: *zglfw.Window, glfw_key: zglfw.Key, _: i32, action: zglfw.Action, _: zglfw.Mods) callconv(.C) void {
     if (zgui.io.getWantCaptureKeyboard()) return;
-    for (game.state.controls.keys) |*k| {
+    for (&game.state.controls.keys) |*k| {
         if (k.primary == glfw_key or k.secondary == glfw_key) {
             k.previous_state = k.state;
             k.state = switch (action) {

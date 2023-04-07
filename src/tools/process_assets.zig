@@ -15,7 +15,7 @@ pub const ProcessAssetsStep = struct {
     pub fn init(builder: *Builder, comptime assets_path: []const u8, comptime assets_output_path: []const u8, comptime animations_output_path: []const u8) *ProcessAssetsStep {
         const self = builder.allocator.create(ProcessAssetsStep) catch unreachable;
         self.* = .{
-            .step = Step.init(.custom, "process-assets", builder.allocator, process),
+            .step = Step.init(.{ .id = .custom, .name = "process-assets", .owner = builder, .makeFn = process }),
             .builder = builder,
             .assets_root_path = assets_path,
             .assets_output_path = assets_output_path,
@@ -25,7 +25,8 @@ pub const ProcessAssetsStep = struct {
         return self;
     }
 
-    fn process(step: *Step) !void {
+    fn process(step: *Step, prog_node: *std.Progress.Node) anyerror!void {
+        _ = prog_node;
         const self = @fieldParentPtr(ProcessAssetsStep, "step", step);
         const root = self.assets_root_path;
         const assets_output = self.assets_output_path;
@@ -46,7 +47,7 @@ pub const ProcessAssetsStep = struct {
                 try assets_writer.writeAll("const std = @import(\"std\");\n\n");
 
                 // Add root assets location as const.
-                try assets_writer.print("pub const root = \"{s}/\";\n\n", .{ root });
+                try assets_writer.print("pub const root = \"{s}/\";\n\n", .{root});
 
                 // Iterate all files
                 for (files) |file| {
@@ -70,9 +71,9 @@ pub const ProcessAssetsStep = struct {
                         try assets_writer.print("pub const {s}{s} = struct {{\n", .{ name, "_atlas" });
                         try assets_writer.print("  pub const path = \"{s}\";\n", .{path_fixed});
 
-                        var atlas = Atlas.initFromFile(self.builder.allocator, file) catch unreachable;
+                        var atlas = Atlas.loadFromFile(self.builder.allocator, file) catch unreachable;
 
-                        for (atlas.sprites) |sprite, i| {
+                        for (atlas.sprites, 0..) |sprite, i| {
                             var sprite_name = try self.builder.allocator.alloc(u8, sprite.name.len);
                             _ = std.mem.replace(u8, sprite.name, " ", "_", sprite_name);
                             _ = std.mem.replace(u8, sprite_name, ".", "_", sprite_name);
@@ -105,7 +106,7 @@ pub const ProcessAssetsStep = struct {
                                     _ = std.mem.replace(u8, atlas.sprites[index].name, " ", "_", sprite_name);
                                     _ = std.mem.replace(u8, sprite_name, ".", "_", sprite_name);
 
-                                    try animations_writer.print("    assets.{s}_atlas.{s},\n", .{name, sprite_name});
+                                    try animations_writer.print("    assets.{s}_atlas.{s},\n", .{ name, sprite_name });
                                 }
                                 try animations_writer.print("}};\n", .{});
                             }

@@ -1,6 +1,6 @@
 const std = @import("std");
 const zm = @import("zmath");
-const game = @import("game");
+const game = @import("root");
 
 pub const utils = @import("utils.zig");
 

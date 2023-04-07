@@ -1,4 +1,4 @@
-pub const version = @import("std").SemanticVersion{ .major = 0, .minor = 9, .patch = 2 };
+pub const version = @import("std").SemanticVersion{ .major = 0, .minor = 9, .patch = 3 };
 const std = @import("std");
 const assert = std.debug.assert;
 
@@ -50,25 +50,29 @@ pub const Image = struct {
     bytes_per_row: u32,
     is_hdr: bool,
 
-    pub fn info(filename: [:0]const u8) struct {
+    pub fn info(pathname: [:0]const u8) struct {
         is_supported: bool,
         width: u32,
         height: u32,
         num_components: u32,
     } {
+        assert(mem_allocator != null);
+
         var w: c_int = 0;
         var h: c_int = 0;
         var c: c_int = 0;
-        const is_supported = stbi_info(filename, &w, &h, &c);
+        const is_supported = stbi_info(pathname, &w, &h, &c);
         return .{
-            .is_supported = is_supported,
+            .is_supported = if (is_supported == 1) true else false,
             .width = @intCast(u32, w),
             .height = @intCast(u32, h),
             .num_components = @intCast(u32, c),
         };
     }
 
-    pub fn init(filename: [:0]const u8, forced_num_channels: u32) !Image {
+    pub fn loadFromFile(pathname: [:0]const u8, forced_num_components: u32) !Image {
+        assert(mem_allocator != null);
+
         var width: u32 = 0;
         var height: u32 = 0;
         var num_components: u32 = 0;
@@ -76,20 +80,20 @@ pub const Image = struct {
         var bytes_per_row: u32 = 0;
         var is_hdr = false;
 
-        const data = if (isHdr(filename)) data: {
+        const data = if (isHdr(pathname)) data: {
             var x: c_int = undefined;
             var y: c_int = undefined;
             var ch: c_int = undefined;
             const ptr = stbi_loadf(
-                filename,
+                pathname,
                 &x,
                 &y,
                 &ch,
-                @intCast(c_int, forced_num_channels),
+                @intCast(c_int, forced_num_components),
             );
             if (ptr == null) return error.ImageInitFailed;
 
-            num_components = if (forced_num_channels == 0) @intCast(u32, ch) else forced_num_channels;
+            num_components = if (forced_num_components == 0) @intCast(u32, ch) else forced_num_components;
             width = @intCast(u32, x);
             height = @intCast(u32, y);
             bytes_per_component = 2;
@@ -108,23 +112,23 @@ pub const Image = struct {
             var x: c_int = undefined;
             var y: c_int = undefined;
             var ch: c_int = undefined;
-            const is_16bit = is16bit(filename);
+            const is_16bit = is16bit(pathname);
             const ptr = if (is_16bit) @ptrCast(?[*]u8, stbi_load_16(
-                filename,
+                pathname,
                 &x,
                 &y,
                 &ch,
-                @intCast(c_int, forced_num_channels),
+                @intCast(c_int, forced_num_components),
             )) else stbi_load(
-                filename,
+                pathname,
                 &x,
                 &y,
                 &ch,
-                @intCast(c_int, forced_num_channels),
+                @intCast(c_int, forced_num_components),
             );
             if (ptr == null) return error.ImageInitFailed;
 
-            num_components = if (forced_num_channels == 0) @intCast(u32, ch) else forced_num_channels;
+            num_components = if (forced_num_components == 0) @intCast(u32, ch) else forced_num_components;
             width = @intCast(u32, x);
             height = @intCast(u32, y);
             bytes_per_component = if (is_16bit) 2 else 1;
@@ -145,15 +149,46 @@ pub const Image = struct {
         };
     }
 
-    pub fn initFromData(data: []const u8, forced_num_channels: u32) !Image {
-        // TODO: Add support for HDR images (https://github.com/michal-z/zig-gamedev/issues/155).
+    pub fn loadFromMemory(data: []const u8, forced_num_components: u32) !Image {
+        assert(mem_allocator != null);
+
         var width: u32 = 0;
         var height: u32 = 0;
         var num_components: u32 = 0;
         var bytes_per_component: u32 = 0;
         var bytes_per_row: u32 = 0;
+        var is_hdr = false;
 
-        const image_data = data: {
+        const image_data = if (isHdrFromMem(data)) data: {
+            var x: c_int = undefined;
+            var y: c_int = undefined;
+            var ch: c_int = undefined;
+            const ptr = stbi_loadf_from_memory(
+                data.ptr,
+                @intCast(c_int, data.len),
+                &x,
+                &y,
+                &ch,
+                @intCast(c_int, forced_num_components),
+            );
+            if (ptr == null) return error.ImageInitFailed;
+
+            num_components = if (forced_num_components == 0) @intCast(u32, ch) else forced_num_components;
+            width = @intCast(u32, x);
+            height = @intCast(u32, y);
+            bytes_per_component = 2;
+            bytes_per_row = width * num_components * bytes_per_component;
+            is_hdr = true;
+
+            // Convert each component from f32 to f16.
+            var ptr_f16 = @ptrCast([*]f16, ptr.?);
+            const num = width * height * num_components;
+            var i: u32 = 0;
+            while (i < num) : (i += 1) {
+                ptr_f16[i] = @floatCast(f16, ptr.?[i]);
+            }
+            break :data @ptrCast([*]u8, ptr_f16)[0 .. height * bytes_per_row];
+        } else data: {
             var x: c_int = undefined;
             var y: c_int = undefined;
             var ch: c_int = undefined;
@@ -163,11 +198,11 @@ pub const Image = struct {
                 &x,
                 &y,
                 &ch,
-                @intCast(c_int, forced_num_channels),
+                @intCast(c_int, forced_num_components),
             );
             if (ptr == null) return error.ImageInitFailed;
 
-            num_components = if (forced_num_channels == 0) @intCast(u32, ch) else forced_num_channels;
+            num_components = if (forced_num_components == 0) @intCast(u32, ch) else forced_num_components;
             width = @intCast(u32, x);
             height = @intCast(u32, y);
             bytes_per_component = 1;
@@ -183,11 +218,41 @@ pub const Image = struct {
             .num_components = num_components,
             .bytes_per_component = bytes_per_component,
             .bytes_per_row = bytes_per_row,
+            .is_hdr = is_hdr,
+        };
+    }
+
+    pub fn createEmpty(width: u32, height: u32, num_components: u32, args: struct {
+        bytes_per_component: u32 = 0,
+        bytes_per_row: u32 = 0,
+    }) !Image {
+        assert(mem_allocator != null);
+
+        const bytes_per_component = if (args.bytes_per_component == 0) 1 else args.bytes_per_component;
+        const bytes_per_row = if (args.bytes_per_row == 0)
+            width * num_components * bytes_per_component
+        else
+            args.bytes_per_row;
+
+        const size = height * bytes_per_row;
+
+        const data = @ptrCast([*]u8, zstbiMalloc(size));
+        @memset(data, 0, size);
+
+        return Image{
+            .data = data[0..size],
+            .width = width,
+            .height = height,
+            .num_components = num_components,
+            .bytes_per_component = bytes_per_component,
+            .bytes_per_row = bytes_per_row,
             .is_hdr = false,
         };
     }
 
     pub fn resize(image: *const Image, new_width: u32, new_height: u32) Image {
+        assert(mem_allocator != null);
+
         // TODO: Add support for HDR images
         const new_bytes_per_row = new_width * image.num_components * image.bytes_per_component;
         const new_size = new_height * new_bytes_per_row;
@@ -214,18 +279,53 @@ pub const Image = struct {
         };
     }
 
-    pub fn writeToFile(self: *const Image, filename: [:0]const u8, image_format: ImageWriteFormat) ImageWriteError!void {
-        const w = @intCast(c_int, self.width);
-        const h = @intCast(c_int, self.height);
-        const comp = @intCast(c_int, self.num_components);
+    pub fn writeToFile(
+        image: *const Image,
+        filename: [:0]const u8,
+        image_format: ImageWriteFormat,
+    ) ImageWriteError!void {
+        assert(mem_allocator != null);
+
+        const w = @intCast(c_int, image.width);
+        const h = @intCast(c_int, image.height);
+        const comp = @intCast(c_int, image.num_components);
         const result = switch (image_format) {
-            .png => stbi_write_png(filename.ptr, w, h, comp, self.data.ptr, 0),
+            .png => stbi_write_png(filename.ptr, w, h, comp, image.data.ptr, 0),
             .jpg => |settings| stbi_write_jpg(
                 filename.ptr,
                 w,
                 h,
                 comp,
-                self.data.ptr,
+                image.data.ptr,
+                @intCast(c_int, settings.quality),
+            ),
+        };
+        // if the result is 0 then it means an error occured (per stb image write docs)
+        if (result == 0) {
+            return ImageWriteError.CouldNotWriteImage;
+        }
+    }
+
+    pub fn writeToFn(
+        image: *const Image,
+        write_fn: *const fn (ctx: ?*anyopaque, data: ?*anyopaque, size: c_int) callconv(.C) void,
+        context: ?*anyopaque,
+        image_format: ImageWriteFormat,
+    ) ImageWriteError!void {
+        assert(mem_allocator != null);
+
+        const w = @intCast(c_int, image.width);
+        const h = @intCast(c_int, image.height);
+        const comp = @intCast(c_int, image.num_components);
+        const result = switch (image_format) {
+            .png => stbi_write_png_to_func(write_fn, context, w, h, comp, image.data.ptr, 0),
+            .jpg => |settings| stbi_write_jpg_to_func(
+                write_fn,
+                context,
+                w,
+                h,
+                comp,
+                image.data.ptr,
                 @intCast(c_int, settings.quality),
             ),
         };
@@ -255,6 +355,10 @@ pub const setLdrToHdrGamma = stbi_ldr_to_hdr_gamma;
 
 pub fn isHdr(filename: [:0]const u8) bool {
     return stbi_is_hdr(filename) != 0;
+}
+
+pub fn isHdrFromMem(buffer: []const u8) bool {
+    return stbi_is_hdr_from_memory(buffer.ptr, @intCast(c_int, buffer.len)) != 0;
 }
 
 pub fn is16bit(filename: [:0]const u8) bool {
@@ -374,6 +478,15 @@ pub extern fn stbi_load_from_memory(
     desired_channels: c_int,
 ) ?[*]u8;
 
+pub extern fn stbi_loadf_from_memory(
+    buffer: [*]const u8,
+    len: c_int,
+    x: *c_int,
+    y: *c_int,
+    channels_in_file: *c_int,
+    desired_channels: c_int,
+) ?[*]f32;
+
 extern fn stbi_image_free(image_data: ?[*]u8) void;
 
 extern fn stbi_hdr_to_ldr_scale(scale: f32) void;
@@ -383,6 +496,7 @@ extern fn stbi_ldr_to_hdr_gamma(gamma: f32) void;
 
 extern fn stbi_is_16_bit(filename: [*:0]const u8) c_int;
 extern fn stbi_is_hdr(filename: [*:0]const u8) c_int;
+extern fn stbi_is_hdr_from_memory(buffer: [*]const u8, len: c_int) c_int;
 
 extern fn stbi_set_flip_vertically_on_load(flag_true_if_should_flip: c_int) void;
 
@@ -415,7 +529,30 @@ extern fn stbi_write_png(
     stride_in_bytes: c_int,
 ) c_int;
 
+extern fn stbi_write_png_to_func(
+    func: *const fn (?*anyopaque, ?*anyopaque, c_int) callconv(.C) void,
+    context: ?*anyopaque,
+    w: c_int,
+    h: c_int,
+    comp: c_int,
+    data: [*]const u8,
+    stride_in_bytes: c_int,
+) c_int;
+
+extern fn stbi_write_jpg_to_func(
+    func: *const fn (?*anyopaque, ?*anyopaque, c_int) callconv(.C) void,
+    context: ?*anyopaque,
+    x: c_int,
+    y: c_int,
+    comp: c_int,
+    data: [*]const u8,
+    quality: c_int,
+) c_int;
+
 test "zstbi.basic" {
     init(std.testing.allocator);
     defer deinit();
+
+    var image = try Image.createEmpty(64, 64, 4, .{});
+    defer image.deinit();
 }

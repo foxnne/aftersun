@@ -1,8 +1,9 @@
 const std = @import("std");
 const zm = @import("zmath");
 const flecs = @import("flecs");
-const game = @import("game");
+const game = @import("root");
 const components = game.components;
+const ecs = @import("zflecs");
 
 pub fn system() flecs.EcsSystemDesc {
     var desc = std.mem.zeroes(flecs.EcsSystemDesc);

@@ -1,4 +1,4 @@
-const game = @import("game");
+const game = @import("root");
 const gfx = game.gfx;
 const math = game.math;
 

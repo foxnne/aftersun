@@ -1,7 +1,7 @@
 const std = @import("std");
 const zm = @import("zmath");
 const flecs = @import("flecs");
-const game = @import("game");
+const game = @import("root");
 const components = game.components;
 
 pub fn system() flecs.EcsSystemDesc {

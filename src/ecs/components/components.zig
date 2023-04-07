@@ -1,7 +1,7 @@
 const std = @import("std");
 const zm = @import("zmath");
-const game = @import("game");
-const flecs = @import("flecs");
+const game = @import("root");
+const ecs = @import("zflecs");
 
 const sprites = @import("sprites.zig");
 const characters = @import("characters.zig");
@@ -102,7 +102,7 @@ pub const Direction = game.math.Direction;
 pub const Rotation = struct { value: f32 = 0 };
 
 pub const Request = struct {};
-pub const RequestZeroOther = struct { target: flecs.EcsEntity };
+pub const RequestZeroOther = struct { target: ecs.entity_t };
 pub const Cooldown = struct { current: f32 = 0.0, end: f32 = 1.0 };
 pub const Movement = struct {
     start: Tile,
@@ -127,10 +127,10 @@ pub const Camera = struct {};
 pub const Target = struct {};
 
 pub const Useable = struct {};
-pub const Toggleable = struct { state: bool = false, on_prefab: flecs.EcsEntity, off_prefab: flecs.EcsEntity };
+pub const Toggleable = struct { state: bool = false, on_prefab: ecs.entity_t, off_prefab: ecs.entity_t };
 pub const Use = struct { target: Tile };
 pub const Consumeable = struct {};
-pub const Raw = struct { cooked_prefab: flecs.EcsEntity };
+pub const Raw = struct { cooked_prefab: ecs.entity_t };
 pub const Cook = struct {};
 
 pub const Trigger = struct {};

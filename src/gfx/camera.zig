@@ -2,7 +2,7 @@ const std = @import("std");
 const zm = @import("zmath");
 const zgpu = @import("zgpu");
 const zglfw = @import("zglfw");
-const game = @import("game");
+const game = @import("root");
 
 pub const Camera = struct {
     design_size: zm.F32x4,

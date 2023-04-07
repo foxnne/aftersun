@@ -1,5 +1,5 @@
 const std = @import("std");
-const game = @import("game");
+const game = @import("root");
 const gfx = game.gfx;
 const zgpu = @import("zgpu");
 const wgpu = zgpu.wgpu;
