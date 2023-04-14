@@ -75,7 +75,7 @@ pub fn build(b: *std.Build) !void {
     });
     const zflecs_pkg = zflecs.package(b, target, optimize, .{});
 
-    const run_cmd = exe.run();
+    const run_cmd = b.addRunArtifact(exe);
     const run_step = b.step("run", b.fmt("run {s}", .{name}));
     run_cmd.step.dependOn(b.getInstallStep());
     run_step.dependOn(&run_cmd.step);
@@ -85,7 +85,6 @@ pub fn build(b: *std.Build) !void {
     exe.addModule("zglfw", zglfw_pkg.zglfw);
     exe.addModule("zgpu", zgpu_pkg.zgpu);
     exe.addModule("zgui", zgui_pkg.zgui);
-    //exe.addModule("flecs", flecs.module(b));
     exe.addModule("zflecs", zflecs_pkg.zflecs);
 
     zgpu_pkg.link(exe);
@@ -93,7 +92,6 @@ pub fn build(b: *std.Build) !void {
     zstbi_pkg.link(exe);
     zgui_pkg.link(exe);
     zflecs_pkg.link(exe);
-    //flecs.link(exe, target);
 
     const assets = ProcessAssetsStep.init(b, "assets", "src/assets.zig", "src/animations.zig");
     const process_assets_step = b.step("process-assets", "generates struct for all assets");
@@ -105,7 +103,7 @@ pub fn build(b: *std.Build) !void {
         .install_subdir = "bin/" ++ content_dir,
     });
     exe.step.dependOn(&install_content_step.step);
-    exe.install();
+    b.installArtifact(exe);
 }
 
 inline fn thisDir() []const u8 {
