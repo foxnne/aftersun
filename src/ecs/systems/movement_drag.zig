@@ -8,7 +8,7 @@ pub fn groupBy(world: *ecs.world_t, table: *ecs.table_t, id: ecs.entity_t, ctx: 
     _ = ctx;
     var match: ecs.entity_t = 0;
     if (ecs.search(world, table, ecs.pair(id, ecs.EcsWildcard), &match) != -1) {
-        return ecs.ecs_pair_second(match);
+        return ecs.pair_second(match);
     }
     return 0;
 }

@@ -40,7 +40,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         game.state.lightmap,
                         game.state.light_atlas.sprites[renderers[i].index],
                         .{
-                            .color = renderers[i].color.value,
+                            .color = renderers[i].color,
                         },
                     ) catch unreachable;
                 }

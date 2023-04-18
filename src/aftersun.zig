@@ -320,23 +320,23 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     var movement_request_system = @import("ecs/systems/movement_request.zig").system();
     ecs.SYSTEM(world, "MovementRequestSystem", ecs.EcsOnUpdate, &movement_request_system);
 
-    // // - Movement
-    // var movement_collision_system = @import("ecs/systems/movement_collision.zig").system(world);
-    // ecs.SYSTEM(world, "MovementCollisionSystem", ecs.Constants.EcsOnUpdate, &movement_collision_system);
-    // var movement_system = @import("ecs/systems/movement.zig").system();
-    // ecs.SYSTEM(world, "MovementSystem", ecs.Constants.EcsOnUpdate, &movement_system);
-    // var velocity_system = @import("ecs/systems/velocity.zig").system();
-    // ecs.SYSTEM(world, "VelocitySystem", ecs.Constants.EcsOnUpdate, &velocity_system);
+    // - Movement
+    var movement_collision_system = @import("ecs/systems/movement_collision.zig").system(world);
+    ecs.SYSTEM(world, "MovementCollisionSystem", ecs.EcsOnUpdate, &movement_collision_system);
+    var movement_system = @import("ecs/systems/movement.zig").system();
+    ecs.SYSTEM(world, "MovementSystem", ecs.EcsOnUpdate, &movement_system);
+    var velocity_system = @import("ecs/systems/velocity.zig").system();
+    ecs.SYSTEM(world, "VelocitySystem", ecs.EcsOnUpdate, &velocity_system);
 
     // // - Other
     // var inspect_system = @import("ecs/systems/inspect.zig").system();
-    // ecs.SYSTEM(world, "InspectSystem", ecs.Constants.EcsOnUpdate, &inspect_system);
+    // ecs.SYSTEM(world, "InspectSystem", ecs.EcsOnUpdate, &inspect_system);
     // var stack_system = @import("ecs/systems/stack.zig").system();
-    // ecs.SYSTEM(world, "StackSystem", ecs.Constants.EcsOnUpdate, &stack_system);
+    // ecs.SYSTEM(world, "StackSystem", ecs.EcsOnUpdate, &stack_system);
     // var use_system = @import("ecs/systems/use.zig").system(world);
-    // ecs.SYSTEM(world, "UseSystem", ecs.Constants.EcsOnUpdate, &use_system);
+    // ecs.SYSTEM(world, "UseSystem", ecs.EcsOnUpdate, &use_system);
     // var cook_system = @import("ecs/systems/cook.zig").system();
-    // ecs.SYSTEM(world, "CookSystem", ecs.Constants.EcsOnUpdate, &cook_system);
+    // ecs.SYSTEM(world, "CookSystem", ecs.EcsOnUpdate, &cook_system);
 
     // // - Observers
     // var tile_observer = @import("ecs/observers/tile.zig").observer();
@@ -346,19 +346,19 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     // var free_particles_observer = @import("ecs/observers/free_particles.zig").observer();
     // ecs.ecs_observer(world, "FreeParticlesObserver", &free_particles_observer);
 
-    // // - Camera
-    // var camera_follow_system = @import("ecs/systems/camera_follow.zig").system();
-    // ecs.SYSTEM(world, "CameraFollowSystem", ecs.Constants.EcsOnUpdate, &camera_follow_system);
-    // var camera_zoom_system = @import("ecs/systems/camera_zoom.zig").system();
-    // ecs.SYSTEM(world, "CameraZoomSystem", ecs.Constants.EcsOnUpdate, &camera_zoom_system);
+    // - Camera
+    var camera_follow_system = @import("ecs/systems/camera_follow.zig").system();
+    ecs.SYSTEM(world, "CameraFollowSystem", ecs.EcsOnUpdate, &camera_follow_system);
+    var camera_zoom_system = @import("ecs/systems/camera_zoom.zig").system();
+    ecs.SYSTEM(world, "CameraZoomSystem", ecs.EcsOnUpdate, &camera_zoom_system);
 
-    // // - Animation
-    // var animation_character_system = @import("ecs/systems/animation_character.zig").system();
-    // ecs.SYSTEM(world, "AnimatorCharacterSystem", ecs.Constants.EcsOnUpdate, &animation_character_system);
-    // var animation_sprite_system = @import("ecs/systems/animation_sprite.zig").system();
-    // ecs.SYSTEM(world, "AnimatorSpriteSystem", ecs.Constants.EcsOnUpdate, &animation_sprite_system);
-    // var particle_system = @import("ecs/systems/animation_particle.zig").system();
-    // ecs.SYSTEM(world, "ParticleSystem", ecs.Constants.EcsOnUpdate, &particle_system);
+    // - Animation
+    var animation_character_system = @import("ecs/systems/animation_character.zig").system();
+    ecs.SYSTEM(world, "AnimatorCharacterSystem", ecs.EcsOnUpdate, &animation_character_system);
+    var animation_sprite_system = @import("ecs/systems/animation_sprite.zig").system();
+    ecs.SYSTEM(world, "AnimatorSpriteSystem", ecs.EcsOnUpdate, &animation_sprite_system);
+    var particle_system = @import("ecs/systems/animation_particle.zig").system();
+    ecs.SYSTEM(world, "ParticleSystem", ecs.EcsOnUpdate, &particle_system);
 
     // - Render
     var render_culling_system = @import("ecs/systems/render_culling.zig").system();
@@ -410,47 +410,47 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
 
     // state.entities.debug = ecs.new_entity(world, "Debug");
     // const debug = state.entities.debug;
-    // ecs.ecs_add_pair(world, debug, ecs.Constants.EcsIsA, state.prefabs.ham);
+    // ecs.ecs_add_pair(world, debug, ecs.EcsIsA, state.prefabs.ham);
     // ecs.set(world, debug, &components.Position{ .x = 0.0, .y = -64.0 });
     // ecs.set(world, debug, &components.Tile{ .x = 0, .y = -2, .counter = state.counter.count() });
 
     // const ham = ecs.new_id(world);
-    // ecs.ecs_add_pair(world, ham, ecs.Constants.EcsIsA, state.prefabs.ham);
+    // ecs.ecs_add_pair(world, ham, ecs.EcsIsA, state.prefabs.ham);
     // ecs.set(world, ham, &components.Position{ .x = 0.0, .y = -96.0 });
     // ecs.set(world, ham, &components.Tile{ .x = 0, .y = -3, .counter = state.counter.count() });
     // ecs.set(world, ham, &components.Stack{ .count = 3, .max = 5 });
 
-    // // Create campfire
-    // {
-    //     const campfire = ecs.new_entity(world, "campfire");
-    //     ecs.set(world, campfire, &components.Position{ .x = 32.0, .y = -64.0 });
-    //     ecs.set(world, campfire, &components.Tile{ .x = 1, .y = -2, .counter = state.counter.count() });
-    //     ecs.set(world, campfire, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Campfire_0_Layer_0 });
-    //     ecs.set(world, campfire, &components.SpriteAnimator{
-    //         .state = .play,
-    //         .animation = &animations.Campfire_Layer_0,
-    //         .fps = 16,
-    //     });
-    //     ecs.set(world, campfire, &components.Collider{ .trigger = true });
-    //     ecs.ecs_add_pair(world, campfire, components.Trigger, components.Cook);
-    //     ecs.set(world, campfire, &components.ParticleRenderer{
-    //         .particles = try allocator.alloc(components.ParticleRenderer.Particle, 32),
-    //         .offset = zm.f32x4(0, settings.pixels_per_unit / 1.5, 0, 0),
-    //     });
-    //     ecs.set(world, campfire, &components.ParticleAnimator{
-    //         .animation = &animations.Smoke_Layer,
-    //         .rate = 8.0,
-    //         .start_life = 2.0,
-    //         .velocity_min = .{ -12.0, 28.0 },
-    //         .velocity_max = .{ 0.0, 46.0 },
-    //         .start_color = math.Color.initFloats(0.5, 0.5, 0.5, 1.0),
-    //         .end_color = math.Color.initFloats(1.0, 1.0, 1.0, 1.0),
-    //     });
-    //     ecs.set(world, campfire, &components.LightRenderer{
-    //         .index = assets.aftersun_lights_atlas.point256_png,
-    //         .color = math.Color.initFloats(0.6, 0.4, 0.1, 1.0),
-    //     });
-    // }
+    // Create campfire
+    {
+        const campfire = ecs.new_entity(world, "campfire");
+        _ = ecs.set(world, campfire, components.Position, .{ .x = 32.0, .y = -64.0 });
+        _ = ecs.set(world, campfire, components.Tile, .{ .x = 1, .y = -2, .counter = state.counter.count() });
+        _ = ecs.set(world, campfire, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Campfire_0_Layer_0 });
+        _ = ecs.set(world, campfire, components.SpriteAnimator, .{
+            .state = .play,
+            .animation = &animations.Campfire_Layer_0,
+            .fps = 16,
+        });
+        _ = ecs.set(world, campfire, components.Collider, .{ .trigger = true });
+        ecs.add_pair(world, campfire, ecs.id(components.Trigger), ecs.id(components.Cook));
+        _ = ecs.set(world, campfire, components.ParticleRenderer, .{
+            .particles = try allocator.alloc(components.ParticleRenderer.Particle, 32),
+            .offset = zm.f32x4(0, settings.pixels_per_unit / 1.5, 0, 0),
+        });
+        _ = ecs.set(world, campfire, components.ParticleAnimator, .{
+            .animation = &animations.Smoke_Layer,
+            .rate = 8.0,
+            .start_life = 2.0,
+            .velocity_min = .{ -12.0, 28.0 },
+            .velocity_max = .{ 0.0, 46.0 },
+            .start_color = math.Color.initFloats(0.5, 0.5, 0.5, 1.0).toSlice(),
+            .end_color = math.Color.initFloats(1.0, 1.0, 1.0, 1.0).toSlice(),
+        });
+        _ = ecs.set(world, campfire, components.LightRenderer, .{
+            .index = assets.aftersun_lights_atlas.point256_png,
+            .color = math.Color.initFloats(0.6, 0.4, 0.1, 1.0).toSlice(),
+        });
+    }
 
     // // Create first tree
     // {
@@ -515,7 +515,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
 
     //     const leaf_color = math.Color.initBytes(15, 0, 0, 255);
 
-    //     const tree_leaves_01 = ecs.ecs_new_w_pair(world, ecs.Constants.EcsChildOf, tree);
+    //     const tree_leaves_01 = ecs.ecs_new_w_pair(world, ecs.EcsChildOf, tree);
     //     ecs.set(world, tree_leaves_01, &position);
     //     ecs.set(world, tree_leaves_01, &position.toTile(state.counter.count()));
     //     ecs.set(world, tree_leaves_01, &components.SpriteRenderer{
@@ -525,7 +525,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     //         .vert_mode = .top_sway,
     //     });
 
-    //     const tree_leaves_02 = ecs.ecs_new_w_pair(world, ecs.Constants.EcsChildOf, tree);
+    //     const tree_leaves_02 = ecs.ecs_new_w_pair(world, ecs.EcsChildOf, tree);
     //     ecs.set(world, tree_leaves_02, &position);
     //     ecs.set(world, tree_leaves_02, &position.toTile(state.counter.count()));
     //     ecs.set(world, tree_leaves_02, &components.SpriteRenderer{
@@ -535,7 +535,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     //         .vert_mode = .top_sway,
     //     });
 
-    //     const tree_leaves_03 = ecs.ecs_new_w_pair(world, ecs.Constants.EcsChildOf, tree);
+    //     const tree_leaves_03 = ecs.ecs_new_w_pair(world, ecs.EcsChildOf, tree);
     //     ecs.set(world, tree_leaves_03, &position);
     //     ecs.set(world, tree_leaves_03, &position.toTile(state.counter.count()));
     //     ecs.set(world, tree_leaves_03, &components.SpriteRenderer{
@@ -545,7 +545,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     //         .vert_mode = .top_sway,
     //     });
 
-    //     const tree_leaves_04 = ecs.ecs_new_w_pair(world, ecs.Constants.EcsChildOf, tree);
+    //     const tree_leaves_04 = ecs.ecs_new_w_pair(world, ecs.EcsChildOf, tree);
     //     ecs.set(world, tree_leaves_04, &position);
     //     ecs.set(world, tree_leaves_04, &position.toTile(state.counter.count()));
     //     ecs.set(world, tree_leaves_04, &components.SpriteRenderer{
@@ -567,7 +567,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     //     ecs.set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Pine_0_Trunk, .vert_mode = .top_sway });
     //     ecs.set(world, tree, &components.Collider{});
 
-    //     const tree_leaves_01 = ecs.ecs_new_w_pair(world, ecs.Constants.EcsChildOf, tree);
+    //     const tree_leaves_01 = ecs.ecs_new_w_pair(world, ecs.EcsChildOf, tree);
     //     ecs.set(world, tree_leaves_01, &position);
     //     ecs.set(world, tree_leaves_01, &position.toTile(state.counter.count()));
     //     ecs.set(world, tree_leaves_01, &components.SpriteRenderer{
@@ -581,7 +581,6 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
 
 fn deinit(allocator: std.mem.Allocator) void {
     // Remove all particle renderers so observer can free particles.
-    //ecs.ecs_remove_all(state.world, ecs.ecs_id(components.ParticleRenderer));
     ecs.remove_all(state.world, ecs.id(components.ParticleRenderer));
 
     state.batcher.deinit();
@@ -617,7 +616,7 @@ fn update() void {
     //         if (zgui.button(zgui.formatZ("{s}", .{n}), .{ .w = -1 })) {
     //             if (ecs.ecs_get(state.world, state.entities.player, components.Tile)) |tile| {
     //                 if (ecs.ecs_get(state.world, state.entities.player, components.Position)) |position| {
-    //                     const new = ecs.ecs_new_w_pair(state.world, ecs.Constants.EcsIsA, ecs.ecs_lookup(state.world, n.ptr));
+    //                     const new = ecs.ecs_new_w_pair(state.world, ecs.EcsIsA, ecs.ecs_lookup(state.world, n.ptr));
     //                     ecs.set(state.world, new, position);
     //                     const end = tile.*;
     //                     const start: components.Tile = .{ .x = end.x, .y = end.y, .z = end.z + 1 };
@@ -664,7 +663,7 @@ fn update() void {
     //         zgui.bulletText("Tile: x: {d}, y: {d}, z: {d}", .{ tile.x, tile.y, tile.z });
     //     }
 
-    //     if (ecs.ecs_get_pair(state.world, state.entities.player, components.Cell, ecs.Constants.EcsWildcard)) |cell| {
+    //     if (ecs.ecs_get_pair(state.world, state.entities.player, components.Cell, ecs.EcsWildcard)) |cell| {
     //         zgui.bulletText("Cell: x: {d}, y: {d}, z: {d}", .{ cell.x, cell.y, cell.z });
     //     }
 

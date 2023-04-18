@@ -1,41 +1,41 @@
 const std = @import("std");
 const zm = @import("zmath");
-const flecs = @import("flecs");
+const ecs = @import("zflecs");
 const game = @import("root");
 const components = game.components;
 
 const Direction = game.math.Direction;
 
-pub fn system() flecs.EcsSystemDesc {
-    var desc = std.mem.zeroes(flecs.EcsSystemDesc);
-    desc.query.filter.terms[0] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.CharacterAnimator) });
-    desc.query.filter.terms[1] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.CharacterRenderer) });
-    desc.query.filter.terms[2] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Direction, components.Movement) });
-    desc.query.filter.terms[3] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Direction, components.Head) });
-    desc.query.filter.terms[4] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Direction, components.Body) });
+pub fn system() ecs.system_desc_t {
+    var desc = std.mem.zeroes(ecs.system_desc_t);
+    desc.query.filter.terms[0] = ecs.term_t{ .id = ecs.id(components.CharacterAnimator) };
+    desc.query.filter.terms[1] = ecs.term_t{ .id = ecs.id(components.CharacterRenderer) };
+    desc.query.filter.terms[2] = ecs.term_t{ .id = ecs.pair(ecs.id(components.Direction), ecs.id(components.Movement)) };
+    desc.query.filter.terms[3] = ecs.term_t{ .id = ecs.pair(ecs.id(components.Direction), ecs.id(components.Head)) };
+    desc.query.filter.terms[4] = ecs.term_t{ .id = ecs.pair(ecs.id(components.Direction), ecs.id(components.Body)) };
     desc.run = run;
     return desc;
 }
 
-pub fn run(it: *flecs.EcsIter) callconv(.C) void {
-    const world = it.world.?;
+pub fn run(it: *ecs.iter_t) callconv(.C) void {
+    const world = it.world;
 
-    while (flecs.ecs_iter_next(it)) {
+    while (ecs.iter_next(it)) {
         var i: usize = 0;
-        while (i < it.count) : (i += 1) {
-            const entity = it.entities[i];
-            if (flecs.ecs_field(it, components.CharacterAnimator, 1)) |animators| {
-                if (flecs.ecs_field(it, components.CharacterRenderer, 2)) |renderers| {
-                    if (flecs.ecs_field(it, components.Direction, 4)) |head_directions| {
-                        if (flecs.ecs_field(it, components.Direction, 5)) |body_directions| {
-                            const move_direction: Direction = if (flecs.ecs_field(it, components.Direction, 3)) |move_directions| move_directions[i] else Direction.none;
+        while (i < it.count()) : (i += 1) {
+            const entity = it.entities()[i];
+            if (ecs.field(it, components.CharacterAnimator, 1)) |animators| {
+                if (ecs.field(it, components.CharacterRenderer, 2)) |renderers| {
+                    if (ecs.field(it, components.Direction, 4)) |head_directions| {
+                        if (ecs.field(it, components.Direction, 5)) |body_directions| {
+                            const move_direction: Direction = if (ecs.field(it, components.Direction, 3)) |move_directions| move_directions[i] else Direction.none;
                             if (body_directions[i] == .none) body_directions[i] = if (move_direction != .none) move_direction else Direction.se;
                             if (head_directions[i] == .none) head_directions[i] = body_directions[i];
                             var temp_head_direction = head_directions[i];
 
                             if (entity == game.state.entities.player) {
                                 const mouse_world = game.state.controls.mouse.position.world();
-                                const player_position = if (flecs.ecs_get(world, entity, components.Position)) |position| position.toF32x4() else zm.f32x4s(0);
+                                const player_position = if (ecs.get(world, entity, components.Position)) |position| position.toF32x4() else zm.f32x4s(0);
                                 const mouse_vector = mouse_world - player_position;
                                 temp_head_direction = Direction.find(8, mouse_vector[0], mouse_vector[1]);
                             }

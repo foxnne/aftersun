@@ -1,25 +1,25 @@
 const std = @import("std");
 const zm = @import("zmath");
-const flecs = @import("flecs");
+const ecs = @import("zflecs");
 const game = @import("root");
 const components = game.components;
 
-pub fn system() flecs.EcsSystemDesc {
-    var desc = std.mem.zeroes(flecs.EcsSystemDesc);
-    desc.query.filter.terms[0] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Camera, components.Target) });
-    desc.query.filter.terms[1] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Position) });
-    desc.query.filter.terms[2] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Velocity), .oper = flecs.EcsOperKind.ecs_optional });
+pub fn system() ecs.system_desc_t {
+    var desc = std.mem.zeroes(ecs.system_desc_t);
+    desc.query.filter.terms[0] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.pair(ecs.id(components.Camera), ecs.id(components.Target)) });
+    desc.query.filter.terms[1] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Position) });
+    desc.query.filter.terms[2] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Velocity), .oper = ecs.oper_kind_t.Optional });
     desc.run = run;
     return desc;
 }
 
-pub fn run(it: *flecs.EcsIter) callconv(.C) void {
-    while (flecs.ecs_iter_next(it)) {
+pub fn run(it: *ecs.iter_t) callconv(.C) void {
+    while (ecs.iter_next(it)) {
         var i: usize = 0;
-        while (i < it.count) : (i += 1) {
-            if (flecs.ecs_field(it, components.Position, 2)) |positions| {
+        while (i < it.count()) : (i += 1) {
+            if (ecs.field(it, components.Position, 2)) |positions| {
                 const position = positions[i].toF32x4();
-                const velocity = if (flecs.ecs_field(it, components.Velocity, 3)) |velocities| velocities[i].toF32x4() else zm.f32x4s(0);
+                const velocity = if (ecs.field(it, components.Velocity, 3)) |velocities| velocities[i].toF32x4() else zm.f32x4s(0);
                 const target = position + velocity * zm.f32x4s(game.settings.pixels_per_unit);
 
                 game.state.camera.position = zm.trunc(target);

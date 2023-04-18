@@ -13,34 +13,34 @@ pub fn groupBy(world: ?*flecs.EcsWorld, table: ?*flecs.EcsTable, id: flecs.EcsId
     return 0;
 }
 
-pub fn system(world: *flecs.EcsWorld) flecs.EcsSystemDesc {
-    var desc = std.mem.zeroes(flecs.EcsSystemDesc);
-    desc.query.filter.terms[0] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Player) });
-    desc.query.filter.terms[1] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Tile) });
-    desc.query.filter.terms[2] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Request, components.Use) });
+pub fn system(world: *flecs.EcsWorld) flecs.system_desc_t {
+    var desc = std.mem.zeroes(flecs.system_desc_t);
+    desc.query.filter.terms[0] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.id(components.Player) });
+    desc.query.filter.terms[1] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.id(components.Tile) });
+    desc.query.filter.terms[2] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.ecs_pair(components.Request, components.Use) });
     desc.run = run;
 
     var ctx_desc = std.mem.zeroes(flecs.EcsQueryDesc);
-    ctx_desc.filter.terms[0] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Cell, flecs.Constants.EcsWildcard) });
-    ctx_desc.filter.terms[1] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Tile) });
+    ctx_desc.filter.terms[0] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.ecs_pair(components.Cell, flecs.Constants.EcsWildcard) });
+    ctx_desc.filter.terms[1] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.id(components.Tile) });
     ctx_desc.group_by = groupBy;
-    ctx_desc.group_by_id = flecs.ecs_id(components.Cell);
+    ctx_desc.group_by_id = flecs.id(components.Cell);
     ctx_desc.order_by = orderBy;
-    ctx_desc.order_by_component = flecs.ecs_id(components.Tile);
+    ctx_desc.order_by_component = flecs.id(components.Tile);
     desc.ctx = flecs.ecs_query_init(world, &ctx_desc);
     return desc;
 }
 
-pub fn run(it: *flecs.EcsIter) callconv(.C) void {
+pub fn run(it: *flecs.iter_t) callconv(.C) void {
     const world = it.world.?;
 
-    while (flecs.ecs_iter_next(it)) {
+    while (flecs.iter_next(it)) {
         var i: usize = 0;
-        while (i < it.count) : (i += 1) {
+        while (i < it.count()) : (i += 1) {
             const entity = it.entities[i];
 
-            if (flecs.ecs_field(it, components.Tile, 2)) |tiles| {
-                if (flecs.ecs_field(it, components.Use, 3)) |uses| {
+            if (flecs.field(it, components.Tile, 2)) |tiles| {
+                if (flecs.field(it, components.Use, 3)) |uses| {
                     const dist_x = std.math.absInt(uses[i].target.x - tiles[i].x) catch unreachable;
                     const dist_y = std.math.absInt(uses[i].target.y - tiles[i].y) catch unreachable;
 
@@ -55,10 +55,10 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                                 flecs.ecs_query_set_group(&query_it, cell_entity);
                             }
 
-                            while (flecs.ecs_iter_next(&query_it)) {
+                            while (flecs.iter_next(&query_it)) {
                                 var j: usize = 0;
-                                while (j < query_it.count) : (j += 1) {
-                                    if (flecs.ecs_field(&query_it, components.Tile, 2)) |start_tiles| {
+                                while (j < query_it.count()) : (j += 1) {
+                                    if (flecs.field(&query_it, components.Tile, 2)) |start_tiles| {
                                         if (query_it.entities[j] == entity)
                                             continue;
 
@@ -75,11 +75,11 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                         }
 
                         if (target_entity) |target| {
-                            if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Useable))) {
-                                if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Consumeable))) {
+                            if (flecs.ecs_has_id(world, target, flecs.id(components.Useable))) {
+                                if (flecs.ecs_has_id(world, target, flecs.id(components.Consumeable))) {
                                     if (flecs.ecs_get_mut(world, target, components.Stack)) |stack| {
                                         stack.count -= 1;
-                                        flecs.ecs_modified_id(world, target, flecs.ecs_id(components.Stack));
+                                        flecs.ecs_modified_id(world, target, flecs.id(components.Stack));
                                     } else {
                                         flecs.ecs_delete(world, target);
                                     }

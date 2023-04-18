@@ -46,7 +46,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         game.state.diffusemap,
                         game.state.atlas.sprites[renderers[i].index],
                         .{
-                            .color = renderers[i].color.value,
+                            .color = renderers[i].color,
                             .vert_mode = renderers[i].vert_mode,
                             .frag_mode = renderers[i].frag_mode,
                             .time = @floatCast(f32, game.state.gctx.stats.time) + @intToFloat(f32, renderers[i].order),
@@ -132,7 +132,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                 game.state.diffusemap,
                                 game.state.atlas.sprites[particle.index],
                                 .{
-                                    .color = particle.color.value,
+                                    .color = particle.color,
                                 },
                             ) catch unreachable;
                         }

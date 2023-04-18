@@ -1,23 +1,23 @@
 const std = @import("std");
 const zm = @import("zmath");
-const flecs = @import("flecs");
+const ecs = @import("zflecs");
 const game = @import("root");
 const components = game.components;
 
-pub fn system() flecs.EcsSystemDesc {
-    var desc = std.mem.zeroes(flecs.EcsSystemDesc);
-    desc.query.filter.terms[0] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.SpriteAnimator) });
-    desc.query.filter.terms[1] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.SpriteRenderer) });
+pub fn system() ecs.system_desc_t {
+    var desc = std.mem.zeroes(ecs.system_desc_t);
+    desc.query.filter.terms[0] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.SpriteAnimator) });
+    desc.query.filter.terms[1] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.SpriteRenderer) });
     desc.run = run;
     return desc;
 }
 
-pub fn run(it: *flecs.EcsIter) callconv(.C) void {
-    while (flecs.ecs_iter_next(it)) {
+pub fn run(it: *ecs.iter_t) callconv(.C) void {
+    while (ecs.iter_next(it)) {
         var i: usize = 0;
-        while (i < it.count) : (i += 1) {
-            if (flecs.ecs_field(it, components.SpriteAnimator, 1)) |animators| {
-                if (flecs.ecs_field(it, components.SpriteRenderer, 2)) |renderers| {
+        while (i < it.count()) : (i += 1) {
+            if (ecs.field(it, components.SpriteAnimator, 1)) |animators| {
+                if (ecs.field(it, components.SpriteRenderer, 2)) |renderers| {
                     if (animators[i].state == components.SpriteAnimator.State.play) {
                         animators[i].elapsed += it.delta_time;
 

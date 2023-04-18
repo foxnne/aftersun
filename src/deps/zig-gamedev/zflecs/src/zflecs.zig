@@ -927,11 +927,11 @@ extern fn ecs_delete_empty_tables(
 pub const make_pair = ecs_make_pair;
 extern fn ecs_make_pair(first: entity_t, second: entity_t) id_t;
 
-pub fn ecs_pair_first(pair_id: entity_t) entity_t {
+pub fn pair_first(pair_id: entity_t) entity_t {
     return @intCast(entity_t, @truncate(u32, (pair_id & ECS_COMPONENT_MASK) >> 32));
 }
 
-pub fn ecs_pair_second(pair_id: entity_t) entity_t {
+pub fn pair_second(pair_id: entity_t) entity_t {
     return @intCast(entity_t, @truncate(u32, pair_id));
 }
 //--------------------------------------------------------------------------------------------------

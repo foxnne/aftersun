@@ -14,19 +14,19 @@ pub fn groupBy(world: ?*flecs.EcsWorld, table: ?*flecs.EcsTable, id: flecs.EcsId
     return 0;
 }
 
-pub fn system() flecs.EcsSystemDesc {
-    var desc = std.mem.zeroes(flecs.EcsSystemDesc);
-    desc.query.filter.terms[0] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Cell, flecs.Constants.EcsWildcard) });
-    desc.query.filter.terms[1] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Tile) });
+pub fn system() flecs.system_desc_t {
+    var desc = std.mem.zeroes(flecs.system_desc_t);
+    desc.query.filter.terms[0] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.ecs_pair(components.Cell, flecs.Constants.EcsWildcard) });
+    desc.query.filter.terms[1] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.id(components.Tile) });
     desc.query.group_by = groupBy;
-    desc.query.group_by_id = flecs.ecs_id(components.Cell);
+    desc.query.group_by_id = flecs.id(components.Cell);
     desc.query.order_by = orderBy;
-    desc.query.order_by_component = flecs.ecs_id(components.Tile);
+    desc.query.order_by_component = flecs.id(components.Tile);
     desc.run = run;
     return desc;
 }
 
-pub fn run(it: *flecs.EcsIter) callconv(.C) void {
+pub fn run(it: *flecs.iter_t) callconv(.C) void {
     if (game.state.controls.inspect() or game.state.controls.inspecting) {
         if (game.state.controls.mouse.tile_timer < 1.0) {
             game.state.controls.mouse.tile_timer += it.delta_time * 4.0;
@@ -47,10 +47,10 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
         var counter: u64 = 0;
         var target_entity: ?flecs.EcsEntity = null;
 
-        while (flecs.ecs_iter_next(it)) {
+        while (flecs.iter_next(it)) {
             var i: usize = 0;
-            while (i < it.count) : (i += 1) {
-                if (flecs.ecs_field(it, components.Tile, 2)) |tiles| {
+            while (i < it.count()) : (i += 1) {
+                if (flecs.field(it, components.Tile, 2)) |tiles| {
                     if (tiles[i].x == mouse_tile.x and tiles[i].y == mouse_tile.y and tiles[i].z == mouse_tile.z) {
                         if (tiles[i].counter > counter) {
                             counter = tiles[i].counter;
@@ -155,8 +155,8 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                     zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.button_active, .c = game.math.Color.initBytes(0, 0, 0, 255).toSlice() });
                     defer zgui.popStyleColor(.{ .count = 4 });
 
-                    if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Useable))) {
-                        if (zgui.button(if (flecs.ecs_has_id(world, target, flecs.ecs_id(components.Consumeable))) "Consume" else "Use", .{ .w = -1 })) {
+                    if (flecs.ecs_has_id(world, target, flecs.id(components.Useable))) {
+                        if (zgui.button(if (flecs.ecs_has_id(world, target, flecs.id(components.Consumeable))) "Consume" else "Use", .{ .w = -1 })) {
                             flecs.ecs_set_pair_second(world, game.state.entities.player, components.Request, &components.Use{ .target = mouse_tile });
                         }
                         if (zgui.button("Use with", .{ .w = -1 })) {}

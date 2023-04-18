@@ -1,24 +1,24 @@
 const std = @import("std");
 const zm = @import("zmath");
-const flecs = @import("flecs");
+const ecs = @import("zflecs");
 const game = @import("root");
 const components = game.components;
 
-pub fn system() flecs.EcsSystemDesc {
-    var desc = std.mem.zeroes(flecs.EcsSystemDesc);
-    desc.query.filter.terms[0] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.ParticleAnimator) });
-    desc.query.filter.terms[1] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.ParticleRenderer) });
-    desc.query.filter.terms[2] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Position) });
+pub fn system() ecs.system_desc_t {
+    var desc = std.mem.zeroes(ecs.system_desc_t);
+    desc.query.filter.terms[0] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.ParticleAnimator) });
+    desc.query.filter.terms[1] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.ParticleRenderer) });
+    desc.query.filter.terms[2] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Position) });
     desc.run = run;
     return desc;
 }
 
-pub fn run(it: *flecs.EcsIter) callconv(.C) void {
-    while (flecs.ecs_iter_next(it)) {
+pub fn run(it: *ecs.iter_t) callconv(.C) void {
+    while (ecs.iter_next(it)) {
         var i: usize = 0;
-        while (i < it.count) : (i += 1) {
-            if (flecs.ecs_field(it, components.ParticleAnimator, 1)) |animators| {
-                if (flecs.ecs_field(it, components.ParticleRenderer, 2)) |renderers| {
+        while (i < it.count()) : (i += 1) {
+            if (ecs.field(it, components.ParticleAnimator, 1)) |animators| {
+                if (ecs.field(it, components.ParticleRenderer, 2)) |renderers| {
                     const start_life = animators[i].start_life;
                     var particles_to_emit: usize = 0;
 
@@ -37,7 +37,12 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                         if (particle.alive()) {
                             particle.life -= it.delta_time;
                             const t = (start_life - particle.life) / start_life;
-                            const color = animators[i].start_color.lerp(animators[i].end_color, t);
+                            const color: [4]f32 = .{
+                                game.math.lerp(animators[i].start_color[0], animators[i].end_color[0], t),
+                                game.math.lerp(animators[i].start_color[1], animators[i].end_color[1], t),
+                                game.math.lerp(animators[i].start_color[2], animators[i].end_color[2], t),
+                                game.math.lerp(animators[i].start_color[3], animators[i].end_color[3], t),
+                            }; // = animators[i].start_color.lerp(animators[i].end_color, t);
                             const index = @floatToInt(usize, @trunc((@intToFloat(f32, animators[i].animation.len - 1)) * t));
 
                             if (index < animators[i].animation.len)
@@ -49,7 +54,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             var new_particle: components.ParticleRenderer.Particle = .{};
                             new_particle.life = animators[i].start_life;
 
-                            if (flecs.ecs_field(it, components.Position, 3)) |positions| {
+                            if (ecs.field(it, components.Position, 3)) |positions| {
                                 new_particle.position[0] = positions[i].x + renderers[i].offset[0];
                                 new_particle.position[1] = positions[i].y + renderers[i].offset[1];
                                 new_particle.position[2] = positions[i].z;

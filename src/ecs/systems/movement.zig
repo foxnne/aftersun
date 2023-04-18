@@ -1,39 +1,39 @@
 const std = @import("std");
 const zm = @import("zmath");
-const flecs = @import("flecs");
+const ecs = @import("zflecs");
 const game = @import("root");
 const components = game.components;
 
-pub fn system() flecs.EcsSystemDesc {
-    var desc = std.mem.zeroes(flecs.EcsSystemDesc);
-    desc.query.filter.terms[0] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Position) });
-    desc.query.filter.terms[1] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Tile) });
-    desc.query.filter.terms[2] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Request, components.Movement) });
-    desc.query.filter.terms[3] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_pair(components.Cooldown, components.Movement), .oper = flecs.EcsOperKind.ecs_optional });
+pub fn system() ecs.system_desc_t {
+    var desc = std.mem.zeroes(ecs.system_desc_t);
+    desc.query.filter.terms[0] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Position) });
+    desc.query.filter.terms[1] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Tile) });
+    desc.query.filter.terms[2] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.pair(ecs.id(components.Request), ecs.id(components.Movement)) });
+    desc.query.filter.terms[3] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.pair(ecs.id(components.Cooldown), ecs.id(components.Movement)), .oper = ecs.oper_kind_t.Optional });
     desc.run = run;
     return desc;
 }
 
-pub fn run(it: *flecs.EcsIter) callconv(.C) void {
-    const world = it.world.?;
+pub fn run(it: *ecs.iter_t) callconv(.C) void {
+    const world = it.world;
 
-    while (flecs.ecs_iter_next(it)) {
+    while (ecs.iter_next(it)) {
         var i: usize = 0;
-        while (i < it.count) : (i += 1) {
-            const entity = it.entities[i];
-            if (flecs.ecs_field(it, components.Position, 1)) |positions| {
-                if (flecs.ecs_field(it, components.Tile, 2)) |tiles| {
-                    if (flecs.ecs_field(it, components.Movement, 3)) |movements| {
+        while (i < it.count()) : (i += 1) {
+            const entity = it.entities()[i];
+            if (ecs.field(it, components.Position, 1)) |positions| {
+                if (ecs.field(it, components.Tile, 2)) |tiles| {
+                    if (ecs.field(it, components.Movement, 3)) |movements| {
                         if (tiles[i].x != movements[i].end.x or tiles[i].y != movements[i].end.y or tiles[i].z != movements[i].end.z) {
                             // Move the tile, only once so counter is only set on the actual move.
                             tiles[i] = movements[i].end;
                             tiles[i].counter = game.state.counter.count();
 
                             // Set modified so that observers are triggered.
-                            flecs.ecs_modified_id(world, entity, flecs.ecs_id(components.Tile));
+                            ecs.modified_id(world, entity, ecs.id(components.Tile));
                         }
 
-                        if (flecs.ecs_field(it, components.Cooldown, 4)) |cooldowns| {
+                        if (ecs.field(it, components.Cooldown, 4)) |cooldowns| {
 
                             // Get progress of the lerp using cooldown duration
                             const t = if (cooldowns[i].end > 0.0) cooldowns[i].current / cooldowns[i].end else 0.0;
@@ -44,7 +44,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             const direction = game.math.Direction.find(8, difference[0], difference[1]);
 
                             // Update movement direction
-                            flecs.ecs_add_pair(world, entity, direction, components.Movement);
+                            _ = ecs.set_pair(world, entity, ecs.id(components.Direction), ecs.id(components.Movement), components.Direction, direction);
 
                             // Update position
                             const position = zm.lerp(start_position, end_position, t);
@@ -56,7 +56,7 @@ pub fn run(it: *flecs.EcsIter) callconv(.C) void {
                             positions[i].x = end_position[0];
                             positions[i].y = end_position[1];
                             positions[i].z = end_position[2];
-                            flecs.ecs_remove_pair(world, entity, components.Request, components.Movement);
+                            ecs.remove_pair(world, entity, ecs.id(components.Request), ecs.id(components.Movement));
                         }
                     }
                 }

@@ -1,16 +1,16 @@
 const std = @import("std");
 const zm = @import("zmath");
-const flecs = @import("flecs");
+const ecs = @import("zflecs");
 const game = @import("root");
 const components = game.components;
 
-pub fn system() flecs.EcsSystemDesc {
-    var desc = std.mem.zeroes(flecs.EcsSystemDesc);
+pub fn system() ecs.system_desc_t {
+    var desc = std.mem.zeroes(ecs.system_desc_t);
     desc.run = run;
     return desc;
 }
 
-pub fn run(it: *flecs.EcsIter) callconv(.C) void {
+pub fn run(it: *ecs.iter_t) callconv(.C) void {
     game.input.callbacks.scroll(game.state.gctx.window, 0.0, game.state.controls.zoom());
 
     if (game.state.camera.zoom_progress >= 0.0) {
