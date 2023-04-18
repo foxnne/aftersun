@@ -730,10 +730,10 @@ fn draw() void {
     };
     defer zgui_commands.release();
 
-    // const batcher_commands = state.batcher.finish() catch unreachable;
-    // defer batcher_commands.release();
+    const batcher_commands = state.batcher.finish() catch unreachable;
+    defer batcher_commands.release();
 
-    state.gctx.submit(&.{zgui_commands});
+    state.gctx.submit(&.{ batcher_commands, zgui_commands });
 
     if (state.gctx.present() == .swap_chain_resized) {
         state.camera.setWindow(state.gctx.window);

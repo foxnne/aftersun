@@ -6,9 +6,9 @@ const components = game.components;
 
 pub fn system() ecs.system_desc_t {
     var desc = std.mem.zeroes(ecs.system_desc_t);
-    desc.query.filter.terms[0] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Position) });
-    desc.query.filter.terms[1] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.SpriteRenderer), .oper = ecs.oper_kind_t.Optional });
-    desc.query.filter.terms[2] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.CharacterRenderer), .oper = ecs.oper_kind_t.Optional });
+    desc.query.filter.terms[0] = ecs.term_t{ .id = ecs.id(components.Position) };
+    desc.query.filter.terms[1] = ecs.term_t{ .id = ecs.id(components.SpriteRenderer), .oper = ecs.oper_kind_t.Optional };
+    desc.query.filter.terms[2] = ecs.term_t{ .id = ecs.id(components.CharacterRenderer), .oper = ecs.oper_kind_t.Optional };
     desc.run = run;
     return desc;
 }
