@@ -1,12 +1,12 @@
 const std = @import("std");
 const zm = @import("zmath");
-const flecs = @import("flecs");
+const ecs = @import("zflecs");
 const game = @import("root");
 const gfx = game.gfx;
 const components = game.components;
 
-pub fn system() flecs.EcsSystemDesc {
-    var desc = std.mem.zeroes(flecs.EcsSystemDesc);
+pub fn system() ecs.system_desc_t {
+    var desc = std.mem.zeroes(ecs.system_desc_t);
     desc.callback = callback;
     return desc;
 }
@@ -16,8 +16,8 @@ pub const FinalUniforms = extern struct {
     output_channel: i32 = 0,
 };
 
-pub fn callback(it: *flecs.EcsIter) callconv(.C) void {
-    if (it.count > 0) return;
+pub fn callback(it: *ecs.iter_t) callconv(.C) void {
+    if (it.count() > 0) return;
 
     const uniforms = FinalUniforms{ .mvp = zm.transpose(game.state.camera.frameBufferMatrix()), .output_channel = @enumToInt(game.state.output_channel) };
 

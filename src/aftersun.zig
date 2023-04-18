@@ -311,33 +311,32 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     }
 
     // - Cooldown
-    //var cooldown_system = @import("ecs/systems/cooldown.zig").system();
+    var cooldown_system = @import("ecs/systems/cooldown.zig").system();
+    ecs.SYSTEM(world, "CooldownSystem", ecs.EcsOnUpdate, &cooldown_system);
 
-    // ecs.ecs_system(world, "CooldownSystem", ecs.Constants.EcsOnUpdate, &cooldown_system);
-
-    // // - Input
-    // var movement_drag_system = @import("ecs/systems/movement_drag.zig").system(world);
-    // ecs.ecs_system(world, "MovementDragSystem", ecs.Constants.EcsOnUpdate, &movement_drag_system);
-    // var movement_request_system = @import("ecs/systems/movement_request.zig").system();
-    // ecs.ecs_system(world, "MovementRequestSystem", ecs.Constants.EcsOnUpdate, &movement_request_system);
+    // - Input
+    var movement_drag_system = @import("ecs/systems/movement_drag.zig").system(world);
+    ecs.SYSTEM(world, "MovementDragSystem", ecs.EcsOnUpdate, &movement_drag_system);
+    var movement_request_system = @import("ecs/systems/movement_request.zig").system();
+    ecs.SYSTEM(world, "MovementRequestSystem", ecs.EcsOnUpdate, &movement_request_system);
 
     // // - Movement
     // var movement_collision_system = @import("ecs/systems/movement_collision.zig").system(world);
-    // ecs.ecs_system(world, "MovementCollisionSystem", ecs.Constants.EcsOnUpdate, &movement_collision_system);
+    // ecs.SYSTEM(world, "MovementCollisionSystem", ecs.Constants.EcsOnUpdate, &movement_collision_system);
     // var movement_system = @import("ecs/systems/movement.zig").system();
-    // ecs.ecs_system(world, "MovementSystem", ecs.Constants.EcsOnUpdate, &movement_system);
+    // ecs.SYSTEM(world, "MovementSystem", ecs.Constants.EcsOnUpdate, &movement_system);
     // var velocity_system = @import("ecs/systems/velocity.zig").system();
-    // ecs.ecs_system(world, "VelocitySystem", ecs.Constants.EcsOnUpdate, &velocity_system);
+    // ecs.SYSTEM(world, "VelocitySystem", ecs.Constants.EcsOnUpdate, &velocity_system);
 
     // // - Other
     // var inspect_system = @import("ecs/systems/inspect.zig").system();
-    // ecs.ecs_system(world, "InspectSystem", ecs.Constants.EcsOnUpdate, &inspect_system);
+    // ecs.SYSTEM(world, "InspectSystem", ecs.Constants.EcsOnUpdate, &inspect_system);
     // var stack_system = @import("ecs/systems/stack.zig").system();
-    // ecs.ecs_system(world, "StackSystem", ecs.Constants.EcsOnUpdate, &stack_system);
+    // ecs.SYSTEM(world, "StackSystem", ecs.Constants.EcsOnUpdate, &stack_system);
     // var use_system = @import("ecs/systems/use.zig").system(world);
-    // ecs.ecs_system(world, "UseSystem", ecs.Constants.EcsOnUpdate, &use_system);
+    // ecs.SYSTEM(world, "UseSystem", ecs.Constants.EcsOnUpdate, &use_system);
     // var cook_system = @import("ecs/systems/cook.zig").system();
-    // ecs.ecs_system(world, "CookSystem", ecs.Constants.EcsOnUpdate, &cook_system);
+    // ecs.SYSTEM(world, "CookSystem", ecs.Constants.EcsOnUpdate, &cook_system);
 
     // // - Observers
     // var tile_observer = @import("ecs/observers/tile.zig").observer();
@@ -349,65 +348,65 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
 
     // // - Camera
     // var camera_follow_system = @import("ecs/systems/camera_follow.zig").system();
-    // ecs.ecs_system(world, "CameraFollowSystem", ecs.Constants.EcsOnUpdate, &camera_follow_system);
+    // ecs.SYSTEM(world, "CameraFollowSystem", ecs.Constants.EcsOnUpdate, &camera_follow_system);
     // var camera_zoom_system = @import("ecs/systems/camera_zoom.zig").system();
-    // ecs.ecs_system(world, "CameraZoomSystem", ecs.Constants.EcsOnUpdate, &camera_zoom_system);
+    // ecs.SYSTEM(world, "CameraZoomSystem", ecs.Constants.EcsOnUpdate, &camera_zoom_system);
 
     // // - Animation
     // var animation_character_system = @import("ecs/systems/animation_character.zig").system();
-    // ecs.ecs_system(world, "AnimatorCharacterSystem", ecs.Constants.EcsOnUpdate, &animation_character_system);
+    // ecs.SYSTEM(world, "AnimatorCharacterSystem", ecs.Constants.EcsOnUpdate, &animation_character_system);
     // var animation_sprite_system = @import("ecs/systems/animation_sprite.zig").system();
-    // ecs.ecs_system(world, "AnimatorSpriteSystem", ecs.Constants.EcsOnUpdate, &animation_sprite_system);
+    // ecs.SYSTEM(world, "AnimatorSpriteSystem", ecs.Constants.EcsOnUpdate, &animation_sprite_system);
     // var particle_system = @import("ecs/systems/animation_particle.zig").system();
-    // ecs.ecs_system(world, "ParticleSystem", ecs.Constants.EcsOnUpdate, &particle_system);
+    // ecs.SYSTEM(world, "ParticleSystem", ecs.Constants.EcsOnUpdate, &particle_system);
 
-    // // - Render
-    // var render_culling_system = @import("ecs/systems/render_culling.zig").system();
-    // ecs.ecs_system(world, "RenderCullingSystem", ecs.Constants.EcsPostUpdate, &render_culling_system);
-    // var render_diffuse_system = @import("ecs/systems/render_diffuse_pass.zig").system();
-    // ecs.ecs_system(world, "RenderDiffuseSystem", ecs.Constants.EcsPostUpdate, &render_diffuse_system);
-    // var render_light_system = @import("ecs/systems/render_light_pass.zig").system();
-    // ecs.ecs_system(world, "RenderLightSystem", ecs.Constants.EcsPostUpdate, &render_light_system);
-    // var render_height_system = @import("ecs/systems/render_height_pass.zig").system();
-    // ecs.ecs_system(world, "RenderHeightSystem", ecs.Constants.EcsPostUpdate, &render_height_system);
-    // var render_reverse_height_system = @import("ecs/systems/render_reverse_height_pass.zig").system();
-    // ecs.ecs_system(world, "RenderReverseHeightSystem", ecs.Constants.EcsPostUpdate, &render_reverse_height_system);
-    // var render_environment_system = @import("ecs/systems/render_environment_pass.zig").system();
-    // ecs.ecs_system(world, "RenderEnvironmentSystem", ecs.Constants.EcsPostUpdate, &render_environment_system);
-    // var render_final_system = @import("ecs/systems/render_final_pass.zig").system();
-    // ecs.ecs_system(world, "RenderFinalSystem", ecs.Constants.EcsPostUpdate, &render_final_system);
+    // - Render
+    var render_culling_system = @import("ecs/systems/render_culling.zig").system();
+    ecs.SYSTEM(world, "RenderCullingSystem", ecs.EcsPostUpdate, &render_culling_system);
+    var render_diffuse_system = @import("ecs/systems/render_diffuse_pass.zig").system();
+    ecs.SYSTEM(world, "RenderDiffuseSystem", ecs.EcsPostUpdate, &render_diffuse_system);
+    var render_light_system = @import("ecs/systems/render_light_pass.zig").system();
+    ecs.SYSTEM(world, "RenderLightSystem", ecs.EcsPostUpdate, &render_light_system);
+    var render_height_system = @import("ecs/systems/render_height_pass.zig").system();
+    ecs.SYSTEM(world, "RenderHeightSystem", ecs.EcsPostUpdate, &render_height_system);
+    var render_reverse_height_system = @import("ecs/systems/render_reverse_height_pass.zig").system();
+    ecs.SYSTEM(world, "RenderReverseHeightSystem", ecs.EcsPostUpdate, &render_reverse_height_system);
+    var render_environment_system = @import("ecs/systems/render_environment_pass.zig").system();
+    ecs.SYSTEM(world, "RenderEnvironmentSystem", ecs.EcsPostUpdate, &render_environment_system);
+    var render_final_system = @import("ecs/systems/render_final_pass.zig").system();
+    ecs.SYSTEM(world, "RenderFinalSystem", ecs.EcsPostUpdate, &render_final_system);
 
-    // state.entities.player = ecs.new_entity(world, "Player");
-    // const player = state.entities.player;
-    // ecs.ecs_add(world, player, components.Player);
-    // ecs.set(world, player, &components.Position{ .x = 0.0, .y = -32.0 });
-    // ecs.set(world, player, &components.Tile{ .x = 0, .y = -1, .counter = state.counter.count() });
-    // ecs.set(world, player, &components.Collider{});
-    // ecs.set(world, player, &components.Velocity{});
-    // ecs.set(world, player, &components.CharacterRenderer{
-    //     .body_index = assets.aftersun_atlas.Idle_SE_0_Body,
-    //     .head_index = assets.aftersun_atlas.Idle_SE_0_Head,
-    //     .bottom_index = assets.aftersun_atlas.Idle_SE_0_BottomF02,
-    //     .top_index = assets.aftersun_atlas.Idle_SE_0_TopF02,
-    //     .hair_index = assets.aftersun_atlas.Idle_SE_0_HairF01,
-    //     .body_color = math.Color.initBytes(5, 0, 0, 255),
-    //     .head_color = math.Color.initBytes(5, 0, 0, 255),
-    //     .bottom_color = math.Color.initBytes(2, 0, 0, 255),
-    //     .top_color = math.Color.initBytes(3, 0, 0, 255),
-    //     .hair_color = math.Color.initBytes(1, 0, 0, 255),
-    //     .flip_head = true,
-    // });
-    // ecs.set(world, player, &components.CharacterAnimator{
-    //     .head_set = animation_sets.head,
-    //     .body_set = animation_sets.body,
-    //     .top_set = animation_sets.top_f_02,
-    //     .bottom_set = animation_sets.bottom_f_02,
-    //     .hair_set = animation_sets.hair_f_01,
-    // });
-    // ecs.ecs_add_pair(world, player, components.Direction.none, components.Movement);
-    // ecs.ecs_add_pair(world, player, components.Direction.se, components.Head);
-    // ecs.ecs_add_pair(world, player, components.Direction.se, components.Body);
-    // ecs.ecs_add_pair(world, player, components.Camera, components.Target);
+    state.entities.player = ecs.new_entity(world, "Player");
+    const player = state.entities.player;
+    ecs.add(world, player, components.Player);
+    _ = ecs.set(world, player, components.Position, .{ .x = 0.0, .y = -32.0 });
+    _ = ecs.set(world, player, components.Tile, .{ .x = 0, .y = -1, .counter = state.counter.count() });
+    _ = ecs.set(world, player, components.Collider, .{});
+    _ = ecs.set(world, player, components.Velocity, .{});
+    _ = ecs.set(world, player, components.CharacterRenderer, .{
+        .body_index = assets.aftersun_atlas.Idle_SE_0_Body,
+        .head_index = assets.aftersun_atlas.Idle_SE_0_Head,
+        .bottom_index = assets.aftersun_atlas.Idle_SE_0_BottomF02,
+        .top_index = assets.aftersun_atlas.Idle_SE_0_TopF02,
+        .hair_index = assets.aftersun_atlas.Idle_SE_0_HairF01,
+        .body_color = math.Color.initBytes(5, 0, 0, 255),
+        .head_color = math.Color.initBytes(5, 0, 0, 255),
+        .bottom_color = math.Color.initBytes(2, 0, 0, 255),
+        .top_color = math.Color.initBytes(3, 0, 0, 255),
+        .hair_color = math.Color.initBytes(1, 0, 0, 255),
+        .flip_head = true,
+    });
+    _ = ecs.set(world, player, components.CharacterAnimator, .{
+        .head_set = animation_sets.head,
+        .body_set = animation_sets.body,
+        .top_set = animation_sets.top_f_02,
+        .bottom_set = animation_sets.bottom_f_02,
+        .hair_set = animation_sets.hair_f_01,
+    });
+    _ = ecs.set_pair(world, player, ecs.id(components.Direction), ecs.id(components.Movement), components.Direction, .none);
+    _ = ecs.set_pair(world, player, ecs.id(components.Direction), ecs.id(components.Head), components.Direction, .se);
+    _ = ecs.set_pair(world, player, ecs.id(components.Direction), ecs.id(components.Body), components.Direction, .se);
+    ecs.add_pair(world, player, ecs.id(components.Camera), ecs.id(components.Target));
 
     // state.entities.debug = ecs.new_entity(world, "Debug");
     // const debug = state.entities.debug;
@@ -583,6 +582,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
 fn deinit(allocator: std.mem.Allocator) void {
     // Remove all particle renderers so observer can free particles.
     //ecs.ecs_remove_all(state.world, ecs.ecs_id(components.ParticleRenderer));
+    ecs.remove_all(state.world, ecs.id(components.ParticleRenderer));
 
     state.batcher.deinit();
     state.cells.deinit();
@@ -730,10 +730,10 @@ fn draw() void {
     };
     defer zgui_commands.release();
 
-    const batcher_commands = state.batcher.finish() catch unreachable;
-    defer batcher_commands.release();
+    // const batcher_commands = state.batcher.finish() catch unreachable;
+    // defer batcher_commands.release();
 
-    state.gctx.submit(&.{ batcher_commands, zgui_commands });
+    state.gctx.submit(&.{zgui_commands});
 
     if (state.gctx.present() == .swap_chain_resized) {
         state.camera.setWindow(state.gctx.window);

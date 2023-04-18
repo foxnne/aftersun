@@ -18,6 +18,11 @@ fn make_error() error{FlecsError} {
     return error.FlecsError;
 }
 
+pub const ECS_ID_FLAGS_MASK: u64 = @as(u64, 0xFF) << 60;
+pub const ECS_COMPONENT_MASK: u64 = ~ECS_ID_FLAGS_MASK;
+
+pub extern const EcsWildcard: entity_t;
+
 pub extern const EcsOnStart: entity_t;
 pub extern const EcsPreFrame: entity_t;
 pub extern const EcsOnLoad: entity_t;
@@ -507,7 +512,7 @@ pub const iter_t = extern struct {
     interrupted_by: entity_t,
     priv: iter_private_t,
     next: iter_next_action_t,
-    callback: iter_action_t,
+    callback: *const fn (it: *iter_t) callconv(.C) void, // TODO: Compiler bug. Should be `iter_action_t`.
     fini: iter_fini_action_t,
     chain_it: ?*iter_t,
 
@@ -921,6 +926,14 @@ extern fn ecs_delete_empty_tables(
 /// `pub fn make_pair(first: entity_t, second: entity_t) id_t`
 pub const make_pair = ecs_make_pair;
 extern fn ecs_make_pair(first: entity_t, second: entity_t) id_t;
+
+pub fn ecs_pair_first(pair_id: entity_t) entity_t {
+    return @intCast(entity_t, @truncate(u32, (pair_id & ECS_COMPONENT_MASK) >> 32));
+}
+
+pub fn ecs_pair_second(pair_id: entity_t) entity_t {
+    return @intCast(entity_t, @truncate(u32, pair_id));
+}
 //--------------------------------------------------------------------------------------------------
 //
 // Functions for creating and deleting entities.
@@ -1892,9 +1905,8 @@ pub fn TAG(world: *world_t, comptime T: type) void {
 pub fn SYSTEM(
     world: *world_t,
     name: [*:0]const u8,
-    callback: iter_action_t,
     phase: entity_t,
-    query_desc: query_desc_t,
+    system_desc: *system_desc_t,
 ) void {
     var entity_desc = entity_desc_t{};
     entity_desc.id = new_id(world);
@@ -1902,11 +1914,8 @@ pub fn SYSTEM(
     entity_desc.add[0] = if (phase != 0) pair(EcsDependsOn, phase) else 0;
     entity_desc.add[1] = phase;
 
-    var system_desc = system_desc_t{};
     system_desc.entity = entity_init(world, &entity_desc);
-    system_desc.query = query_desc;
-    system_desc.callback = callback;
-    _ = system_init(world, &system_desc);
+    _ = system_init(world, system_desc);
 }
 
 pub fn new_entity(world: *world_t, name: [*:0]const u8) entity_t {
@@ -1915,6 +1924,14 @@ pub fn new_entity(world: *world_t, name: [*:0]const u8) entity_t {
 
 pub fn add_pair(world: *world_t, subject: entity_t, first: entity_t, second: entity_t) void {
     add_id(world, subject, pair(first, second));
+}
+
+pub fn set_pair(world: *world_t, subject: entity_t, first: entity_t, second: entity_t, comptime T: type, val: T) entity_t {
+    return ecs_set_id(world, subject, pair(first, second), @sizeOf(T), @ptrCast(*const anyopaque, &val));
+}
+
+pub fn remove_pair(world: *world_t, subject: entity_t, first: entity_t, second: entity_t) void {
+    remove_id(world, subject, pair(first, second));
 }
 
 // flecs internally reserves names like u16, u32, f32, etc. so we re-map them to uppercase to avoid collisions
@@ -1971,11 +1988,11 @@ pub inline fn id(comptime T: type) id_t {
 
 pub const pair = make_pair;
 
-fn cast(comptime T: type, val: ?*const anyopaque) *const T {
+pub fn cast(comptime T: type, val: ?*const anyopaque) *const T {
     return @ptrCast(*const T, @alignCast(@alignOf(T), val));
 }
 
-fn cast_mut(comptime T: type, val: ?*anyopaque) *T {
+pub fn cast_mut(comptime T: type, val: ?*anyopaque) *T {
     return @ptrCast(*T, @alignCast(@alignOf(T), val));
 }
 //--------------------------------------------------------------------------------------------------
