@@ -178,7 +178,7 @@ pub const Batcher = struct {
     }
 
     pub const SpriteOptions = struct {
-        color: zm.F32x4 = game.math.Colors.white.value,
+        color: [4]f32 = .{ 1.0, 1.0, 1.0, 1.0 },
         flip_x: bool = false,
         flip_y: bool = false,
         vert_mode: VertRenderMode = .standard,
@@ -211,8 +211,6 @@ pub const Batcher = struct {
         const origin_x = if (options.flip_x) o_x - width else -o_x;
         const origin_y = if (options.flip_y) -o_y else o_y - height;
         const pos = zm.trunc(position);
-        var color: [4]f32 = [_]f32{ 1.0, 1.0, 1.0, 1.0 };
-        zm.store(color[0..], options.color, 4);
 
         const vert_mode = switch (options.vert_mode) {
             .standard => @as(f32, 0.0),
@@ -229,25 +227,25 @@ pub const Batcher = struct {
                 .{
                     .position = [3]f32{ pos[0] + origin_x, pos[1] + height + origin_y, pos[2] },
                     .uv = [2]f32{ 0.0, 0.0 },
-                    .color = color,
+                    .color = options.color,
                     .data = [3]f32{ vert_mode, frag_mode, options.time },
                 }, //Bl
                 .{
                     .position = [3]f32{ pos[0] + width + origin_x, pos[1] + height + origin_y, pos[2] },
                     .uv = [2]f32{ 1.0, 0.0 },
-                    .color = color,
+                    .color = options.color,
                     .data = [3]f32{ vert_mode, frag_mode, options.time },
                 }, //Br
                 .{
                     .position = [3]f32{ pos[0] + width + origin_x, pos[1] + origin_y, pos[2] },
                     .uv = [2]f32{ 1.0, 1.0 },
-                    .color = color,
+                    .color = options.color,
                     .data = [3]f32{ vert_mode, frag_mode, options.time },
                 }, //Tr
                 .{
                     .position = [3]f32{ pos[0] + origin_x, pos[1] + origin_y, pos[2] },
                     .uv = [2]f32{ 0.0, 1.0 },
-                    .color = color,
+                    .color = options.color,
                     .data = [3]f32{ vert_mode, frag_mode, options.time },
                 }, //Tl
             },

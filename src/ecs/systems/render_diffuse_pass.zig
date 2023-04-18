@@ -64,7 +64,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         game.state.diffusemap,
                         game.state.atlas.sprites[renderers[i].body_index],
                         .{
-                            .color = renderers[i].body_color.value,
+                            .color = renderers[i].body_color,
                             .frag_mode = .palette,
                             .flip_x = renderers[i].flip_body,
                             .rotation = rotation,
@@ -77,7 +77,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         game.state.diffusemap,
                         game.state.atlas.sprites[renderers[i].head_index],
                         .{
-                            .color = renderers[i].head_color.value,
+                            .color = renderers[i].head_color,
                             .frag_mode = .palette,
                             .flip_x = renderers[i].flip_head,
                             .rotation = rotation,
@@ -90,7 +90,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         game.state.diffusemap,
                         game.state.atlas.sprites[renderers[i].bottom_index],
                         .{
-                            .color = renderers[i].bottom_color.value,
+                            .color = renderers[i].bottom_color,
                             .frag_mode = .palette,
                             .flip_x = renderers[i].flip_body,
                             .rotation = rotation,
@@ -103,7 +103,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         game.state.diffusemap,
                         game.state.atlas.sprites[renderers[i].top_index],
                         .{
-                            .color = renderers[i].top_color.value,
+                            .color = renderers[i].top_color,
                             .frag_mode = .palette,
                             .flip_x = renderers[i].flip_body,
                             .rotation = rotation,
@@ -116,7 +116,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         game.state.diffusemap,
                         game.state.atlas.sprites[renderers[i].hair_index],
                         .{
-                            .color = renderers[i].hair_color.value,
+                            .color = renderers[i].hair_color,
                             .frag_mode = .palette,
                             .flip_x = renderers[i].flip_head,
                             .rotation = rotation,

@@ -389,11 +389,11 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         .bottom_index = assets.aftersun_atlas.Idle_SE_0_BottomF02,
         .top_index = assets.aftersun_atlas.Idle_SE_0_TopF02,
         .hair_index = assets.aftersun_atlas.Idle_SE_0_HairF01,
-        .body_color = math.Color.initBytes(5, 0, 0, 255),
-        .head_color = math.Color.initBytes(5, 0, 0, 255),
-        .bottom_color = math.Color.initBytes(2, 0, 0, 255),
-        .top_color = math.Color.initBytes(3, 0, 0, 255),
-        .hair_color = math.Color.initBytes(1, 0, 0, 255),
+        .body_color = math.Color.initBytes(5, 0, 0, 255).toSlice(),
+        .head_color = math.Color.initBytes(5, 0, 0, 255).toSlice(),
+        .bottom_color = math.Color.initBytes(2, 0, 0, 255).toSlice(),
+        .top_color = math.Color.initBytes(3, 0, 0, 255).toSlice(),
+        .hair_color = math.Color.initBytes(1, 0, 0, 255).toSlice(),
         .flip_head = true,
     });
     _ = ecs.set(world, player, components.CharacterAnimator, .{
