@@ -34,7 +34,7 @@ test {
 }
 
 const Counter = @import("tools/counter.zig").Counter;
-//const Prefabs = @import("ecs/prefabs/prefabs.zig");
+const Prefabs = @import("ecs/prefabs/prefabs.zig");
 
 // TODO: Find somewhere to keep track of the characters outfit and choices.
 var top: u32 = 1;
@@ -48,7 +48,7 @@ pub const GameState = struct {
     gctx: *zgpu.GraphicsContext,
     world: *ecs.world_t,
     entities: Entities = .{},
-    //prefabs: Prefabs,
+    prefabs: Prefabs,
     camera: gfx.Camera,
     controls: input.Controls = .{},
     time: time.Time = .{},
@@ -121,9 +121,9 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     //ecs.set_entity_range(world, 8000, 0);
     register(world, components);
 
-    // Create all of our prefabs.
-    //var prefabs = Prefabs.init(world);
-    //prefabs.create(world);
+    //Create all of our prefabs.
+    var prefabs = Prefabs.init(world);
+    prefabs.create(world);
 
     const gctx = try zgpu.GraphicsContext.create(allocator, window);
 
@@ -256,7 +256,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         .allocator = allocator,
         .gctx = gctx,
         .world = world,
-        //.prefabs = prefabs,
+        .prefabs = prefabs,
         .camera = camera,
         .batcher = batcher,
         .cells = std.AutoArrayHashMap(components.Cell, ecs.entity_t).init(allocator),
@@ -408,17 +408,17 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     _ = ecs.set_pair(world, player, ecs.id(components.Direction), ecs.id(components.Body), components.Direction, .se);
     ecs.add_pair(world, player, ecs.id(components.Camera), ecs.id(components.Target));
 
-    // state.entities.debug = ecs.new_entity(world, "Debug");
-    // const debug = state.entities.debug;
-    // ecs.ecs_add_pair(world, debug, ecs.EcsIsA, state.prefabs.ham);
-    // ecs.set(world, debug, &components.Position{ .x = 0.0, .y = -64.0 });
-    // ecs.set(world, debug, &components.Tile{ .x = 0, .y = -2, .counter = state.counter.count() });
+    state.entities.debug = ecs.new_entity(world, "Debug");
+    const debug = state.entities.debug;
+    ecs.add_pair(world, debug, ecs.EcsIsA, state.prefabs.ham);
+    _ = ecs.set(world, debug, components.Position, .{ .x = 0.0, .y = -64.0 });
+    _ = ecs.set(world, debug, components.Tile, .{ .x = 0, .y = -2, .counter = state.counter.count() });
 
-    // const ham = ecs.new_id(world);
-    // ecs.ecs_add_pair(world, ham, ecs.EcsIsA, state.prefabs.ham);
-    // ecs.set(world, ham, &components.Position{ .x = 0.0, .y = -96.0 });
-    // ecs.set(world, ham, &components.Tile{ .x = 0, .y = -3, .counter = state.counter.count() });
-    // ecs.set(world, ham, &components.Stack{ .count = 3, .max = 5 });
+    const ham = ecs.new_id(world);
+    ecs.add_pair(world, ham, ecs.EcsIsA, state.prefabs.ham);
+    _ = ecs.set(world, ham, components.Position, .{ .x = 0.0, .y = -96.0 });
+    _ = ecs.set(world, ham, components.Tile, .{ .x = 0, .y = -3, .counter = state.counter.count() });
+    _ = ecs.set(world, ham, components.Stack, .{ .count = 3, .max = 5 });
 
     // Create campfire
     {
@@ -606,108 +606,112 @@ fn update() void {
 
     _ = ecs.progress(state.world, 0);
 
-    // if (zgui.begin("Prefabs", .{})) {
-    //     const prefab_names = std.meta.fieldNames(Prefabs);
-    //     for (prefab_names) |n| {
-    //         if (std.mem.indexOf(u8, n, "_")) |delimiter| {
-    //             if (delimiter == 0) continue;
-    //         }
+    if (zgui.begin("Prefabs", .{})) {
+        const prefab_names = std.meta.fieldNames(Prefabs);
+        for (prefab_names) |n| {
+            if (std.mem.indexOf(u8, n, "_")) |delimiter| {
+                if (delimiter == 0) continue;
+            }
 
-    //         if (zgui.button(zgui.formatZ("{s}", .{n}), .{ .w = -1 })) {
-    //             if (ecs.ecs_get(state.world, state.entities.player, components.Tile)) |tile| {
-    //                 if (ecs.ecs_get(state.world, state.entities.player, components.Position)) |position| {
-    //                     const new = ecs.ecs_new_w_pair(state.world, ecs.EcsIsA, ecs.ecs_lookup(state.world, n.ptr));
-    //                     ecs.set(state.world, new, position);
-    //                     const end = tile.*;
-    //                     const start: components.Tile = .{ .x = end.x, .y = end.y, .z = end.z + 1 };
-    //                     ecs.set(state.world, new, start);
-    //                     ecs.set_pair_second(state.world, new, components.Request, &components.Movement{ .start = start, .end = end, .curve = .sin });
-    //                     ecs.set_pair(state.world, new, &components.Cooldown{ .end = settings.movement_cooldown / 2 }, components.Movement);
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-    // zgui.end();
+            if (zgui.button(zgui.formatZ("{s}", .{n}), .{ .w = -1 })) {
+                if (ecs.get(state.world, state.entities.player, components.Tile)) |tile| {
+                    if (ecs.get(state.world, state.entities.player, components.Position)) |position| {
+                        const new = ecs.new_w_id(state.world, ecs.pair(ecs.EcsIsA, ecs.lookup(state.world, n.ptr[0..n.len :0])));
+                        _ = ecs.set(state.world, new, components.Position, position.*);
+                        const end = tile.*;
+                        const start: components.Tile = .{ .x = end.x, .y = end.y, .z = end.z + 1 };
+                        _ = ecs.set(state.world, new, components.Tile, start);
+                        _ = ecs.set_pair(state.world, new, ecs.id(components.Request), ecs.id(components.Movement), components.Movement, .{ .start = start, .end = end, .curve = .sin });
+                        _ = ecs.set_pair(state.world, new, ecs.id(components.Cooldown), ecs.id(components.Movement), components.Cooldown, .{ .end = settings.movement_cooldown / 2 });
+                    }
+                }
+            }
+        }
+    }
+    zgui.end();
 
-    // if (zgui.begin("Game Settings", .{})) {
-    //     zgui.bulletText(
-    //         "Average :  {d:.3} ms/frame ({d:.1} fps)",
-    //         .{ state.gctx.stats.average_cpu_time, state.gctx.stats.fps },
-    //     );
+    if (zgui.begin("Game Settings", .{})) {
+        zgui.bulletText(
+            "Average :  {d:.3} ms/frame ({d:.1} fps)",
+            .{ state.gctx.stats.average_cpu_time, state.gctx.stats.fps },
+        );
 
-    //     zgui.bulletText("Channel:", .{});
-    //     if (zgui.radioButton("Final", .{ .active = state.output_channel == .final })) state.output_channel = .final;
-    //     zgui.sameLine(.{});
-    //     if (zgui.radioButton("Diffuse", .{ .active = state.output_channel == .diffuse })) state.output_channel = .diffuse;
-    //     if (zgui.radioButton("Height##1", .{ .active = state.output_channel == .height })) state.output_channel = .height;
-    //     zgui.sameLine(.{});
-    //     if (zgui.radioButton("Reverse Height", .{ .active = state.output_channel == .reverse_height })) state.output_channel = .reverse_height;
-    //     if (zgui.radioButton("Environment", .{ .active = state.output_channel == .environment })) state.output_channel = .environment;
-    //     zgui.sameLine(.{});
-    //     if (zgui.radioButton("Light", .{ .active = state.output_channel == .light })) state.output_channel = .light;
+        zgui.bulletText("Channel:", .{});
+        if (zgui.radioButton("Final", .{ .active = state.output_channel == .final })) state.output_channel = .final;
+        zgui.sameLine(.{});
+        if (zgui.radioButton("Diffuse", .{ .active = state.output_channel == .diffuse })) state.output_channel = .diffuse;
+        if (zgui.radioButton("Height##1", .{ .active = state.output_channel == .height })) state.output_channel = .height;
+        zgui.sameLine(.{});
+        if (zgui.radioButton("Reverse Height", .{ .active = state.output_channel == .reverse_height })) state.output_channel = .reverse_height;
+        if (zgui.radioButton("Environment", .{ .active = state.output_channel == .environment })) state.output_channel = .environment;
+        zgui.sameLine(.{});
+        if (zgui.radioButton("Light", .{ .active = state.output_channel == .light })) state.output_channel = .light;
 
-    //     _ = zgui.sliderFloat("Timescale", .{ .v = &state.time.scale, .min = 0.1, .max = 2400.0 });
-    //     zgui.bulletText("Day: {d:.4}, Hour: {d:.4}", .{ state.time.day(), state.time.hour() });
-    //     zgui.bulletText("Phase: {s}, Next Phase: {s}", .{ state.environment.phase().name, state.environment.nextPhase().name });
-    //     zgui.bulletText("Ambient XY Angle: {d:.4}", .{state.environment.ambientXYAngle()});
-    //     zgui.bulletText("Ambient Z Angle: {d:.4}", .{state.environment.ambientZAngle()});
+        _ = zgui.sliderFloat("Timescale", .{ .v = &state.time.scale, .min = 0.1, .max = 2400.0 });
+        zgui.bulletText("Day: {d:.4}, Hour: {d:.4}", .{ state.time.day(), state.time.hour() });
+        zgui.bulletText("Phase: {s}, Next Phase: {s}", .{ state.environment.phase().name, state.environment.nextPhase().name });
+        zgui.bulletText("Ambient XY Angle: {d:.4}", .{state.environment.ambientXYAngle()});
+        zgui.bulletText("Ambient Z Angle: {d:.4}", .{state.environment.ambientZAngle()});
 
-    //     zgui.bulletText("Movement Input: {s}", .{state.controls.movement().fmt()});
+        zgui.bulletText("Movement Input: {s}", .{state.controls.movement().fmt()});
 
-    //     if (ecs.ecs_get(state.world, state.entities.player, components.Velocity)) |velocity| {
-    //         zgui.bulletText("Velocity: x: {d} y: {d}", .{ velocity.x, velocity.y });
-    //     }
+        if (ecs.get(state.world, state.entities.player, components.Velocity)) |velocity| {
+            zgui.bulletText("Velocity: x: {d} y: {d}", .{ velocity.x, velocity.y });
+        }
 
-    //     if (ecs.ecs_get(state.world, state.entities.player, components.Tile)) |tile| {
-    //         zgui.bulletText("Tile: x: {d}, y: {d}, z: {d}", .{ tile.x, tile.y, tile.z });
-    //     }
+        if (ecs.get(state.world, state.entities.player, components.Tile)) |tile| {
+            zgui.bulletText("Tile: x: {d}, y: {d}, z: {d}", .{ tile.x, tile.y, tile.z });
+        }
 
-    //     if (ecs.ecs_get_pair(state.world, state.entities.player, components.Cell, ecs.EcsWildcard)) |cell| {
-    //         zgui.bulletText("Cell: x: {d}, y: {d}, z: {d}", .{ cell.x, cell.y, cell.z });
-    //     }
+        if (ecs.get_id(state.world, state.entities.player, ecs.pair(ecs.id(components.Cell), ecs.EcsWildcard))) |cell_ptr| {
+            const cell = ecs.cast(components.Cell, cell_ptr);
+            zgui.bulletText("Cell: x: {d}, y: {d}, z: {d}", .{ cell.x, cell.y, cell.z });
+        }
 
-    //     if (ecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Movement)) |direction| {
-    //         zgui.bulletText("Movement Direction: {s}", .{direction.fmt()});
-    //     }
+        if (ecs.get_id(state.world, state.entities.player, ecs.pair(ecs.id(components.Direction), ecs.id(components.Movement)))) |direction_ptr| {
+            const direction = ecs.cast(components.Direction, direction_ptr);
+            zgui.bulletText("Movement Direction: {s}", .{direction.fmt()});
+        }
 
-    //     if (ecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Head)) |direction| {
-    //         zgui.bulletText("Head Direction: {s}", .{direction.fmt()});
-    //     }
+        if (ecs.get_id(state.world, state.entities.player, ecs.pair(ecs.id(components.Direction), ecs.id(components.Head)))) |direction_ptr| {
+            const direction = ecs.cast(components.Direction, direction_ptr);
+            zgui.bulletText("Head Direction: {s}", .{direction.fmt()});
+        }
 
-    //     if (ecs.ecs_get_pair(state.world, state.entities.player, components.Direction, components.Body)) |direction| {
-    //         zgui.bulletText("Body Direction: {s}", .{direction.fmt()});
-    //     }
+        if (ecs.get_id(state.world, state.entities.player, ecs.pair(ecs.id(components.Direction), ecs.id(components.Body)))) |direction_ptr| {
+            const direction = ecs.cast(components.Direction, direction_ptr);
+            zgui.bulletText("Body Direction: {s}", .{direction.fmt()});
+        }
 
-    //     if (ecs.ecs_get_mut(state.world, state.entities.player, components.Position)) |position| {
-    //         var z = position.z;
-    //         _ = zgui.sliderFloat("Height##2", .{ .v = &z, .min = 0.0, .max = 128.0 });
-    //         position.z = z;
-    //     }
+        if (ecs.get_mut(state.world, state.entities.player, components.Position)) |position| {
+            var z = position.z;
+            _ = zgui.sliderFloat("Height##2", .{ .v = &z, .min = 0.0, .max = 128.0 });
+            position.z = z;
+        }
 
-    //     if (ecs.ecs_get_mut(state.world, state.entities.player, components.CharacterAnimator)) |animator| {
-    //         zgui.bulletText("Player Clothing:", .{});
-    //         if (zgui.radioButton("TopF01", .{ .active = top == 0 })) {
-    //             top = 0;
-    //             animator.top_set = animation_sets.top_f_01;
-    //         }
-    //         zgui.sameLine(.{});
-    //         if (zgui.radioButton("TopF02", .{ .active = top == 1 })) {
-    //             top = 1;
-    //             animator.top_set = animation_sets.top_f_02;
-    //         }
-    //         if (zgui.radioButton("BottomF01", .{ .active = bottom == 0 })) {
-    //             bottom = 0;
-    //             animator.bottom_set = animation_sets.bottom_f_01;
-    //         }
-    //         zgui.sameLine(.{});
-    //         if (zgui.radioButton("BottomF02", .{ .active = bottom == 1 })) {
-    //             bottom = 1;
-    //             animator.bottom_set = animation_sets.bottom_f_02;
-    //         }
-    //     }
-    // }
-    // zgui.end();
+        if (ecs.get_mut(state.world, state.entities.player, components.CharacterAnimator)) |animator| {
+            zgui.bulletText("Player Clothing:", .{});
+            if (zgui.radioButton("TopF01", .{ .active = top == 0 })) {
+                top = 0;
+                animator.top_set = animation_sets.top_f_01;
+            }
+            zgui.sameLine(.{});
+            if (zgui.radioButton("TopF02", .{ .active = top == 1 })) {
+                top = 1;
+                animator.top_set = animation_sets.top_f_02;
+            }
+            if (zgui.radioButton("BottomF01", .{ .active = bottom == 0 })) {
+                bottom = 0;
+                animator.bottom_set = animation_sets.bottom_f_01;
+            }
+            zgui.sameLine(.{});
+            if (zgui.radioButton("BottomF02", .{ .active = bottom == 1 })) {
+                bottom = 1;
+                animator.bottom_set = animation_sets.bottom_f_02;
+            }
+        }
+    }
+    zgui.end();
 }
 
 fn draw() void {

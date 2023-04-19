@@ -51,7 +51,6 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                     .curve = .sin,
                                 });
                                 _ = ecs.set_pair(world, entity, ecs.id(components.Cooldown), ecs.id(components.Movement), components.Cooldown, .{ .end = game.settings.movement_cooldown / 2 });
-                                ecs.remove(world, entity, components.Cook);
                             }
                         } else {
                             ecs.delete(world, entity);

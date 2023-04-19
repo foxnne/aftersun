@@ -58,7 +58,6 @@ pub fn scroll(_: *zglfw.Window, _: f64, y: f64) callconv(.C) void {
 }
 
 pub fn button(_: *zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Action, mods: zglfw.Mods) callconv(.C) void {
-    _ = mods;
     if (zgui.io.getWantCaptureMouse()) return;
 
     const tile = game.state.controls.mouse.tile;
@@ -95,11 +94,11 @@ pub fn button(_: *zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Ac
     if (game.state.controls.mouse.primary.down_tile) |down| {
         if (game.state.controls.mouse.primary.up_tile) |up| {
             if (down.x != up.x or down.y != up.y) {
-                // ecs.ecs_set_pair_second(game.state.world, game.state.entities.player, components.Request, &components.Drag{
-                //     .start = down,
-                //     .end = up,
-                //     .modifier = if (mods.super or mods.control) .half else if (mods.shift) .one else .all,
-                // });
+                _ = ecs.set_pair(game.state.world, game.state.entities.player, ecs.id(components.Request), ecs.id(components.Drag), components.Drag, .{
+                    .start = down,
+                    .end = up,
+                    .modifier = if (mods.super or mods.control) components.Drag.Modifier.half else if (mods.shift) components.Drag.Modifier.one else components.Drag.Modifier.all,
+                });
             }
             game.state.controls.mouse.primary.down_tile = null;
             game.state.controls.mouse.primary.up_tile = null;
@@ -109,7 +108,7 @@ pub fn button(_: *zglfw.Window, glfw_button: zglfw.MouseButton, action: zglfw.Ac
     if (game.state.controls.mouse.secondary.down_tile) |down| {
         if (game.state.controls.mouse.secondary.up_tile) |up| {
             if (down.x == up.x and down.y == up.y) {
-                // flecs.ecs_set_pair_second(game.state.world, game.state.entities.player, components.Request, &components.Use{
+                // _ = ecs.set_pair(game.state.world, game.state.entities.player, ecs.id(components.Request), ecs.id(components.Use), components.Use, .{
                 //     .target = up,
                 // });
                 game.state.controls.inspecting = true;

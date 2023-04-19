@@ -1968,6 +1968,10 @@ pub fn new_entity(world: *world_t, name: [*:0]const u8) entity_t {
     return entity_init(world, &.{ .name = name });
 }
 
+pub fn new_prefab(world: *world_t, name: [*:0]const u8) entity_t {
+    return entity_init(world, &.{ .name = name, .add = [_]id_t{EcsPrefab} ++ [_]id_t{0} ** (ID_CACHE_SIZE - 1) });
+}
+
 pub fn add_pair(world: *world_t, subject: entity_t, first: entity_t, second: entity_t) void {
     add_id(world, subject, pair(first, second));
 }
@@ -2025,6 +2029,10 @@ pub fn add(world: *world_t, entity: entity_t, comptime T: type) void {
 
 pub fn remove(world: *world_t, entity: entity_t, comptime T: type) void {
     ecs_remove_id(world, entity, id(T));
+}
+
+pub fn override(world: *world_t, entity: entity_t, comptime T: type) void {
+    ecs_override_id(world, entity, id(T));
 }
 
 pub fn field(it: *iter_t, comptime T: type, index: i32) ?[]T {
