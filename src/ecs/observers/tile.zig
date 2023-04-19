@@ -1,42 +1,42 @@
 const std = @import("std");
 const zm = @import("zmath");
-const flecs = @import("flecs");
+const ecs = @import("zflecs");
 const game = @import("root");
 const components = game.components;
 
-pub fn observer() flecs.EcsObserverDesc {
-    var observer_desc = std.mem.zeroes(flecs.EcsObserverDesc);
-    observer_desc.filter.terms[0] = std.mem.zeroInit(flecs.EcsTerm, .{ .id = flecs.ecs_id(components.Tile) });
-    observer_desc.events[0] = flecs.Constants.EcsOnSet;
+pub fn observer() ecs.observer_desc_t {
+    var observer_desc = std.mem.zeroes(ecs.observer_desc_t);
+    observer_desc.filter.terms[0] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Tile) });
+    observer_desc.events[0] = ecs.EcsOnSet;
     observer_desc.run = run;
     return observer_desc;
 }
 
-pub fn run(it: *flecs.EcsIter) callconv(.C) void {
-    const world = it.world.?;
+pub fn run(it: *ecs.iter_t) callconv(.C) void {
+    const world = it.world;
 
-    while (flecs.ecs_iter_next(it)) {
+    while (ecs.iter_next(it)) {
         var i: usize = 0;
-        while (i < it.count) : (i += 1) {
-            const entity = it.entities[i];
-            if (flecs.ecs_field(it, components.Tile, 1)) |tiles| {
+        while (i < it.count()) : (i += 1) {
+            const entity = it.entities()[i];
+            if (ecs.field(it, components.Tile, 1)) |tiles| {
                 const cell = tiles[i].toCell();
                 if (game.state.cells.get(cell)) |cell_entity| {
-                    const id = flecs.ecs_get_target(world, entity, flecs.ecs_id(components.Cell), 0);
+                    const id = ecs.get_target(world, entity, ecs.id(components.Cell), 0);
                     if (id != 0) {
                         if (id != cell_entity) {
-                            flecs.ecs_remove_pair(world, entity, components.Cell, flecs.Constants.EcsWildcard);
-                            flecs.ecs_set_pair(world, entity, &cell, cell_entity);
+                            ecs.remove_pair(world, entity, ecs.id(components.Cell), ecs.EcsWildcard);
+                            _ = ecs.set_pair(world, entity, ecs.id(components.Cell), cell_entity, components.Cell, cell);
                         }
                     } else {
-                        flecs.ecs_set_pair(world, entity, &cell, cell_entity);
+                        _ = ecs.set_pair(world, entity, ecs.id(components.Cell), cell_entity, components.Cell, cell);
                     }
                 } else {
-                    const cell_entity = flecs.ecs_new_id(world);
-                    flecs.ecs_set(world, cell_entity, &cell);
+                    const cell_entity = ecs.new_id(world);
+                    _ = ecs.set(world, cell_entity, components.Cell, cell);
                     game.state.cells.put(cell, cell_entity) catch unreachable;
-                    flecs.ecs_remove_pair(world, entity, components.Cell, flecs.Constants.EcsWildcard);
-                    flecs.ecs_set_pair(world, entity, &cell, cell_entity);
+                    ecs.remove_pair(world, entity, ecs.id(components.Cell), ecs.EcsWildcard);
+                    _ = ecs.set_pair(world, entity, ecs.id(components.Cell), cell_entity, components.Cell, cell);
                 }
             }
         }

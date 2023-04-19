@@ -1,65 +1,65 @@
 const std = @import("std");
 const zm = @import("zmath");
-const flecs = @import("flecs");
+const ecs = @import("zflecs");
 const game = @import("root");
 const components = game.components;
 
-pub fn system() flecs.system_desc_t {
-    var desc = std.mem.zeroes(flecs.system_desc_t);
-    desc.query.filter.terms[0] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.id(components.Raw), .oper = flecs.EcsOperKind.ecs_optional });
-    desc.query.filter.terms[1] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.id(components.Cook) });
-    desc.query.filter.terms[2] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.id(components.Stack), .oper = flecs.EcsOperKind.ecs_optional });
-    desc.query.filter.terms[3] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.id(components.Position) });
-    desc.query.filter.terms[4] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.id(components.Tile) });
-    desc.query.filter.terms[5] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.ecs_pair(components.Cooldown, components.Movement), .oper = flecs.EcsOperKind.ecs_not });
+pub fn system() ecs.system_desc_t {
+    var desc = std.mem.zeroes(ecs.system_desc_t);
+    desc.query.filter.terms[0] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Raw), .oper = ecs.oper_kind_t.Optional });
+    desc.query.filter.terms[1] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Cook) });
+    desc.query.filter.terms[2] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Stack), .oper = ecs.oper_kind_t.Optional });
+    desc.query.filter.terms[3] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Position) });
+    desc.query.filter.terms[4] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Tile) });
+    desc.query.filter.terms[5] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.pair(ecs.id(components.Cooldown), ecs.id(components.Movement)), .oper = ecs.oper_kind_t.Not });
     desc.run = run;
     return desc;
 }
 
-pub fn run(it: *flecs.iter_t) callconv(.C) void {
-    const world = it.world.?;
+pub fn run(it: *ecs.iter_t) callconv(.C) void {
+    const world = it.world;
 
-    while (flecs.iter_next(it)) {
+    while (ecs.iter_next(it)) {
         var i: usize = 0;
         while (i < it.count()) : (i += 1) {
-            const entity = it.entities[i];
+            const entity = it.entities()[i];
 
-            if (flecs.field(it, components.Raw, 1)) |raws| {
-                if (flecs.field(it, components.Position, 4)) |positions| {
-                    if (flecs.field(it, components.Tile, 5)) |tiles| {
-                        const new = flecs.ecs_new_w_pair(world, flecs.Constants.EcsIsA, raws[i].cooked_prefab);
+            if (ecs.field(it, components.Raw, 1)) |raws| {
+                if (ecs.field(it, components.Position, 4)) |positions| {
+                    if (ecs.field(it, components.Tile, 5)) |tiles| {
+                        const new = ecs.new_w_id(world, ecs.pair(ecs.EcsIsA, raws[i].cooked_prefab));
                         var tile = tiles[i];
                         tile.z += 1;
 
-                        flecs.ecs_set(world, new, positions[i]);
-                        flecs.ecs_set(world, new, &tile);
+                        _ = ecs.set(world, new, components.Position, positions[i]);
+                        _ = ecs.set(world, new, components.Tile, tile);
 
-                        flecs.ecs_set_pair_second(world, new, components.Request, &components.Movement{
+                        _ = ecs.set_pair(world, new, ecs.id(components.Request), ecs.id(components.Movement), components.Movement, .{
                             .start = tile,
                             .end = tiles[i],
                             .curve = .sin,
                         });
-                        flecs.ecs_set_pair(world, new, &components.Cooldown{ .end = game.settings.movement_cooldown / 2 }, components.Movement);
-                        if (flecs.field(it, components.Stack, 3)) |stacks| {
+                        _ = ecs.set_pair(world, new, ecs.id(components.Cooldown), ecs.id(components.Movement), components.Cooldown, .{ .end = game.settings.movement_cooldown / 2 });
+                        if (ecs.field(it, components.Stack, 3)) |stacks| {
                             if (stacks[i].count > 0) {
                                 stacks[i].count -= 1;
-                                flecs.ecs_modified_id(world, entity, flecs.id(components.Stack));
+                                ecs.modified_id(world, entity, ecs.id(components.Stack));
 
-                                flecs.ecs_set_pair_second(world, entity, components.Request, &components.Movement{
+                                _ = ecs.set_pair(world, entity, ecs.id(components.Request), ecs.id(components.Movement), components.Movement, .{
                                     .start = tile,
                                     .end = tiles[i],
                                     .curve = .sin,
                                 });
-                                flecs.ecs_set_pair(world, entity, &components.Cooldown{ .end = game.settings.movement_cooldown / 2 }, components.Movement);
-                                flecs.ecs_remove(world, entity, components.Cook);
+                                _ = ecs.set_pair(world, entity, ecs.id(components.Cooldown), ecs.id(components.Movement), components.Cooldown, .{ .end = game.settings.movement_cooldown / 2 });
+                                ecs.remove(world, entity, components.Cook);
                             }
                         } else {
-                            flecs.ecs_delete(world, entity);
+                            ecs.delete(world, entity);
                         }
                     }
                 }
             } else {
-                flecs.ecs_remove(world, entity, components.Cook);
+                ecs.remove(world, entity, components.Cook);
             }
         }
     }

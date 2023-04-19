@@ -328,23 +328,23 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     var velocity_system = @import("ecs/systems/velocity.zig").system();
     ecs.SYSTEM(world, "VelocitySystem", ecs.EcsOnUpdate, &velocity_system);
 
-    // // - Other
-    // var inspect_system = @import("ecs/systems/inspect.zig").system();
-    // ecs.SYSTEM(world, "InspectSystem", ecs.EcsOnUpdate, &inspect_system);
-    // var stack_system = @import("ecs/systems/stack.zig").system();
-    // ecs.SYSTEM(world, "StackSystem", ecs.EcsOnUpdate, &stack_system);
-    // var use_system = @import("ecs/systems/use.zig").system(world);
-    // ecs.SYSTEM(world, "UseSystem", ecs.EcsOnUpdate, &use_system);
-    // var cook_system = @import("ecs/systems/cook.zig").system();
-    // ecs.SYSTEM(world, "CookSystem", ecs.EcsOnUpdate, &cook_system);
+    // - Other
+    var inspect_system = @import("ecs/systems/inspect.zig").system();
+    ecs.SYSTEM(world, "InspectSystem", ecs.EcsOnUpdate, &inspect_system);
+    var stack_system = @import("ecs/systems/stack.zig").system();
+    ecs.SYSTEM(world, "StackSystem", ecs.EcsOnUpdate, &stack_system);
+    var use_system = @import("ecs/systems/use.zig").system(world);
+    ecs.SYSTEM(world, "UseSystem", ecs.EcsOnUpdate, &use_system);
+    var cook_system = @import("ecs/systems/cook.zig").system();
+    ecs.SYSTEM(world, "CookSystem", ecs.EcsOnUpdate, &cook_system);
 
-    // // - Observers
-    // var tile_observer = @import("ecs/observers/tile.zig").observer();
-    // ecs.ecs_observer(world, "TileObserver", &tile_observer);
+    // - Observers
+    var tile_observer = @import("ecs/observers/tile.zig").observer();
+    ecs.OBSERVER(world, "TileObserver", &tile_observer);
     // var stack_observer = @import("ecs/observers/stack.zig").observer();
-    // ecs.ecs_observer(world, "StackObserver", &stack_observer);
+    // ecs.OBSERVER(world, "StackObserver", &stack_observer);
     // var free_particles_observer = @import("ecs/observers/free_particles.zig").observer();
-    // ecs.ecs_observer(world, "FreeParticlesObserver", &free_particles_observer);
+    // ecs.OBSERVER(world, "FreeParticlesObserver", &free_particles_observer);
 
     // - Camera
     var camera_follow_system = @import("ecs/systems/camera_follow.zig").system();
@@ -452,129 +452,129 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         });
     }
 
-    // // Create first tree
-    // {
-    //     const tree = ecs.new_entity(world, "Tree01");
-    //     ecs.set(world, tree, &components.Position{});
-    //     ecs.set(world, tree, &components.Tile{ .counter = state.counter.count() });
-    //     ecs.set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Oak_0_Trunk });
-    //     ecs.set(world, tree, &components.Collider{});
+    // Create first tree
+    {
+        const tree = ecs.new_entity(world, "Tree01");
+        _ = ecs.set(world, tree, components.Position, .{});
+        _ = ecs.set(world, tree, components.Tile, .{ .counter = state.counter.count() });
+        _ = ecs.set(world, tree, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Oak_0_Trunk });
+        _ = ecs.set(world, tree, components.Collider, .{});
 
-    //     const leaf_color = math.Color.initBytes(16, 0, 0, 255);
+        const leaf_color = math.Color.initBytes(16, 0, 0, 255).toSlice();
 
-    //     const tree_leaves_01 = ecs.new_entity(world, "TreeLeaves01");
-    //     ecs.set(world, tree_leaves_01, &components.Position{});
-    //     ecs.set(world, tree_leaves_01, &components.Tile{ .counter = state.counter.count() });
-    //     ecs.set(world, tree_leaves_01, &components.SpriteRenderer{
-    //         .index = assets.aftersun_atlas.Oak_0_Leaves04,
-    //         .color = leaf_color,
-    //         .frag_mode = .palette,
-    //         .vert_mode = .top_sway,
-    //     });
+        const tree_leaves_01 = ecs.new_entity(world, "TreeLeaves01");
+        _ = ecs.set(world, tree_leaves_01, components.Position, .{});
+        _ = ecs.set(world, tree_leaves_01, components.Tile, .{ .counter = state.counter.count() });
+        _ = ecs.set(world, tree_leaves_01, components.SpriteRenderer, .{
+            .index = assets.aftersun_atlas.Oak_0_Leaves04,
+            .color = leaf_color,
+            .frag_mode = .palette,
+            .vert_mode = .top_sway,
+        });
 
-    //     const tree_leaves_02 = ecs.new_entity(world, "TreeLeaves02");
-    //     ecs.set(world, tree_leaves_02, &components.Position{});
-    //     ecs.set(world, tree_leaves_02, &components.Tile{ .counter = state.counter.count() });
-    //     ecs.set(world, tree_leaves_02, &components.SpriteRenderer{
-    //         .index = assets.aftersun_atlas.Oak_0_Leaves03,
-    //         .color = leaf_color,
-    //         .frag_mode = .palette,
-    //         .vert_mode = .top_sway,
-    //     });
+        const tree_leaves_02 = ecs.new_entity(world, "TreeLeaves02");
+        ecs.add(world, tree_leaves_02, components.Position);
+        _ = ecs.set(world, tree_leaves_02, components.Tile, .{ .counter = state.counter.count() });
+        _ = ecs.set(world, tree_leaves_02, components.SpriteRenderer, .{
+            .index = assets.aftersun_atlas.Oak_0_Leaves03,
+            .color = leaf_color,
+            .frag_mode = .palette,
+            .vert_mode = .top_sway,
+        });
 
-    //     const tree_leaves_03 = ecs.new_entity(world, "TreeLeaves03");
-    //     ecs.set(world, tree_leaves_03, &components.Position{});
-    //     ecs.set(world, tree_leaves_03, &components.Tile{ .counter = state.counter.count() });
-    //     ecs.set(world, tree_leaves_03, &components.SpriteRenderer{
-    //         .index = assets.aftersun_atlas.Oak_0_Leaves02,
-    //         .color = leaf_color,
-    //         .frag_mode = .palette,
-    //         .vert_mode = .top_sway,
-    //     });
+        const tree_leaves_03 = ecs.new_entity(world, "TreeLeaves03");
+        ecs.add(world, tree_leaves_03, components.Position);
+        _ = ecs.set(world, tree_leaves_03, components.Tile, .{ .counter = state.counter.count() });
+        _ = ecs.set(world, tree_leaves_03, components.SpriteRenderer, .{
+            .index = assets.aftersun_atlas.Oak_0_Leaves02,
+            .color = leaf_color,
+            .frag_mode = .palette,
+            .vert_mode = .top_sway,
+        });
 
-    //     const tree_leaves_04 = ecs.new_entity(world, "TreeLeaves04");
-    //     ecs.set(world, tree_leaves_04, &components.Position{});
-    //     ecs.set(world, tree_leaves_04, &components.Tile{ .counter = state.counter.count() });
-    //     ecs.set(world, tree_leaves_04, &components.SpriteRenderer{
-    //         .index = assets.aftersun_atlas.Oak_0_Leaves01,
-    //         .color = leaf_color,
-    //         .frag_mode = .palette,
-    //         .vert_mode = .top_sway,
-    //     });
-    // }
+        const tree_leaves_04 = ecs.new_entity(world, "TreeLeaves04");
+        ecs.add(world, tree_leaves_04, components.Position);
+        _ = ecs.set(world, tree_leaves_04, components.Tile, .{ .counter = state.counter.count() });
+        _ = ecs.set(world, tree_leaves_04, components.SpriteRenderer, .{
+            .index = assets.aftersun_atlas.Oak_0_Leaves01,
+            .color = leaf_color,
+            .frag_mode = .palette,
+            .vert_mode = .top_sway,
+        });
+    }
 
-    // // Create second tree
-    // {
-    //     const position = components.Position{ .x = 64.0, .y = -32.0 };
+    // Create second tree
+    {
+        const position = components.Position{ .x = 64.0, .y = -32.0 };
 
-    //     const tree = ecs.new_entity(world, "Tree02");
-    //     ecs.set(world, tree, &position);
-    //     ecs.set(world, tree, &position.toTile(state.counter.count()));
-    //     ecs.set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Oak_0_Trunk });
-    //     ecs.set(world, tree, &components.Collider{});
+        const tree = ecs.new_entity(world, "Tree02");
+        _ = ecs.set(world, tree, components.Position, position);
+        _ = ecs.set(world, tree, components.Tile, position.toTile(state.counter.count()));
+        _ = ecs.set(world, tree, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Oak_0_Trunk });
+        _ = ecs.set(world, tree, components.Collider, .{});
 
-    //     const leaf_color = math.Color.initBytes(15, 0, 0, 255);
+        const leaf_color = math.Color.initBytes(15, 0, 0, 255).toSlice();
 
-    //     const tree_leaves_01 = ecs.ecs_new_w_pair(world, ecs.EcsChildOf, tree);
-    //     ecs.set(world, tree_leaves_01, &position);
-    //     ecs.set(world, tree_leaves_01, &position.toTile(state.counter.count()));
-    //     ecs.set(world, tree_leaves_01, &components.SpriteRenderer{
-    //         .index = assets.aftersun_atlas.Oak_0_Leaves04,
-    //         .color = leaf_color,
-    //         .frag_mode = .palette,
-    //         .vert_mode = .top_sway,
-    //     });
+        const tree_leaves_01 = ecs.new_w_id(world, ecs.pair(ecs.EcsChildOf, tree));
+        _ = ecs.set(world, tree_leaves_01, components.Position, position);
+        _ = ecs.set(world, tree_leaves_01, components.Tile, position.toTile(state.counter.count()));
+        _ = ecs.set(world, tree_leaves_01, components.SpriteRenderer, .{
+            .index = assets.aftersun_atlas.Oak_0_Leaves04,
+            .color = leaf_color,
+            .frag_mode = .palette,
+            .vert_mode = .top_sway,
+        });
 
-    //     const tree_leaves_02 = ecs.ecs_new_w_pair(world, ecs.EcsChildOf, tree);
-    //     ecs.set(world, tree_leaves_02, &position);
-    //     ecs.set(world, tree_leaves_02, &position.toTile(state.counter.count()));
-    //     ecs.set(world, tree_leaves_02, &components.SpriteRenderer{
-    //         .index = assets.aftersun_atlas.Oak_0_Leaves03,
-    //         .color = leaf_color,
-    //         .frag_mode = .palette,
-    //         .vert_mode = .top_sway,
-    //     });
+        const tree_leaves_02 = ecs.new_w_id(world, ecs.pair(ecs.EcsChildOf, tree));
+        _ = ecs.set(world, tree_leaves_02, components.Position, position);
+        _ = ecs.set(world, tree_leaves_02, components.Tile, position.toTile(state.counter.count()));
+        _ = ecs.set(world, tree_leaves_02, components.SpriteRenderer, .{
+            .index = assets.aftersun_atlas.Oak_0_Leaves03,
+            .color = leaf_color,
+            .frag_mode = .palette,
+            .vert_mode = .top_sway,
+        });
 
-    //     const tree_leaves_03 = ecs.ecs_new_w_pair(world, ecs.EcsChildOf, tree);
-    //     ecs.set(world, tree_leaves_03, &position);
-    //     ecs.set(world, tree_leaves_03, &position.toTile(state.counter.count()));
-    //     ecs.set(world, tree_leaves_03, &components.SpriteRenderer{
-    //         .index = assets.aftersun_atlas.Oak_0_Leaves02,
-    //         .color = leaf_color,
-    //         .frag_mode = .palette,
-    //         .vert_mode = .top_sway,
-    //     });
+        const tree_leaves_03 = ecs.new_w_id(world, ecs.pair(ecs.EcsChildOf, tree));
+        _ = ecs.set(world, tree_leaves_03, components.Position, position);
+        _ = ecs.set(world, tree_leaves_03, components.Tile, position.toTile(state.counter.count()));
+        _ = ecs.set(world, tree_leaves_03, components.SpriteRenderer, .{
+            .index = assets.aftersun_atlas.Oak_0_Leaves02,
+            .color = leaf_color,
+            .frag_mode = .palette,
+            .vert_mode = .top_sway,
+        });
 
-    //     const tree_leaves_04 = ecs.ecs_new_w_pair(world, ecs.EcsChildOf, tree);
-    //     ecs.set(world, tree_leaves_04, &position);
-    //     ecs.set(world, tree_leaves_04, &position.toTile(state.counter.count()));
-    //     ecs.set(world, tree_leaves_04, &components.SpriteRenderer{
-    //         .index = assets.aftersun_atlas.Oak_0_Leaves01,
-    //         .color = leaf_color,
-    //         .frag_mode = .palette,
-    //         .vert_mode = .top_sway,
-    //     });
-    // }
+        const tree_leaves_04 = ecs.new_w_id(world, ecs.pair(ecs.EcsChildOf, tree));
+        _ = ecs.set(world, tree_leaves_04, components.Position, position);
+        _ = ecs.set(world, tree_leaves_04, components.Tile, position.toTile(state.counter.count()));
+        _ = ecs.set(world, tree_leaves_04, components.SpriteRenderer, .{
+            .index = assets.aftersun_atlas.Oak_0_Leaves01,
+            .color = leaf_color,
+            .frag_mode = .palette,
+            .vert_mode = .top_sway,
+        });
+    }
 
-    // // Create third tree
-    // {
-    //     // Make sure its within another cell
-    //     const position = components.Position{ .x = @intToFloat(f32, settings.cell_size + 2) * settings.pixels_per_unit, .y = 0.0 };
+    // Create third tree
+    {
+        // Make sure its within another cell
+        const position = components.Position{ .x = @intToFloat(f32, settings.cell_size + 2) * settings.pixels_per_unit, .y = 0.0 };
 
-    //     const tree = ecs.new_entity(world, "Tree03");
-    //     ecs.set(world, tree, &position);
-    //     ecs.set(world, tree, &position.toTile(state.counter.count()));
-    //     ecs.set(world, tree, &components.SpriteRenderer{ .index = assets.aftersun_atlas.Pine_0_Trunk, .vert_mode = .top_sway });
-    //     ecs.set(world, tree, &components.Collider{});
+        const tree = ecs.new_entity(world, "Tree03");
+        _ = ecs.set(world, tree, components.Position, position);
+        _ = ecs.set(world, tree, components.Tile, position.toTile(state.counter.count()));
+        _ = ecs.set(world, tree, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Pine_0_Trunk, .vert_mode = .top_sway });
+        _ = ecs.set(world, tree, components.Collider, .{});
 
-    //     const tree_leaves_01 = ecs.ecs_new_w_pair(world, ecs.EcsChildOf, tree);
-    //     ecs.set(world, tree_leaves_01, &position);
-    //     ecs.set(world, tree_leaves_01, &position.toTile(state.counter.count()));
-    //     ecs.set(world, tree_leaves_01, &components.SpriteRenderer{
-    //         .index = assets.aftersun_atlas.Pine_0_Needles,
-    //         .vert_mode = .top_sway,
-    //     });
-    // }
+        const tree_leaves_01 = ecs.new_w_id(world, ecs.pair(ecs.EcsChildOf, tree));
+        _ = ecs.set(world, tree_leaves_01, components.Position, position);
+        _ = ecs.set(world, tree_leaves_01, components.Tile, position.toTile(state.counter.count()));
+        _ = ecs.set(world, tree_leaves_01, components.SpriteRenderer, .{
+            .index = assets.aftersun_atlas.Pine_0_Needles,
+            .vert_mode = .top_sway,
+        });
+    }
 
     return state;
 }

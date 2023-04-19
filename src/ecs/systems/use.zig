@@ -1,71 +1,71 @@
 const std = @import("std");
 const zm = @import("zmath");
-const flecs = @import("flecs");
+const ecs = @import("zflecs");
 const game = @import("root");
 const components = game.components;
 
-pub fn groupBy(world: ?*flecs.EcsWorld, table: ?*flecs.EcsTable, id: flecs.EcsId, ctx: ?*anyopaque) callconv(.C) flecs.EcsId {
+pub fn groupBy(world: *ecs.world_t, table: *ecs.table_t, id: ecs.entity_t, ctx: ?*anyopaque) callconv(.C) ecs.entity_t {
     _ = ctx;
-    var match: flecs.EcsId = 0;
-    if (flecs.ecs_search(world, table, flecs.ecs_pair(id, flecs.Constants.EcsWildcard), &match) != -1) {
-        return flecs.ecs_pair_second(match);
+    var match: ecs.entity_t = 0;
+    if (ecs.search(world, table, ecs.pair(id, ecs.EcsWildcard), &match) != -1) {
+        return ecs.pair_second(match);
     }
     return 0;
 }
 
-pub fn system(world: *flecs.EcsWorld) flecs.system_desc_t {
-    var desc = std.mem.zeroes(flecs.system_desc_t);
-    desc.query.filter.terms[0] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.id(components.Player) });
-    desc.query.filter.terms[1] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.id(components.Tile) });
-    desc.query.filter.terms[2] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.ecs_pair(components.Request, components.Use) });
+pub fn system(world: *ecs.world_t) ecs.system_desc_t {
+    var desc = std.mem.zeroes(ecs.system_desc_t);
+    desc.query.filter.terms[0] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Player) });
+    desc.query.filter.terms[1] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Tile) });
+    desc.query.filter.terms[2] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.pair(ecs.id(components.Request), ecs.id(components.Use)) });
     desc.run = run;
 
-    var ctx_desc = std.mem.zeroes(flecs.EcsQueryDesc);
-    ctx_desc.filter.terms[0] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.ecs_pair(components.Cell, flecs.Constants.EcsWildcard) });
-    ctx_desc.filter.terms[1] = std.mem.zeroInit(flecs.term_t, .{ .id = flecs.id(components.Tile) });
+    var ctx_desc = std.mem.zeroes(ecs.query_desc_t);
+    ctx_desc.filter.terms[0] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.pair(ecs.id(components.Cell), ecs.EcsWildcard) });
+    ctx_desc.filter.terms[1] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Tile) });
     ctx_desc.group_by = groupBy;
-    ctx_desc.group_by_id = flecs.id(components.Cell);
+    ctx_desc.group_by_id = ecs.id(components.Cell);
     ctx_desc.order_by = orderBy;
-    ctx_desc.order_by_component = flecs.id(components.Tile);
-    desc.ctx = flecs.ecs_query_init(world, &ctx_desc);
+    ctx_desc.order_by_component = ecs.id(components.Tile);
+    desc.ctx = ecs.query_init(world, &ctx_desc) catch unreachable;
     return desc;
 }
 
-pub fn run(it: *flecs.iter_t) callconv(.C) void {
-    const world = it.world.?;
+pub fn run(it: *ecs.iter_t) callconv(.C) void {
+    const world = it.world;
 
-    while (flecs.iter_next(it)) {
+    while (ecs.iter_next(it)) {
         var i: usize = 0;
         while (i < it.count()) : (i += 1) {
-            const entity = it.entities[i];
+            const entity = it.entities()[i];
 
-            if (flecs.field(it, components.Tile, 2)) |tiles| {
-                if (flecs.field(it, components.Use, 3)) |uses| {
+            if (ecs.field(it, components.Tile, 2)) |tiles| {
+                if (ecs.field(it, components.Use, 3)) |uses| {
                     const dist_x = std.math.absInt(uses[i].target.x - tiles[i].x) catch unreachable;
                     const dist_y = std.math.absInt(uses[i].target.y - tiles[i].y) catch unreachable;
 
                     if (dist_x <= 1 and dist_y <= 1) {
-                        var target_entity: ?flecs.EcsEntity = null;
+                        var target_entity: ?ecs.entity_t = null;
                         var target_tile: components.Tile = .{};
                         var counter: u64 = 0;
                         if (it.ctx) |ctx| {
-                            var query = @ptrCast(*flecs.EcsQuery, ctx);
-                            var query_it = flecs.ecs_query_iter(world, query);
+                            var query = @ptrCast(*ecs.query_t, ctx);
+                            var query_it = ecs.query_iter(world, query);
                             if (game.state.cells.get(uses[i].target.toCell())) |cell_entity| {
-                                flecs.ecs_query_set_group(&query_it, cell_entity);
+                                ecs.query_set_group(&query_it, cell_entity);
                             }
 
-                            while (flecs.iter_next(&query_it)) {
+                            while (ecs.iter_next(&query_it)) {
                                 var j: usize = 0;
                                 while (j < query_it.count()) : (j += 1) {
-                                    if (flecs.field(&query_it, components.Tile, 2)) |start_tiles| {
-                                        if (query_it.entities[j] == entity)
+                                    if (ecs.field(&query_it, components.Tile, 2)) |start_tiles| {
+                                        if (query_it.entities()[j] == entity)
                                             continue;
 
                                         if (start_tiles[j].x == uses[i].target.x and start_tiles[j].y == uses[i].target.y and start_tiles[j].z == uses[i].target.z) {
                                             if (start_tiles[j].counter > counter) {
                                                 counter = start_tiles[j].counter;
-                                                target_entity = query_it.entities[j];
+                                                target_entity = query_it.entities()[j];
                                                 target_tile = start_tiles[j];
                                             }
                                         }
@@ -75,36 +75,36 @@ pub fn run(it: *flecs.iter_t) callconv(.C) void {
                         }
 
                         if (target_entity) |target| {
-                            if (flecs.ecs_has_id(world, target, flecs.id(components.Useable))) {
-                                if (flecs.ecs_has_id(world, target, flecs.id(components.Consumeable))) {
-                                    if (flecs.ecs_get_mut(world, target, components.Stack)) |stack| {
+                            if (ecs.has_id(world, target, ecs.id(components.Useable))) {
+                                if (ecs.has_id(world, target, ecs.id(components.Consumeable))) {
+                                    if (ecs.get_mut(world, target, components.Stack)) |stack| {
                                         stack.count -= 1;
-                                        flecs.ecs_modified_id(world, target, flecs.id(components.Stack));
+                                        ecs.modified_id(world, target, ecs.id(components.Stack));
                                     } else {
-                                        flecs.ecs_delete(world, target);
+                                        ecs.delete(world, target);
                                     }
                                 }
 
-                                if (flecs.ecs_get(world, target, components.Toggleable)) |toggle| {
-                                    const new = flecs.ecs_new_w_pair(world, flecs.Constants.EcsIsA, if (toggle.state) toggle.off_prefab else toggle.on_prefab);
-                                    flecs.ecs_set(world, new, target_tile);
-                                    flecs.ecs_set(world, new, target_tile.toPosition());
-                                    flecs.ecs_delete(world, target);
+                                if (ecs.get(world, target, components.Toggleable)) |toggle| {
+                                    const new = ecs.new_w_id(world, ecs.pair(ecs.EcsIsA, if (toggle.state) toggle.off_prefab else toggle.on_prefab));
+                                    _ = ecs.set(world, new, components.Tile, target_tile);
+                                    _ = ecs.set(world, new, components.Position, target_tile.toPosition());
+                                    ecs.delete(world, target);
                                 }
                             }
                         }
                     }
 
-                    flecs.ecs_remove_pair(world, entity, components.Request, components.Use);
+                    ecs.remove_pair(world, entity, ecs.id(components.Request), ecs.id(components.Use));
                 }
             }
         }
     }
 }
 
-fn orderBy(_: flecs.EcsEntity, c1: ?*const anyopaque, _: flecs.EcsEntity, c2: ?*const anyopaque) callconv(.C) c_int {
-    const tile_1 = flecs.ecs_cast(components.Tile, c1);
-    const tile_2 = flecs.ecs_cast(components.Tile, c2);
+fn orderBy(_: ecs.entity_t, c1: ?*const anyopaque, _: ecs.entity_t, c2: ?*const anyopaque) callconv(.C) c_int {
+    const tile_1 = ecs.cast(components.Tile, c1);
+    const tile_2 = ecs.cast(components.Tile, c2);
 
     return @intCast(c_int, @boolToInt(tile_1.counter > tile_2.counter)) - @intCast(c_int, @boolToInt(tile_1.counter < tile_2.counter));
 }

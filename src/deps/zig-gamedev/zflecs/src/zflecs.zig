@@ -22,6 +22,24 @@ pub const ECS_ID_FLAGS_MASK: u64 = @as(u64, 0xFF) << 60;
 pub const ECS_COMPONENT_MASK: u64 = ~ECS_ID_FLAGS_MASK;
 
 pub extern const EcsWildcard: entity_t;
+pub extern const EcsAny: entity_t;
+pub extern const EcsTransitive: entity_t;
+pub extern const EcsReflexive: entity_t;
+pub extern const EcsFinal: entity_t;
+pub extern const EcsDontInherit: entity_t;
+pub extern const EcsSymmetric: entity_t;
+pub extern const EcsExclusive: entity_t;
+pub extern const EcsAcyclic: entity_t;
+pub extern const EcsTraversable: entity_t;
+pub extern const EcsWith: entity_t;
+pub extern const EcsOneOf: entity_t;
+pub extern const EcsTag: entity_t;
+pub extern const EcsUnion: entity_t;
+pub extern const EcsAlias: entity_t;
+pub extern const EcsChildOf: entity_t;
+pub extern const EcsSlotOf: entity_t;
+pub extern const EcsPrefab: entity_t;
+pub extern const EcsDisabled: entity_t;
 
 pub extern const EcsOnStart: entity_t;
 pub extern const EcsPreFrame: entity_t;
@@ -35,6 +53,21 @@ pub extern const EcsPreStore: entity_t;
 pub extern const EcsOnStore: entity_t;
 pub extern const EcsPostFrame: entity_t;
 pub extern const EcsPhase: entity_t;
+
+pub extern const EcsOnAdd: entity_t;
+pub extern const EcsOnRemove: entity_t;
+pub extern const EcsOnSet: entity_t;
+pub extern const EcsUnSet: entity_t;
+pub extern const EcsMonitor: entity_t;
+pub extern const EcsOnDelete: entity_t;
+pub extern const EcsOnTableCreate: entity_t;
+pub extern const EcsOnTableDelete: entity_t;
+pub extern const EcsOnTableEmpty: entity_t;
+pub extern const EcsOnTableFill: entity_t;
+
+pub extern const EcsOnDeleteTarget: entity_t;
+pub extern const EcsRemove: entity_t;
+pub extern const EcsDelete: entity_t;
 
 pub extern const EcsIsA: entity_t;
 pub extern const EcsDependsOn: entity_t;
@@ -1563,7 +1596,7 @@ pub const event_desc_t = extern struct {
     offset: i32 = 0,
     count: i32 = 0,
     entity: entity_t = 0,
-    param: ?*const anyopaque = 0,
+    param: ?*const anyopaque = null,
     observable: ?*poly_t = null,
     flags: flags32_t = 0,
 };
@@ -1572,9 +1605,9 @@ pub const event_desc_t = extern struct {
 pub const emit = ecs_emit;
 extern fn ecs_emit(world: *world_t, desc: *event_desc_t) void;
 
-/// `pub fn observer_init(world: *world_t, desc: *const event_desc_t) entity_t`
+/// `pub fn observer_init(world: *world_t, desc: *const observer_desc_t) entity_t`
 pub const observer_init = ecs_observer_init;
-extern fn ecs_observer_init(world: *world_t, desc: *const event_desc_t) entity_t;
+extern fn ecs_observer_init(world: *world_t, desc: *const observer_desc_t) entity_t;
 
 /// `pub fn observer_default_run_action(it: *iter_t) bool`
 pub const observer_default_run_action = ecs_observer_default_run_action;
@@ -1918,6 +1951,19 @@ pub fn SYSTEM(
     _ = system_init(world, system_desc);
 }
 
+pub fn OBSERVER(
+    world: *world_t,
+    name: [*:0]const u8,
+    observer_desc: *observer_desc_t,
+) void {
+    var entity_desc = entity_desc_t{};
+    entity_desc.id = new_id(world);
+    entity_desc.name = name;
+
+    observer_desc.entity = entity_init(world, &entity_desc);
+    _ = observer_init(world, observer_desc);
+}
+
 pub fn new_entity(world: *world_t, name: [*:0]const u8) entity_t {
     return entity_init(world, &.{ .name = name });
 }
@@ -1962,6 +2008,13 @@ pub fn set(world: *world_t, entity: entity_t, comptime T: type, val: T) entity_t
 pub fn get(world: *const world_t, entity: entity_t, comptime T: type) ?*const T {
     if (get_id(world, entity, id(T))) |ptr| {
         return cast(T, ptr);
+    }
+    return null;
+}
+
+pub fn get_mut(world: *world_t, entity: entity_t, comptime T: type) ?*T {
+    if (get_mut_id(world, entity, id(T))) |ptr| {
+        return cast_mut(T, ptr);
     }
     return null;
 }
