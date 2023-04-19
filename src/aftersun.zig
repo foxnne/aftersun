@@ -341,10 +341,10 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     // - Observers
     var tile_observer = @import("ecs/observers/tile.zig").observer();
     ecs.OBSERVER(world, "TileObserver", &tile_observer);
-    // var stack_observer = @import("ecs/observers/stack.zig").observer();
-    // ecs.OBSERVER(world, "StackObserver", &stack_observer);
-    // var free_particles_observer = @import("ecs/observers/free_particles.zig").observer();
-    // ecs.OBSERVER(world, "FreeParticlesObserver", &free_particles_observer);
+    var stack_observer = @import("ecs/observers/stack.zig").observer();
+    ecs.OBSERVER(world, "StackObserver", &stack_observer);
+    var free_particles_observer = @import("ecs/observers/free_particles.zig").observer();
+    ecs.OBSERVER(world, "FreeParticlesObserver", &free_particles_observer);
 
     // - Camera
     var camera_follow_system = @import("ecs/systems/camera_follow.zig").system();
