@@ -14,17 +14,17 @@ pub fn groupBy(world: *ecs.world_t, table: *ecs.table_t, id: ecs.entity_t, ctx: 
 }
 
 pub fn system(world: *ecs.world_t) ecs.system_desc_t {
-    var desc = std.mem.zeroes(ecs.system_desc_t);
-    desc.query.filter.terms[0] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.pair(ecs.id(components.Request), ecs.id(components.Movement)) });
-    desc.query.filter.terms[1] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Tile) });
-    desc.query.filter.terms[2] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Collider), .oper = ecs.oper_kind_t.Optional });
-    desc.query.filter.terms[3] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Stack), .oper = ecs.oper_kind_t.Optional });
+    var desc: ecs.system_desc_t = .{};
+    desc.query.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Request), ecs.id(components.Movement)) };
+    desc.query.filter.terms[1] = .{ .id = ecs.id(components.Tile) };
+    desc.query.filter.terms[2] = .{ .id = ecs.id(components.Collider), .oper = ecs.oper_kind_t.Optional };
+    desc.query.filter.terms[3] = .{ .id = ecs.id(components.Stack), .oper = ecs.oper_kind_t.Optional };
     desc.run = run;
 
-    var ctx_desc = std.mem.zeroes(ecs.query_desc_t);
-    ctx_desc.filter.terms[0] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.pair(ecs.id(components.Cell), ecs.EcsWildcard) });
-    ctx_desc.filter.terms[1] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Tile) });
-    ctx_desc.filter.terms[2] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Collider), .oper = ecs.oper_kind_t.Optional });
+    var ctx_desc: ecs.query_desc_t = .{};
+    ctx_desc.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cell), ecs.EcsWildcard) };
+    ctx_desc.filter.terms[1] = .{ .id = ecs.id(components.Tile) };
+    ctx_desc.filter.terms[2] = .{ .id = ecs.id(components.Collider), .oper = ecs.oper_kind_t.Optional };
     ctx_desc.group_by = groupBy;
     ctx_desc.group_by_id = ecs.id(components.Cell);
     desc.ctx = ecs.query_init(world, &ctx_desc) catch unreachable;

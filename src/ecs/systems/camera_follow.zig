@@ -5,10 +5,10 @@ const game = @import("root");
 const components = game.components;
 
 pub fn system() ecs.system_desc_t {
-    var desc = std.mem.zeroes(ecs.system_desc_t);
-    desc.query.filter.terms[0] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.pair(ecs.id(components.Camera), ecs.id(components.Target)) });
-    desc.query.filter.terms[1] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Position) });
-    desc.query.filter.terms[2] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Velocity), .oper = ecs.oper_kind_t.Optional });
+    var desc: ecs.system_desc_t = .{};
+    desc.query.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Camera), ecs.id(components.Target)) };
+    desc.query.filter.terms[1] = .{ .id = ecs.id(components.Position) };
+    desc.query.filter.terms[2] = .{ .id = ecs.id(components.Velocity), .oper = ecs.oper_kind_t.Optional };
     desc.run = run;
     return desc;
 }

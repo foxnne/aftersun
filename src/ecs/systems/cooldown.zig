@@ -5,8 +5,8 @@ const components = game.components;
 const ecs = @import("zflecs");
 
 pub fn system() ecs.system_desc_t {
-    var desc = std.mem.zeroes(ecs.system_desc_t);
-    desc.query.filter.terms[0] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.pair(ecs.id(components.Cooldown), ecs.EcsWildcard) });
+    var desc: ecs.system_desc_t = .{};
+    desc.query.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cooldown), ecs.EcsWildcard) };
     desc.run = run;
     return desc;
 }

@@ -5,7 +5,7 @@ const game = @import("root");
 const components = game.components;
 
 pub fn system() ecs.system_desc_t {
-    var desc = std.mem.zeroes(ecs.system_desc_t);
+    var desc: ecs.system_desc_t = .{};
     desc.run = run;
     return desc;
 }

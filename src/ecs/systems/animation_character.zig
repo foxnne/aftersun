@@ -7,12 +7,12 @@ const components = game.components;
 const Direction = game.math.Direction;
 
 pub fn system() ecs.system_desc_t {
-    var desc = std.mem.zeroes(ecs.system_desc_t);
-    desc.query.filter.terms[0] = ecs.term_t{ .id = ecs.id(components.CharacterAnimator) };
-    desc.query.filter.terms[1] = ecs.term_t{ .id = ecs.id(components.CharacterRenderer) };
-    desc.query.filter.terms[2] = ecs.term_t{ .id = ecs.pair(ecs.id(components.Direction), ecs.id(components.Movement)) };
-    desc.query.filter.terms[3] = ecs.term_t{ .id = ecs.pair(ecs.id(components.Direction), ecs.id(components.Head)) };
-    desc.query.filter.terms[4] = ecs.term_t{ .id = ecs.pair(ecs.id(components.Direction), ecs.id(components.Body)) };
+    var desc: ecs.system_desc_t = .{};
+    desc.query.filter.terms[0] = .{ .id = ecs.id(components.CharacterAnimator) };
+    desc.query.filter.terms[1] = .{ .id = ecs.id(components.CharacterRenderer) };
+    desc.query.filter.terms[2] = .{ .id = ecs.pair(ecs.id(components.Direction), ecs.id(components.Movement)) };
+    desc.query.filter.terms[3] = .{ .id = ecs.pair(ecs.id(components.Direction), ecs.id(components.Head)) };
+    desc.query.filter.terms[4] = .{ .id = ecs.pair(ecs.id(components.Direction), ecs.id(components.Body)) };
     desc.run = run;
     return desc;
 }

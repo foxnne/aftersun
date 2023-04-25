@@ -5,11 +5,11 @@ const game = @import("root");
 const components = game.components;
 
 pub fn system() ecs.system_desc_t {
-    var desc = std.mem.zeroes(ecs.system_desc_t);
-    desc.query.filter.terms[0] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Player) });
-    desc.query.filter.terms[1] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Tile) });
-    desc.query.filter.terms[2] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.pair(ecs.id(components.Request), ecs.id(components.Movement)), .oper = ecs.oper_kind_t.Not });
-    desc.query.filter.terms[3] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.pair(ecs.id(components.Cooldown), ecs.id(components.Movement)), .oper = ecs.oper_kind_t.Not });
+    var desc: ecs.system_desc_t = .{};
+    desc.query.filter.terms[0] = .{ .id = ecs.id(components.Player) };
+    desc.query.filter.terms[1] = .{ .id = ecs.id(components.Tile) };
+    desc.query.filter.terms[2] = .{ .id = ecs.pair(ecs.id(components.Request), ecs.id(components.Movement)), .oper = ecs.oper_kind_t.Not };
+    desc.query.filter.terms[3] = .{ .id = ecs.pair(ecs.id(components.Cooldown), ecs.id(components.Movement)), .oper = ecs.oper_kind_t.Not };
     desc.no_readonly = true;
     desc.run = run;
     return desc;

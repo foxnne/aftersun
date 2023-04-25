@@ -7,9 +7,9 @@ const math = game.math;
 const components = game.components;
 
 pub fn system() ecs.system_desc_t {
-    var desc = std.mem.zeroes(ecs.system_desc_t);
-    desc.query.filter.terms[0] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Position) });
-    desc.query.filter.terms[1] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.LightRenderer) });
+    var desc: ecs.system_desc_t = .{};
+    desc.query.filter.terms[0] = .{ .id = ecs.id(components.Position) };
+    desc.query.filter.terms[1] = .{ .id = ecs.id(components.LightRenderer) };
     desc.query.order_by_component = ecs.id(components.Position);
     desc.query.order_by = orderBy;
     desc.run = run;

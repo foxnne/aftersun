@@ -15,9 +15,9 @@ pub fn groupBy(world: *ecs.world_t, table: *ecs.table_t, id: ecs.entity_t, ctx: 
 }
 
 pub fn system() ecs.system_desc_t {
-    var desc = std.mem.zeroes(ecs.system_desc_t);
-    desc.query.filter.terms[0] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.pair(ecs.id(components.Cell), ecs.EcsWildcard) });
-    desc.query.filter.terms[1] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.Tile) });
+    var desc: ecs.system_desc_t = .{};
+    desc.query.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cell), ecs.EcsWildcard) };
+    desc.query.filter.terms[1] = .{ .id = ecs.id(components.Tile) };
     desc.query.group_by = groupBy;
     desc.query.group_by_id = ecs.id(components.Cell);
     desc.query.order_by = orderBy;
@@ -29,7 +29,7 @@ pub fn system() ecs.system_desc_t {
 pub fn run(it: *ecs.iter_t) callconv(.C) void {
     if (game.state.controls.inspect() or game.state.controls.inspecting) {
         if (game.state.controls.mouse.tile_timer < 1.0) {
-            game.state.controls.mouse.tile_timer += it.delta_time * 4.0;
+            game.state.controls.mouse.tile_timer += it.delta_time * 2.0;
         }
         game.state.controls.mouse.tile_timer = std.math.clamp(game.state.controls.mouse.tile_timer, 0.0, 1.0);
 
@@ -125,13 +125,8 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                     zgui.text("{s}", .{description[0..index]});
                 } else {
                     if (target != game.state.entities.player) {
-                        const a = "a";
-                        const e = "e";
-                        const i = "i";
-                        const o = "o";
-                        const u = "u";
                         const quantifier = switch (name[0]) {
-                            a[0], e[0], i[0], o[0], u[0] => "an",
+                            'a', 'e', 'i', 'o', 'u' => "an",
                             else => "a",
                         };
 
