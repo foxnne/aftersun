@@ -1,6 +1,6 @@
 @group(0) @binding(1) var diffuse: texture_2d<f32>;
-@group(0) @binding(2) var diffuse_sampler: sampler;
-@group(0) @binding(3) var palette: texture_2d<f32>;
+@group(0) @binding(2) var palette: texture_2d<f32>;
+@group(0) @binding(3) var diffuse_sampler: sampler;
 
 let multiplier = 65025.0;
 

@@ -32,6 +32,8 @@ fn findShadow(x_step: f32, y_step: f32, uv: vec2<f32>, ambient_color: vec4<f32>)
     let height_sample = textureSampleLevel(height_texture, height_sampler, uv, 0.0);
     let height = height_sample.r + (height_sample.g * 255.0);
 
+    if (height_sample.b > 0.0) { return vec4(1.0); }
+
     for(var i: i32 = 0; i < uniforms.shadow_steps; i++) {
         let other_uv = uv + findTarget(x_step, y_step, i);
         let distance = distance(other_uv, uv);

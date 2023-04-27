@@ -186,23 +186,24 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     const bind_group_layout_diffuse = gctx.createBindGroupLayout(&.{
         zgpu.bufferEntry(0, .{ .vertex = true }, .uniform, true, 0),
         zgpu.textureEntry(1, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.samplerEntry(2, .{ .fragment = true }, .filtering),
-        zgpu.textureEntry(3, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.textureEntry(2, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.samplerEntry(3, .{ .fragment = true }, .filtering),
     });
     defer gctx.releaseResource(bind_group_layout_diffuse);
 
     const bind_group_diffuse = gctx.createBindGroup(bind_group_layout_diffuse, &[_]zgpu.BindGroupEntryInfo{
         .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(gfx.Uniforms) },
         .{ .binding = 1, .texture_view_handle = diffusemap.view_handle },
-        .{ .binding = 2, .sampler_handle = diffusemap.sampler_handle },
-        .{ .binding = 3, .texture_view_handle = palettemap.view_handle },
+        .{ .binding = 2, .texture_view_handle = palettemap.view_handle },
+        .{ .binding = 3, .sampler_handle = diffusemap.sampler_handle },
     });
 
     // Build the height bind group.
-    const bind_group_height = gctx.createBindGroup(bind_group_layout_default, &[_]zgpu.BindGroupEntryInfo{
+    const bind_group_height = gctx.createBindGroup(bind_group_layout_diffuse, &[_]zgpu.BindGroupEntryInfo{
         .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(gfx.Uniforms) },
         .{ .binding = 1, .texture_view_handle = heightmap.view_handle },
-        .{ .binding = 2, .sampler_handle = heightmap.sampler_handle },
+        .{ .binding = 2, .texture_view_handle = diffusemap.view_handle },
+        .{ .binding = 3, .sampler_handle = heightmap.sampler_handle },
     });
 
     // Build the environment bind group.
@@ -292,7 +293,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         }, &state.pipeline_diffuse);
 
         // (Async) Create height render pipeline.
-        gfx.utils.createPipelineAsync(allocator, bind_group_layout_default, .{
+        gfx.utils.createPipelineAsync(allocator, bind_group_layout_diffuse, .{
             .vertex_shader = shaders.diffuse_vs,
             .fragment_shader = shaders.height_fs,
         }, &state.pipeline_height);

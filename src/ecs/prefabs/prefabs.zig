@@ -16,8 +16,6 @@ plum: ecs.entity_t = 0,
 torch: ecs.entity_t = 0,
 lit_torch: ecs.entity_t = 0,
 
-pub const id_start: u64 = 6000;
-
 pub fn init(world: *ecs.world_t) Prefabs {
     var prefabs: Prefabs = .{};
     const fields = comptime std.meta.fieldNames(Prefabs);
