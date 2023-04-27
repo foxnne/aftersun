@@ -12,6 +12,7 @@ pub fn system() ecs.system_desc_t {
     desc.query.filter.terms[1] = .{ .id = ecs.id(components.Rotation), .oper = ecs.oper_kind_t.Optional };
     desc.query.filter.terms[2] = .{ .id = ecs.id(components.SpriteRenderer), .oper = ecs.oper_kind_t.Optional };
     desc.query.filter.terms[3] = .{ .id = ecs.id(components.CharacterRenderer), .oper = ecs.oper_kind_t.Optional };
+    desc.query.filter.terms[4] = .{ .id = ecs.id(components.ParticleRenderer), .oper = ecs.oper_kind_t.Optional };
     desc.query.order_by_component = ecs.id(components.Position);
     desc.query.order_by = orderBy;
     desc.run = run;
@@ -109,6 +110,19 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                             .rotation = rotation,
                         },
                     ) catch unreachable;
+                }
+
+                if (ecs.field(it, components.ParticleRenderer, 5)) |renderers| {
+                    for (renderers[i].particles) |particle| {
+                        if (particle.alive()) {
+                            game.state.batcher.sprite(
+                                zm.f32x4(particle.position[0], particle.position[1], particle.position[2], 0),
+                                game.state.heightmap,
+                                game.state.atlas.sprites[particle.index],
+                                .{},
+                            ) catch unreachable;
+                        }
+                    }
                 }
             }
         }
