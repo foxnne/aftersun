@@ -745,6 +745,13 @@ fn draw() void {
 }
 
 pub fn main() !void {
+    // Change current working directory to where the executable is located.
+    {
+        var buffer: [1024]u8 = undefined;
+        const path = std.fs.selfExeDirPath(buffer[0..]) catch ".";
+        std.os.chdir(path) catch {};
+    }
+
     try zglfw.init();
     defer zglfw.terminate();
 
