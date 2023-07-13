@@ -29,8 +29,8 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
             if (ecs.field(it, components.Tile, 2)) |tiles| {
                 if (direction != .none) {
                     const end_tile = components.Tile{
-                        .x = tiles[i].x + @floatToInt(i32, direction.x()),
-                        .y = tiles[i].y + @floatToInt(i32, direction.y()),
+                        .x = tiles[i].x + @as(i32, @intFromFloat(direction.x())),
+                        .y = tiles[i].y + @as(i32, @intFromFloat(direction.y())),
                     };
 
                     // ! When setting pairs, the intended data type attached must either be matched with a tag, or first in the pair of components.

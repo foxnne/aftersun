@@ -1,5 +1,6 @@
 const std = @import("std");
 const assert = std.debug.assert;
+const builtin = @import("builtin");
 
 pub const ftime_t = f32;
 pub const size_t = i32;
@@ -18,59 +19,110 @@ fn make_error() error{FlecsError} {
     return error.FlecsError;
 }
 
-pub const ECS_ID_FLAGS_MASK: u64 = @as(u64, 0xFF) << 60;
-pub const ECS_COMPONENT_MASK: u64 = ~ECS_ID_FLAGS_MASK;
+pub const ID_FLAGS_MASK: u64 = @as(u64, 0xFF) << 60;
+pub const COMPONENT_MASK: u64 = ~ID_FLAGS_MASK;
 
-pub extern const EcsWildcard: entity_t;
-pub extern const EcsAny: entity_t;
-pub extern const EcsTransitive: entity_t;
-pub extern const EcsReflexive: entity_t;
-pub extern const EcsFinal: entity_t;
-pub extern const EcsDontInherit: entity_t;
-pub extern const EcsSymmetric: entity_t;
-pub extern const EcsExclusive: entity_t;
-pub extern const EcsAcyclic: entity_t;
-pub extern const EcsTraversable: entity_t;
-pub extern const EcsWith: entity_t;
-pub extern const EcsOneOf: entity_t;
-pub extern const EcsTag: entity_t;
-pub extern const EcsUnion: entity_t;
-pub extern const EcsAlias: entity_t;
-pub extern const EcsChildOf: entity_t;
-pub extern const EcsSlotOf: entity_t;
-pub extern const EcsPrefab: entity_t;
-pub extern const EcsDisabled: entity_t;
+extern const EcsWildcard: entity_t;
+extern const EcsAny: entity_t;
+extern const EcsTransitive: entity_t;
+extern const EcsReflexive: entity_t;
+extern const EcsFinal: entity_t;
+extern const EcsDontInherit: entity_t;
+extern const EcsSymmetric: entity_t;
+extern const EcsExclusive: entity_t;
+extern const EcsAcyclic: entity_t;
+extern const EcsTraversable: entity_t;
+extern const EcsWith: entity_t;
+extern const EcsOneOf: entity_t;
+extern const EcsTag: entity_t;
+extern const EcsUnion: entity_t;
+extern const EcsAlias: entity_t;
+extern const EcsChildOf: entity_t;
+extern const EcsSlotOf: entity_t;
+extern const EcsPrefab: entity_t;
+extern const EcsDisabled: entity_t;
 
-pub extern const EcsOnStart: entity_t;
-pub extern const EcsPreFrame: entity_t;
-pub extern const EcsOnLoad: entity_t;
-pub extern const EcsPostLoad: entity_t;
-pub extern const EcsPreUpdate: entity_t;
-pub extern const EcsOnUpdate: entity_t;
-pub extern const EcsOnValidate: entity_t;
-pub extern const EcsPostUpdate: entity_t;
-pub extern const EcsPreStore: entity_t;
-pub extern const EcsOnStore: entity_t;
-pub extern const EcsPostFrame: entity_t;
-pub extern const EcsPhase: entity_t;
+extern const EcsOnStart: entity_t;
+extern const EcsPreFrame: entity_t;
+extern const EcsOnLoad: entity_t;
+extern const EcsPostLoad: entity_t;
+extern const EcsPreUpdate: entity_t;
+extern const EcsOnUpdate: entity_t;
+extern const EcsOnValidate: entity_t;
+extern const EcsPostUpdate: entity_t;
+extern const EcsPreStore: entity_t;
+extern const EcsOnStore: entity_t;
+extern const EcsPostFrame: entity_t;
+extern const EcsPhase: entity_t;
 
-pub extern const EcsOnAdd: entity_t;
-pub extern const EcsOnRemove: entity_t;
-pub extern const EcsOnSet: entity_t;
-pub extern const EcsUnSet: entity_t;
-pub extern const EcsMonitor: entity_t;
-pub extern const EcsOnDelete: entity_t;
-pub extern const EcsOnTableCreate: entity_t;
-pub extern const EcsOnTableDelete: entity_t;
-pub extern const EcsOnTableEmpty: entity_t;
-pub extern const EcsOnTableFill: entity_t;
+extern const EcsOnAdd: entity_t;
+extern const EcsOnRemove: entity_t;
+extern const EcsOnSet: entity_t;
+extern const EcsUnSet: entity_t;
+extern const EcsMonitor: entity_t;
+extern const EcsOnDelete: entity_t;
+extern const EcsOnTableCreate: entity_t;
+extern const EcsOnTableDelete: entity_t;
+extern const EcsOnTableEmpty: entity_t;
+extern const EcsOnTableFill: entity_t;
 
-pub extern const EcsOnDeleteTarget: entity_t;
-pub extern const EcsRemove: entity_t;
-pub extern const EcsDelete: entity_t;
+extern const EcsOnDeleteTarget: entity_t;
+extern const EcsRemove: entity_t;
+extern const EcsDelete: entity_t;
 
-pub extern const EcsIsA: entity_t;
-pub extern const EcsDependsOn: entity_t;
+extern const EcsIsA: entity_t;
+extern const EcsDependsOn: entity_t;
+
+pub var Wildcard: entity_t = undefined;
+pub var Any: entity_t = undefined;
+pub var Transitive: entity_t = undefined;
+pub var Reflexive: entity_t = undefined;
+pub var Final: entity_t = undefined;
+pub var DontInherit: entity_t = undefined;
+pub var Symmetric: entity_t = undefined;
+pub var Exclusive: entity_t = undefined;
+pub var Acyclic: entity_t = undefined;
+pub var Traversable: entity_t = undefined;
+pub var With: entity_t = undefined;
+pub var OneOf: entity_t = undefined;
+pub var Tag: entity_t = undefined;
+pub var Union: entity_t = undefined;
+pub var Alias: entity_t = undefined;
+pub var ChildOf: entity_t = undefined;
+pub var SlotOf: entity_t = undefined;
+pub var Prefab: entity_t = undefined;
+pub var Disabled: entity_t = undefined;
+
+pub var OnStart: entity_t = undefined;
+pub var PreFrame: entity_t = undefined;
+pub var OnLoad: entity_t = undefined;
+pub var PostLoad: entity_t = undefined;
+pub var PreUpdate: entity_t = undefined;
+pub var OnUpdate: entity_t = undefined;
+pub var OnValidate: entity_t = undefined;
+pub var PostUpdate: entity_t = undefined;
+pub var PreStore: entity_t = undefined;
+pub var OnStore: entity_t = undefined;
+pub var PostFrame: entity_t = undefined;
+pub var Phase: entity_t = undefined;
+
+pub var OnAdd: entity_t = undefined;
+pub var OnRemove: entity_t = undefined;
+pub var OnSet: entity_t = undefined;
+pub var UnSet: entity_t = undefined;
+pub var Monitor: entity_t = undefined;
+pub var OnDelete: entity_t = undefined;
+pub var OnTableCreate: entity_t = undefined;
+pub var OnTableDelete: entity_t = undefined;
+pub var OnTableEmpty: entity_t = undefined;
+pub var OnTableFill: entity_t = undefined;
+
+pub var OnDeleteTarget: entity_t = undefined;
+pub var Remove: entity_t = undefined;
+pub var Delete: entity_t = undefined;
+
+pub var IsA: entity_t = undefined;
+pub var DependsOn: entity_t = undefined;
 //--------------------------------------------------------------------------------------------------
 //
 // Types for core API objects.
@@ -270,8 +322,8 @@ pub const term_t = extern struct {
     first: term_id_t = .{},
     second: term_id_t = .{},
 
-    inout: inout_kind_t = @intToEnum(inout_kind_t, 0),
-    oper: oper_kind_t = @intToEnum(oper_kind_t, 0),
+    inout: inout_kind_t = .InOutDefault,
+    oper: oper_kind_t = .And,
 
     id_flags: id_t = 0,
     name: ?[*:0]u8 = null,
@@ -550,10 +602,10 @@ pub const iter_t = extern struct {
     chain_it: ?*iter_t,
 
     pub fn entities(iter: iter_t) []entity_t {
-        return iter.entities_[0..@intCast(usize, iter.count_)];
+        return iter.entities_[0..@as(usize, @intCast(iter.count_))];
     }
     pub fn count(iter: iter_t) usize {
-        return @intCast(usize, iter.count_);
+        return @as(usize, @intCast(iter.count_));
     }
 };
 //--------------------------------------------------------------------------------------------------
@@ -760,16 +812,170 @@ pub const world_info_t = extern struct {
     },
     name_prefix: [*:0]const u8,
 };
+
+const EcsAllocator = struct {
+    const AllocationHeader = struct {
+        size: usize,
+    };
+
+    const Alignment = 16;
+
+    var gpa: ?std.heap.GeneralPurposeAllocator(.{}) = null;
+    var allocator: ?std.mem.Allocator = null;
+
+    fn alloc(size: i32) callconv(.C) ?*anyopaque {
+        if (size < 0) {
+            return null;
+        }
+
+        var allocation_size = Alignment + @as(usize, @intCast(size));
+
+        var data = allocator.?.alignedAlloc(u8, Alignment, allocation_size) catch {
+            return null;
+        };
+
+        var allocation_header = @as(
+            *align(Alignment) AllocationHeader,
+            @ptrCast(@alignCast(data.ptr)),
+        );
+
+        allocation_header.size = allocation_size;
+
+        return data.ptr + Alignment;
+    }
+
+    fn free(ptr: ?*anyopaque) callconv(.C) void {
+        if (ptr == null) {
+            return;
+        }
+        var ptr_unwrapped = @as([*]u8, @ptrCast(ptr.?)) - Alignment;
+        var allocation_header = @as(
+            *align(Alignment) AllocationHeader,
+            @ptrCast(@alignCast(ptr_unwrapped)),
+        );
+
+        allocator.?.free(
+            @as([]align(Alignment) u8, @alignCast(ptr_unwrapped[0..allocation_header.size])),
+        );
+    }
+
+    fn realloc(old: ?*anyopaque, size: i32) callconv(.C) ?*anyopaque {
+        if (old == null) {
+            return alloc(size);
+        }
+
+        var ptr_unwrapped = @as([*]u8, @ptrCast(old.?)) - Alignment;
+
+        var allocation_header = @as(
+            *align(Alignment) AllocationHeader,
+            @ptrCast(@alignCast(ptr_unwrapped)),
+        );
+
+        const old_allocation_size = allocation_header.size;
+        const old_slice = @as([*]u8, @ptrCast(ptr_unwrapped))[0..old_allocation_size];
+        const old_slice_aligned = @as([]align(Alignment) u8, @alignCast(old_slice));
+
+        const new_allocation_size = Alignment + @as(usize, @intCast(size));
+        var new_data = allocator.?.realloc(old_slice_aligned, new_allocation_size) catch {
+            return null;
+        };
+
+        var new_allocation_header = @as(*align(Alignment) AllocationHeader, @ptrCast(@alignCast(new_data.ptr)));
+        new_allocation_header.size = new_allocation_size;
+
+        return new_data.ptr + Alignment;
+    }
+
+    fn calloc(size: i32) callconv(.C) ?*anyopaque {
+        var data_maybe = alloc(size);
+        if (data_maybe) |data| {
+            @memset(@as([*]u8, @ptrCast(data))[0..@as(usize, @intCast(size))], 0);
+        }
+
+        return data_maybe;
+    }
+};
+
+fn flecs_abort() callconv(.C) noreturn {
+    std.debug.dumpCurrentStackTrace(@returnAddress());
+    @breakpoint();
+    std.os.exit(1);
+}
+
 //--------------------------------------------------------------------------------------------------
 //
 // Creation & Deletion
 //
 //--------------------------------------------------------------------------------------------------
 pub fn init() *world_t {
+    if (builtin.os.tag == .windows) {
+        os.ecs_os_api.abort_ = flecs_abort;
+    }
+
     assert(num_worlds == 0);
+
+    if (num_worlds == 0) {
+        EcsAllocator.gpa = .{};
+        EcsAllocator.allocator = EcsAllocator.gpa.?.allocator();
+
+        os.ecs_os_api.malloc_ = &EcsAllocator.alloc;
+        os.ecs_os_api.free_ = &EcsAllocator.free;
+        os.ecs_os_api.realloc_ = &EcsAllocator.realloc;
+        os.ecs_os_api.calloc_ = &EcsAllocator.calloc;
+    }
+
     num_worlds += 1;
     component_ids_hm.ensureTotalCapacity(32) catch @panic("OOM");
-    return ecs_init();
+    const world = ecs_init();
+
+    Wildcard = EcsWildcard;
+    Any = EcsAny;
+    Transitive = EcsTransitive;
+    Reflexive = EcsReflexive;
+    Final = EcsFinal;
+    DontInherit = EcsDontInherit;
+    Symmetric = EcsSymmetric;
+    Exclusive = EcsExclusive;
+    Acyclic = EcsAcyclic;
+    Traversable = EcsTraversable;
+    With = EcsWith;
+    OneOf = EcsOneOf;
+    Tag = EcsTag;
+    Union = EcsUnion;
+    Alias = EcsAlias;
+    ChildOf = EcsChildOf;
+    SlotOf = EcsSlotOf;
+    Prefab = EcsPrefab;
+    Disabled = EcsDisabled;
+    OnStart = EcsOnStart;
+    PreFrame = EcsPreFrame;
+    OnLoad = EcsOnLoad;
+    PostLoad = EcsPostLoad;
+    PreUpdate = EcsPreUpdate;
+    OnUpdate = EcsOnUpdate;
+    OnValidate = EcsOnValidate;
+    PostUpdate = EcsPostUpdate;
+    PreStore = EcsPreStore;
+    OnStore = EcsOnStore;
+    PostFrame = EcsPostFrame;
+    Phase = EcsPhase;
+    OnAdd = EcsOnAdd;
+    OnRemove = EcsOnRemove;
+    OnSet = EcsOnSet;
+    UnSet = EcsUnSet;
+    Monitor = EcsMonitor;
+    OnDelete = EcsOnDelete;
+    OnTableCreate = EcsOnTableCreate;
+    OnTableDelete = EcsOnTableDelete;
+    OnTableEmpty = EcsOnTableEmpty;
+    OnTableFill = EcsOnTableFill;
+    OnDeleteTarget = EcsOnDeleteTarget;
+    Remove = EcsRemove;
+    Delete = EcsDelete;
+    IsA = EcsIsA;
+    DependsOn = EcsDependsOn;
+
+    return world;
 }
 extern fn ecs_init() *world_t;
 
@@ -784,7 +990,15 @@ pub fn fini(world: *world_t) i32 {
     }
     component_ids_hm.clearRetainingCapacity();
 
-    return ecs_fini(world);
+    var fini_result = ecs_fini(world);
+
+    if (num_worlds == 0) {
+        _ = EcsAllocator.gpa.?.deinit();
+        EcsAllocator.gpa = null;
+        EcsAllocator.allocator = null;
+    }
+
+    return fini_result;
 }
 extern fn ecs_fini(world: *world_t) i32;
 
@@ -961,11 +1175,11 @@ pub const make_pair = ecs_make_pair;
 extern fn ecs_make_pair(first: entity_t, second: entity_t) id_t;
 
 pub fn pair_first(pair_id: entity_t) entity_t {
-    return @intCast(entity_t, @truncate(u32, (pair_id & ECS_COMPONENT_MASK) >> 32));
+    return @as(entity_t, @intCast(@as(u32, @truncate((pair_id & COMPONENT_MASK) >> 32))));
 }
 
 pub fn pair_second(pair_id: entity_t) entity_t {
-    return @intCast(entity_t, @truncate(u32, pair_id));
+    return @as(entity_t, @intCast(@as(u32, @truncate(pair_id))));
 }
 //--------------------------------------------------------------------------------------------------
 //
@@ -1976,8 +2190,15 @@ pub fn add_pair(world: *world_t, subject: entity_t, first: entity_t, second: ent
     add_id(world, subject, pair(first, second));
 }
 
-pub fn set_pair(world: *world_t, subject: entity_t, first: entity_t, second: entity_t, comptime T: type, val: T) entity_t {
-    return ecs_set_id(world, subject, pair(first, second), @sizeOf(T), @ptrCast(*const anyopaque, &val));
+pub fn set_pair(
+    world: *world_t,
+    subject: entity_t,
+    first: entity_t,
+    second: entity_t,
+    comptime T: type,
+    val: T,
+) entity_t {
+    return ecs_set_id(world, subject, pair(first, second), @sizeOf(T), @as(*const anyopaque, @ptrCast(&val)));
 }
 
 pub fn remove_pair(world: *world_t, subject: entity_t, first: entity_t, second: entity_t) void {
@@ -2006,7 +2227,7 @@ pub fn typeName(comptime T: type) @TypeOf(@typeName(T)) {
 //
 //--------------------------------------------------------------------------------------------------
 pub fn set(world: *world_t, entity: entity_t, comptime T: type, val: T) entity_t {
-    return ecs_set_id(world, entity, id(T), @sizeOf(T), @ptrCast(*const anyopaque, &val));
+    return ecs_set_id(world, entity, id(T), @sizeOf(T), @as(*const anyopaque, @ptrCast(&val)));
 }
 
 pub fn get(world: *const world_t, entity: entity_t, comptime T: type) ?*const T {
@@ -2037,7 +2258,7 @@ pub fn override(world: *world_t, entity: entity_t, comptime T: type) void {
 
 pub fn field(it: *iter_t, comptime T: type, index: i32) ?[]T {
     if (ecs_field_w_size(it, @sizeOf(T), index)) |anyptr| {
-        const ptr = @ptrCast([*]T, @alignCast(@alignOf(T), anyptr));
+        const ptr = @as([*]T, @ptrCast(@alignCast(anyptr)));
         return ptr[0..it.count()];
     }
     return null;
@@ -2050,14 +2271,26 @@ pub inline fn id(comptime T: type) id_t {
 pub const pair = make_pair;
 
 pub fn cast(comptime T: type, val: ?*const anyopaque) *const T {
-    return @ptrCast(*const T, @alignCast(@alignOf(T), val));
+    return @as(*const T, @ptrCast(@alignCast(val)));
 }
 
 pub fn cast_mut(comptime T: type, val: ?*anyopaque) *T {
-    return @ptrCast(*T, @alignCast(@alignOf(T), val));
+    return @as(*T, @ptrCast(@alignCast(val)));
 }
 //--------------------------------------------------------------------------------------------------
-fn PerTypeGlobalVar(comptime _: type) type {
+fn PerTypeGlobalVar(comptime in_type: type) type {
+    if (@alignOf(in_type) > EcsAllocator.Alignment) {
+        var message = std.fmt.comptimePrint(
+            "Type [{s}] requires an alignment of [{}] but the EcsAllocator only provides an alignment of [{}].",
+            .{
+                @typeName(in_type),
+                @alignOf(in_type),
+                EcsAllocator.Alignment,
+            },
+        );
+        @compileError(message);
+    }
+
     return struct {
         var id: id_t = 0;
     };
@@ -2164,7 +2397,16 @@ pub const os = struct {
     }
 };
 //--------------------------------------------------------------------------------------------------
+test {
+    //std.testing.refAllDecls(@This());
+}
 comptime {
     _ = @import("tests.zig");
+    _ = run_action_t;
+    _ = iter_init_action_t;
+    _ = iter_fini_action_t;
+    _ = iter_action_t;
+    _ = iter_next_action_t;
+    _ = iter_t;
 }
 //--------------------------------------------------------------------------------------------------

@@ -12,10 +12,10 @@ pub fn cursor(window: *zglfw.Window, x: f64, y: f64) callconv(.C) void {
     if (zgui.io.getWantCaptureMouse()) return;
     const scale_factor = scale_factor: {
         const cs = window.getContentScale();
-        break :scale_factor std.math.max(cs[0], cs[1]);
+        break :scale_factor @max(cs[0], cs[1]);
     };
-    game.state.controls.mouse.position.x = @floatCast(f32, x / scale_factor);
-    game.state.controls.mouse.position.y = @floatCast(f32, y / scale_factor);
+    game.state.controls.mouse.position.x = @as(f32, @floatCast(x / scale_factor));
+    game.state.controls.mouse.position.y = @as(f32, @floatCast(y / scale_factor));
     const current_tile = game.state.controls.mouse.position.tile();
     if (game.state.controls.mouse.tile.x != current_tile.x or game.state.controls.mouse.tile.y != current_tile.y) {
         game.state.controls.inspecting = false;

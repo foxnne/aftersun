@@ -8,7 +8,7 @@ const components = game.components;
 pub fn groupBy(world: *ecs.world_t, table: *ecs.table_t, id: ecs.entity_t, ctx: ?*anyopaque) callconv(.C) ecs.entity_t {
     _ = ctx;
     var match: ecs.entity_t = 0;
-    if (ecs.search(world, table, ecs.pair(id, ecs.EcsWildcard), &match) != -1) {
+    if (ecs.search(world, table, ecs.pair(id, ecs.Wildcard), &match) != -1) {
         return ecs.pair_second(match);
     }
     return 0;
@@ -16,7 +16,7 @@ pub fn groupBy(world: *ecs.world_t, table: *ecs.table_t, id: ecs.entity_t, ctx: 
 
 pub fn system() ecs.system_desc_t {
     var desc: ecs.system_desc_t = .{};
-    desc.query.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cell), ecs.EcsWildcard) };
+    desc.query.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cell), ecs.Wildcard) };
     desc.query.filter.terms[1] = .{ .id = ecs.id(components.Tile) };
     desc.query.group_by = groupBy;
     desc.query.group_by_id = ecs.id(components.Cell);
@@ -61,7 +61,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
             }
         }
         if (target_entity) |target| {
-            const prefab = ecs.get_target(world, target, ecs.EcsIsA, 0);
+            const prefab = ecs.get_target(world, target, ecs.IsA, 0);
 
             const tile_position = mouse_tile.toPosition().toF32x4();
             const screen_position = game.state.camera.worldToScreen(tile_position);
@@ -70,13 +70,13 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
             if (target == game.state.entities.player) name = "yourself";
 
             const cs = game.state.gctx.window.getContentScale();
-            const scale = std.math.max(cs[0], cs[1]);
+            const scale = @max(cs[0], cs[1]);
 
             const text_spacing = game.settings.zgui_font_size * scale;
             const window_padding = game.settings.inspect_window_padding * scale;
             const window_spacing = game.settings.inspect_window_spacing * scale;
 
-            const bg = game.math.Color.initBytes(225, 225, 225, @floatToInt(u8, 225.0 * game.state.controls.mouse.tile_timer));
+            const bg = game.math.Color.initBytes(225, 225, 225, @as(u8, @intFromFloat(225.0 * game.state.controls.mouse.tile_timer)));
 
             zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.window_bg, .c = bg.toSlice() });
             defer zgui.popStyleColor(.{ .count = 1 });
@@ -121,7 +121,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 
                 if (count > 1) {
                     const description = zgui.formatZ("{s} {d} {s}s.", .{ prefix, count, fixed_name });
-                    const index = @floatToInt(usize, @trunc(game.state.controls.mouse.tile_timer * @intToFloat(f32, description.len)));
+                    const index = @as(usize, @intFromFloat(@trunc(game.state.controls.mouse.tile_timer * @as(f32, @floatFromInt(description.len)))));
                     zgui.text("{s}", .{description[0..index]});
                 } else {
                     if (target != game.state.entities.player) {
@@ -131,11 +131,11 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         };
 
                         const description = zgui.formatZ("{s} {s} {s}.", .{ prefix, quantifier, fixed_name });
-                        const index = @floatToInt(usize, @trunc(game.state.controls.mouse.tile_timer * @intToFloat(f32, description.len)));
+                        const index = @as(usize, @intFromFloat(@trunc(game.state.controls.mouse.tile_timer * @as(f32, @floatFromInt(description.len)))));
                         zgui.text("{s}", .{description[0..index]});
                     } else {
                         const description = zgui.formatZ("{s} {s}.", .{ prefix, fixed_name });
-                        const index = @floatToInt(usize, @trunc(game.state.controls.mouse.tile_timer * @intToFloat(f32, description.len)));
+                        const index = @as(usize, @intFromFloat(@trunc(game.state.controls.mouse.tile_timer * @as(f32, @floatFromInt(description.len)))));
                         zgui.text("{s}", .{description[0..index]});
                     }
                 }
@@ -160,7 +160,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 
                 if (target == game.state.entities.player) {
                     if (zgui.button("Change", .{ .w = -1 })) {
-                        var prng = std.rand.DefaultPrng.init(@floatToInt(u64, game.state.gctx.stats.time * 100));
+                        var prng = std.rand.DefaultPrng.init(@as(u64, @intFromFloat(game.state.gctx.stats.time * 100)));
                         const rand = prng.random();
 
                         if (ecs.get_mut(world, game.state.entities.player, components.CharacterAnimator)) |animator| {
@@ -193,5 +193,5 @@ fn orderBy(_: ecs.entity_t, c1: ?*const anyopaque, _: ecs.entity_t, c2: ?*const 
     const tile_1 = ecs.cast(components.Tile, c1);
     const tile_2 = ecs.cast(components.Tile, c2);
 
-    return @intCast(c_int, @boolToInt(tile_1.counter > tile_2.counter)) - @intCast(c_int, @boolToInt(tile_1.counter < tile_2.counter));
+    return @as(c_int, @intCast(@intFromBool(tile_1.counter > tile_2.counter))) - @as(c_int, @intCast(@intFromBool(tile_1.counter < tile_2.counter)));
 }

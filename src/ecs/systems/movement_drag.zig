@@ -7,7 +7,7 @@ const components = game.components;
 pub fn groupBy(world: *ecs.world_t, table: *ecs.table_t, id: ecs.entity_t, ctx: ?*anyopaque) callconv(.C) ecs.entity_t {
     _ = ctx;
     var match: ecs.entity_t = 0;
-    if (ecs.search(world, table, ecs.pair(id, ecs.EcsWildcard), &match) != -1) {
+    if (ecs.search(world, table, ecs.pair(id, ecs.Wildcard), &match) != -1) {
         return ecs.pair_second(match);
     }
     return 0;
@@ -21,7 +21,7 @@ pub fn system(world: *ecs.world_t) ecs.system_desc_t {
     desc.run = run;
 
     var ctx_desc: ecs.query_desc_t = .{};
-    ctx_desc.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cell), ecs.EcsWildcard) };
+    ctx_desc.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cell), ecs.Wildcard) };
     ctx_desc.filter.terms[1] = .{ .id = ecs.id(components.Tile) };
     ctx_desc.group_by = groupBy;
     ctx_desc.group_by_id = ecs.id(components.Cell);
@@ -48,7 +48,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         var target_entity: ?ecs.entity_t = null;
                         var counter: u64 = 0;
                         if (it.ctx) |ctx| {
-                            var query = @ptrCast(*ecs.query_t, ctx);
+                            var query = @as(*ecs.query_t, @ptrCast(ctx));
                             var query_it = ecs.query_iter(world, query);
                             if (game.state.cells.get(drags[i].start.toCell())) |cell_entity| {
                                 ecs.query_set_group(&query_it, cell_entity);
@@ -74,7 +74,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 
                         if (target_entity) |target| {
                             if (ecs.has_id(world, target, ecs.id(components.Moveable))) {
-                                const direction = game.math.Direction.find(8, @intToFloat(f32, drags[i].end.x - drags[i].start.x), @intToFloat(f32, drags[i].end.y - drags[i].start.y));
+                                const direction = game.math.Direction.find(8, @as(f32, @floatFromInt(drags[i].end.x - drags[i].start.x)), @as(f32, @floatFromInt(drags[i].end.y - drags[i].start.y)));
 
                                 const cooldown = switch (direction) {
                                     .n, .s, .e, .w => game.settings.movement_cooldown / 2,
@@ -116,5 +116,5 @@ fn orderBy(_: ecs.entity_t, c1: ?*const anyopaque, _: ecs.entity_t, c2: ?*const 
     const tile_1 = ecs.cast(components.Tile, c1);
     const tile_2 = ecs.cast(components.Tile, c2);
 
-    return @intCast(c_int, @boolToInt(tile_1.counter > tile_2.counter)) - @intCast(c_int, @boolToInt(tile_1.counter < tile_2.counter));
+    return @as(c_int, @intCast(@intFromBool(tile_1.counter > tile_2.counter))) - @as(c_int, @intCast(@intFromBool(tile_1.counter < tile_2.counter)));
 }

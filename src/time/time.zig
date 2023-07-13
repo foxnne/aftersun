@@ -13,7 +13,7 @@ pub const Time = struct {
 
     /// Returns a number where the decimal point is progress of the current day.
     pub fn day(self: Time) f32 {
-        const seconds = game.state.gctx.stats.time * @floatCast(f64, self.scale) + (self.start_time * 60.0 * 60.0);
-        return @floatCast(f32, seconds / (60.0 * 60.0 * 24.0));
+        const seconds = game.state.gctx.stats.time * @as(f64, @floatCast(self.scale)) + (self.start_time * 60.0 * 60.0);
+        return @as(f32, @floatCast(seconds / (60.0 * 60.0 * 24.0)));
     }
 };

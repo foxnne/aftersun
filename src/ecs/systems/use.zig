@@ -7,7 +7,7 @@ const components = game.components;
 pub fn groupBy(world: *ecs.world_t, table: *ecs.table_t, id: ecs.entity_t, ctx: ?*anyopaque) callconv(.C) ecs.entity_t {
     _ = ctx;
     var match: ecs.entity_t = 0;
-    if (ecs.search(world, table, ecs.pair(id, ecs.EcsWildcard), &match) != -1) {
+    if (ecs.search(world, table, ecs.pair(id, ecs.Wildcard), &match) != -1) {
         return ecs.pair_second(match);
     }
     return 0;
@@ -21,7 +21,7 @@ pub fn system(world: *ecs.world_t) ecs.system_desc_t {
     desc.run = run;
 
     var ctx_desc: ecs.query_desc_t = .{};
-    ctx_desc.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cell), ecs.EcsWildcard) };
+    ctx_desc.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cell), ecs.Wildcard) };
     ctx_desc.filter.terms[1] = .{ .id = ecs.id(components.Tile) };
     ctx_desc.group_by = groupBy;
     ctx_desc.group_by_id = ecs.id(components.Cell);
@@ -49,7 +49,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         var target_tile: components.Tile = .{};
                         var counter: u64 = 0;
                         if (it.ctx) |ctx| {
-                            var query = @ptrCast(*ecs.query_t, ctx);
+                            var query = @as(*ecs.query_t, @ptrCast(ctx));
                             var query_it = ecs.query_iter(world, query);
                             if (game.state.cells.get(uses[i].target.toCell())) |cell_entity| {
                                 ecs.query_set_group(&query_it, cell_entity);
@@ -86,7 +86,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                 }
 
                                 if (ecs.get(world, target, components.Toggleable)) |toggle| {
-                                    const new = ecs.new_w_id(world, ecs.pair(ecs.EcsIsA, if (toggle.state) toggle.off_prefab else toggle.on_prefab));
+                                    const new = ecs.new_w_id(world, ecs.pair(ecs.IsA, if (toggle.state) toggle.off_prefab else toggle.on_prefab));
                                     _ = ecs.set(world, new, components.Tile, target_tile);
                                     _ = ecs.set(world, new, components.Position, target_tile.toPosition());
                                     ecs.delete(world, target);
@@ -106,5 +106,5 @@ fn orderBy(_: ecs.entity_t, c1: ?*const anyopaque, _: ecs.entity_t, c2: ?*const 
     const tile_1 = ecs.cast(components.Tile, c1);
     const tile_2 = ecs.cast(components.Tile, c2);
 
-    return @intCast(c_int, @boolToInt(tile_1.counter > tile_2.counter)) - @intCast(c_int, @boolToInt(tile_1.counter < tile_2.counter));
+    return @as(c_int, @intCast(@intFromBool(tile_1.counter > tile_2.counter))) - @as(c_int, @intCast(@intFromBool(tile_1.counter < tile_2.counter)));
 }

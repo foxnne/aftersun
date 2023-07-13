@@ -7,7 +7,7 @@ const components = game.components;
 pub fn groupBy(world: *ecs.world_t, table: *ecs.table_t, id: ecs.entity_t, ctx: ?*anyopaque) callconv(.C) ecs.entity_t {
     _ = ctx;
     var match: ecs.entity_t = 0;
-    if (ecs.search(world, table, ecs.pair(id, ecs.EcsWildcard), &match) != -1) {
+    if (ecs.search(world, table, ecs.pair(id, ecs.Wildcard), &match) != -1) {
         return ecs.pair_second(match);
     }
     return 0;
@@ -22,7 +22,7 @@ pub fn system(world: *ecs.world_t) ecs.system_desc_t {
     desc.run = run;
 
     var ctx_desc: ecs.query_desc_t = .{};
-    ctx_desc.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cell), ecs.EcsWildcard) };
+    ctx_desc.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cell), ecs.Wildcard) };
     ctx_desc.filter.terms[1] = .{ .id = ecs.id(components.Tile) };
     ctx_desc.filter.terms[2] = .{ .id = ecs.id(components.Collider), .oper = ecs.oper_kind_t.Optional };
     ctx_desc.group_by = groupBy;
@@ -46,7 +46,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                     // check for a collision when the tile hasn't yet been moved.
                     if (tiles[i].x != movements[i].end.x or tiles[i].y != movements[i].end.y or tiles[i].z != movements[i].end.z) {
                         if (it.ctx) |ctx| {
-                            var query = @ptrCast(*ecs.query_t, ctx);
+                            var query = @as(*ecs.query_t, @ptrCast(ctx));
                             var query_it = ecs.query_iter(world, query);
                             if (game.state.cells.get(movements[i].end.toCell())) |cell_entity| {
                                 ecs.query_set_group(&query_it, cell_entity);
@@ -91,8 +91,8 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                 if (ecs.field(it, components.Stack, 4)) |stacks| {
                                     if (ecs.get(world, other, components.Stack)) |other_stack| {
                                         if (stacks[i].count + other_stack.count <= stacks[i].max) {
-                                            const prefab = ecs.get_target(world, entity, ecs.EcsIsA, 0);
-                                            const other_prefab = ecs.get_target(world, other, ecs.EcsIsA, 0);
+                                            const prefab = ecs.get_target(world, entity, ecs.IsA, 0);
+                                            const other_prefab = ecs.get_target(world, other, ecs.IsA, 0);
                                             if (prefab == other_prefab) {
                                                 _ = ecs.set_pair(world, entity, ecs.id(components.Request), ecs.id(components.Stack), components.Stack, .{
                                                     .count = stacks[i].count + other_stack.count,

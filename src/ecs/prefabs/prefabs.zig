@@ -20,7 +20,7 @@ pub fn init(world: *ecs.world_t) Prefabs {
     var prefabs: Prefabs = .{};
     const fields = comptime std.meta.fieldNames(Prefabs);
     inline for (fields) |field_name| {
-        @field(prefabs, field_name) = ecs.new_prefab(world, field_name[0.. :0]);
+        @field(prefabs, field_name) = ecs.new_prefab(world, field_name ++ &[_:0]u8{});
     }
     return prefabs;
 }
@@ -38,12 +38,12 @@ pub fn create(prefabs: *Prefabs, world: *ecs.world_t) void {
     ecs.override(world, prefabs._item, components.SpriteRenderer);
 
     // Stackable item
-    ecs.add_pair(world, prefabs._stackable, ecs.EcsIsA, prefabs._item);
+    ecs.add_pair(world, prefabs._stackable, ecs.IsA, prefabs._item);
     _ = ecs.set(world, prefabs._stackable, components.Stack, .{ .max = 100 });
     ecs.override(world, prefabs._stackable, components.Stack);
 
     // Ham
-    ecs.add_pair(world, prefabs.ham, ecs.EcsIsA, prefabs._stackable);
+    ecs.add_pair(world, prefabs.ham, ecs.IsA, prefabs._stackable);
     _ = ecs.set(world, prefabs.ham, components.Stack, .{ .max = 5 });
     _ = ecs.set(world, prefabs.ham, components.StackAnimator, .{
         .animation = &game.animations.Ham_Layer,
@@ -55,7 +55,7 @@ pub fn create(prefabs: *Prefabs, world: *ecs.world_t) void {
     _ = ecs.set(world, prefabs.ham, components.Raw, .{ .cooked_prefab = prefabs.cooked_ham });
 
     // Cooked ham
-    ecs.add_pair(world, prefabs.cooked_ham, ecs.EcsIsA, prefabs._stackable);
+    ecs.add_pair(world, prefabs.cooked_ham, ecs.IsA, prefabs._stackable);
     _ = ecs.set(world, prefabs.cooked_ham, components.Stack, .{ .max = 5 });
     _ = ecs.set(world, prefabs.cooked_ham, components.StackAnimator, .{
         .animation = &game.animations.Cooked_Ham_Layer,
@@ -68,7 +68,7 @@ pub fn create(prefabs: *Prefabs, world: *ecs.world_t) void {
     _ = ecs.add(world, prefabs.cooked_ham, components.Useable);
 
     // Apple
-    ecs.add_pair(world, prefabs.apple, ecs.EcsIsA, prefabs._stackable);
+    ecs.add_pair(world, prefabs.apple, ecs.IsA, prefabs._stackable);
     _ = ecs.set(world, prefabs.apple, components.Stack, .{ .max = 5 });
     _ = ecs.set(world, prefabs.apple, components.StackAnimator, .{
         .animation = &game.animations.Apple_Layer,
@@ -81,7 +81,7 @@ pub fn create(prefabs: *Prefabs, world: *ecs.world_t) void {
     ecs.add(world, prefabs.apple, components.Useable);
 
     // Plum
-    ecs.add_pair(world, prefabs.plum, ecs.EcsIsA, prefabs._stackable);
+    ecs.add_pair(world, prefabs.plum, ecs.IsA, prefabs._stackable);
     _ = ecs.set(world, prefabs.plum, components.Stack, .{ .max = 5 });
     _ = ecs.set(world, prefabs.plum, components.StackAnimator, .{
         .animation = &game.animations.Plum_Layer,
@@ -94,7 +94,7 @@ pub fn create(prefabs: *Prefabs, world: *ecs.world_t) void {
     ecs.add(world, prefabs.plum, components.Useable);
 
     // Pear
-    ecs.add_pair(world, prefabs.pear, ecs.EcsIsA, prefabs._stackable);
+    ecs.add_pair(world, prefabs.pear, ecs.IsA, prefabs._stackable);
     _ = ecs.set(world, prefabs.pear, components.Stack, .{ .max = 5 });
     _ = ecs.set(world, prefabs.pear, components.StackAnimator, .{
         .animation = &game.animations.Pear_Layer,
@@ -107,7 +107,7 @@ pub fn create(prefabs: *Prefabs, world: *ecs.world_t) void {
     ecs.add(world, prefabs.pear, components.Useable);
 
     // Lit torch
-    ecs.add_pair(world, prefabs.lit_torch, ecs.EcsIsA, prefabs._item);
+    ecs.add_pair(world, prefabs.lit_torch, ecs.IsA, prefabs._item);
     _ = ecs.set(world, prefabs.lit_torch, components.SpriteAnimator, .{
         .animation = &game.animations.Torch_Flame_Layer,
         .state = .play,
@@ -130,7 +130,7 @@ pub fn create(prefabs: *Prefabs, world: *ecs.world_t) void {
     ecs.override(world, prefabs.lit_torch, components.LightRenderer);
 
     // Torch
-    ecs.add_pair(world, prefabs.torch, ecs.EcsIsA, prefabs._item);
+    ecs.add_pair(world, prefabs.torch, ecs.IsA, prefabs._item);
     _ = ecs.set(world, prefabs.torch, components.SpriteRenderer, .{
         .index = game.assets.aftersun_atlas.Torch_0_Layer,
     });

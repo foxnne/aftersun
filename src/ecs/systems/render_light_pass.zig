@@ -57,7 +57,7 @@ fn orderBy(e1: ecs.entity_t, c1: ?*const anyopaque, e2: ecs.entity_t, c2: ?*cons
     if (@fabs(position_1.y - position_2.y) <= 16) {
         var counter1 = if (ecs.get(game.state.world, e1, components.Tile)) |tile| tile.counter else 0;
         var counter2 = if (ecs.get(game.state.world, e2, components.Tile)) |tile| tile.counter else 0;
-        return @intCast(c_int, @boolToInt(counter1 > counter2)) - @intCast(c_int, @boolToInt(counter1 < counter2));
+        return @as(c_int, @intCast(@intFromBool(counter1 > counter2))) - @as(c_int, @intCast(@intFromBool(counter1 < counter2)));
     }
-    return @intCast(c_int, @boolToInt(position_1.y < position_2.y)) - @intCast(c_int, @boolToInt(position_1.y > position_2.y));
+    return @as(c_int, @intCast(@intFromBool(position_1.y < position_2.y))) - @as(c_int, @intCast(@intFromBool(position_1.y > position_2.y)));
 }

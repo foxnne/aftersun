@@ -30,6 +30,7 @@ pub fn package(
     zflecs_c_cpp.addCSourceFile(thisDir() ++ "/libs/flecs/flecs.c", &.{
         "-fno-sanitize=undefined",
         "-DFLECS_NO_CPP",
+        "-DFLECS_USE_OS_ALLOC",
         if (@import("builtin").mode == .Debug) "-DFLECS_SANITIZE" else "",
     });
 
@@ -66,7 +67,7 @@ pub fn runTests(
     const zflecs_pkg = package(b, target, optimize, .{});
     zflecs_pkg.link(tests);
 
-    return &tests.run().step;
+    return &b.addRunArtifact(tests).step;
 }
 
 inline fn thisDir() []const u8 {

@@ -6,7 +6,7 @@ const ecs = @import("zflecs");
 
 pub fn system() ecs.system_desc_t {
     var desc: ecs.system_desc_t = .{};
-    desc.query.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cooldown), ecs.EcsWildcard) };
+    desc.query.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cooldown), ecs.Wildcard) };
     desc.run = run;
     return desc;
 }

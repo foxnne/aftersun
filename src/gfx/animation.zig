@@ -1,5 +1,6 @@
 pub const Animation = struct {
-    name: []const u8,
-    indexes: []usize,
+    name: [:0]const u8,
+    start: usize,
+    length: usize,
     fps: usize,
 };

@@ -1,7 +1,8 @@
 const std = @import("std");
 
-pub const PoolError = error{
-    PoolIsFull,
+pub const PoolError = error{PoolIsFull} || HandleError;
+
+pub const HandleError = error{
     HandleIsUnacquired,
     HandleIsOutOfBounds,
     HandleIsReleased,
@@ -32,7 +33,7 @@ pub const PoolError = error{
 ///
 /// const GPA = std.heap.GeneralPurposeAllocator;
 /// var gpa = GPA(.{}){};
-/// var pool = try TestPool.initMaxCapacity(gpa.allocator());
+/// var pool = try TexturePool.initMaxCapacity(gpa.allocator());
 /// defer pool.deinit();
 ///
 /// // creating a texture and adding it to the pool returns a handle
@@ -43,6 +44,11 @@ pub const PoolError = error{
 /// // elsewhere, use the handle to get `obj` or `desc` as needed
 /// const obj = pool.getColumn(handle, .obj);
 /// const desc = pool.getColumn(handle, .desc);
+///
+/// // ...
+///
+/// // once the texture is no longer needed, release it.
+/// _ = pool.removeIfLive(handle);
 /// ```
 pub fn Pool(
     comptime index_bits: u8,
@@ -186,12 +192,9 @@ pub fn Pool(
             return self.isLiveAddressableHandle(handle.addressable());
         }
 
-        /// Checks whether `handle` is live, otherwise returns one of:
-        /// * `Error.HandleIsUnacquired`
-        /// * `Error.HandleIsOutOfBounds`
-        /// * `Error.HandleIsReleased`
+        /// Checks whether `handle` is live.
         /// Unlike `std.debug.assert()`, this check is evaluated in all builds.
-        pub fn requireLiveHandle(self: Self, handle: Handle) Error!void {
+        pub fn requireLiveHandle(self: Self, handle: Handle) HandleError!void {
             try self.requireLiveAddressableHandle(handle.addressable());
         }
 
@@ -206,11 +209,16 @@ pub fn Pool(
         pub const LiveIndexIterator = struct {
             curr_cycle: []const AddressableCycle = &.{},
             next_index: AddressableIndex = 0,
+            ended: bool = false,
 
             pub fn next(self: *LiveIndexIterator) ?AddressableIndex {
-                while (self.next_index < self.curr_cycle.len) {
+                while (!self.ended and self.next_index < self.curr_cycle.len) {
                     const curr_index = self.next_index;
-                    self.next_index += 1;
+                    if (curr_index < max_index) {
+                        self.next_index += 1;
+                    } else {
+                        self.ended = true;
+                    }
                     if (isLiveCycle(self.curr_cycle[curr_index]))
                         return curr_index;
                 }
@@ -247,12 +255,12 @@ pub fn Pool(
         /// defined.
         pub fn clear(self: *Self) void {
             var ahandle = AddressableHandle{ .index = 0 };
-            for (self._curr_cycle) |cycle| {
+            for (self._curr_cycle, 0..) |cycle, i| {
                 if (isLiveCycle(cycle)) {
+                    ahandle.index = @as(AddressableIndex, @intCast(i));
                     ahandle.cycle = cycle;
                     self.releaseAddressableHandleUnchecked(ahandle);
                 }
-                ahandle.index += 1;
             }
         }
 
@@ -287,12 +295,8 @@ pub fn Pool(
             return ahandle.handle();
         }
 
-        /// Removes (and invalidates) `handle` if live, otherwise returns one
-        /// of:
-        /// * `Error.HandleIsUnacquired`
-        /// * `Error.HandleIsOutOfBounds`
-        /// * `Error.HandleIsReleased`
-        pub fn remove(self: *Self, handle: Handle) !void {
+        /// Removes (and invalidates) `handle` if live.
+        pub fn remove(self: *Self, handle: Handle) HandleError!void {
             try self.releaseAddressableHandle(handle.addressable());
         }
 
@@ -317,51 +321,36 @@ pub fn Pool(
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-        /// Gets a column pointer if `handle` is live, otherwise returns one of:
-        /// * `Error.HandleIsUnacquired`
-        /// * `Error.HandleIsOutOfBounds`
-        /// * `Error.HandleIsReleased`
-        pub fn getColumnPtr(self: Self, handle: Handle, comptime column: Column) !*ColumnType(column) {
+        /// Gets a column pointer if `handle` is live.
+        pub fn getColumnPtr(self: Self, handle: Handle, comptime column: Column) HandleError!*ColumnType(column) {
             const ahandle = handle.addressable();
             try self.requireLiveAddressableHandle(ahandle);
             return self.getColumnPtrUnchecked(ahandle, column);
         }
 
-        /// Gets a column value if `handle` is live, otherwise returns one of:
-        /// * `Error.HandleIsUnacquired`
-        /// * `Error.HandleIsOutOfBounds`
-        /// * `Error.HandleIsReleased`
-        pub fn getColumn(self: Self, handle: Handle, comptime column: Column) !ColumnType(column) {
+        /// Gets a column value if `handle` is live.
+        pub fn getColumn(self: Self, handle: Handle, comptime column: Column) HandleError!ColumnType(column) {
             const ahandle = handle.addressable();
             try self.requireLiveAddressableHandle(ahandle);
             return self.getColumnUnchecked(ahandle, column);
         }
 
-        /// Gets column values if `handle` is live, otherwise returns one of:
-        /// * `Error.HandleIsUnacquired`
-        /// * `Error.HandleIsOutOfBounds`
-        /// * `Error.HandleIsReleased`
-        pub fn getColumns(self: Self, handle: Handle) !Columns {
+        /// Gets column values if `handle` is live.
+        pub fn getColumns(self: Self, handle: Handle) HandleError!Columns {
             const ahandle = handle.addressable();
             try self.requireLiveAddressableHandle(ahandle);
             return self.getColumnsUnchecked(ahandle);
         }
 
-        /// Sets a column value if `handle` is live, otherwise returns one of:
-        /// * `Error.HandleIsUnacquired`
-        /// * `Error.HandleIsOutOfBounds`
-        /// * `Error.HandleIsReleased`
-        pub fn setColumn(self: Self, handle: Handle, comptime column: Column, value: ColumnType(column)) !void {
+        /// Sets a column value if `handle` is live.
+        pub fn setColumn(self: Self, handle: Handle, comptime column: Column, value: ColumnType(column)) HandleError!void {
             const ahandle = handle.addressable();
             try self.requireLiveAddressableHandle(ahandle);
             self.setColumnUnchecked(ahandle, column, value);
         }
 
-        /// Sets column values if `handle` is live, otherwise returns one of:
-        /// * `Error.HandleIsUnacquired`
-        /// * `Error.HandleIsOutOfBounds`
-        /// * `Error.HandleIsReleased`
-        pub fn setColumns(self: Self, handle: Handle, values: Columns) !void {
+        /// Sets column values if `handle` is live.
+        pub fn setColumns(self: Self, handle: Handle, values: Columns) HandleError!void {
             const ahandle = handle.addressable();
             try self.requireLiveAddressableHandle(ahandle);
             self.setColumnsUnchecked(ahandle, values);
@@ -543,7 +532,7 @@ pub fn Pool(
             inline for (column_fields, 0..) |column_field, i| {
                 const F = column_field.type;
                 const p = slice.ptrs[private_fields.len + i];
-                const f = @ptrCast([*]F, @alignCast(@alignOf(F), p));
+                const f = @as([*]F, @ptrCast(@alignCast(p)));
                 @field(self.columns, column_field.name) = f[0..slice.len];
             }
         }
@@ -566,7 +555,7 @@ pub fn Pool(
         fn requireLiveAddressableHandle(
             self: Self,
             handle: AddressableHandle,
-        ) Error!void {
+        ) HandleError!void {
             if (isFreeCycle(handle.cycle))
                 return Error.HandleIsUnacquired;
             if (handle.index >= self._curr_cycle.len)
@@ -670,7 +659,7 @@ pub fn Pool(
                 const new_index = self._storage.addOneAssumeCapacity();
                 updateSlices(self);
                 self._curr_cycle[new_index] = 1;
-                handle.index = @intCast(AddressableIndex, new_index);
+                handle.index = @as(AddressableIndex, @intCast(new_index));
                 handle.cycle = 1;
                 return true;
             }
@@ -681,7 +670,7 @@ pub fn Pool(
             const new_index = try self._storage.addOne(self._allocator);
             updateSlices(self);
             self._curr_cycle[new_index] = 1;
-            handle.index = @intCast(AddressableIndex, new_index);
+            handle.index = @as(AddressableIndex, @intCast(new_index));
             handle.cycle = 1;
         }
     };
@@ -878,6 +867,33 @@ test "Pool.liveIndices()" {
     try expectEqual(handle1.addressable().index, live_indices.next().?);
     try expectEqual(handle2.addressable().index, live_indices.next().?);
     try expect(null == live_indices.next());
+}
+
+test "Pool.liveIndices() when full" {
+    // Test that iterator's internal index doesn't overflow when pool is full.
+    // (8,8 is the smallest size we can easily test because AddressableIndex is
+    // at least a u8)
+    const TestPool = Pool(8, 8, void, struct {});
+
+    var pool = try TestPool.initMaxCapacity(std.testing.allocator);
+    defer pool.deinit();
+
+    try expectEqual(@as(usize, 0), pool.liveHandleCount());
+
+    var i: usize = 0;
+    while (i < 256) {
+        _ = try pool.add(.{});
+        i += 1;
+    }
+    try expectEqual(@as(usize, 256), pool.liveHandleCount());
+
+    // Make sure it does correctly iterate all the way.
+    var j: usize = 0;
+    var live_indices = pool.liveIndices();
+    while (live_indices.next()) |_| {
+        j += 1;
+    }
+    try expectEqual(@as(usize, 256), j);
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

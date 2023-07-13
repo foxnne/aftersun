@@ -47,7 +47,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         game.state.atlas.sprites[renderers[i].index],
                         .{
                             .vert_mode = renderers[i].vert_mode,
-                            .time = @floatCast(f32, game.state.gctx.stats.time) + @intToFloat(f32, renderers[i].order),
+                            .time = @as(f32, @floatCast(game.state.gctx.stats.time)) + @as(f32, @floatFromInt(renderers[i].order)),
                             .rotation = rotation,
                             .flip_x = renderers[i].flip_x,
                             .flip_y = renderers[i].flip_y,
@@ -138,7 +138,7 @@ fn orderBy(e1: ecs.entity_t, c1: ?*const anyopaque, e2: ecs.entity_t, c2: ?*cons
     if (@fabs(position_1.y - position_2.y) <= 16) {
         var counter1 = if (ecs.get(game.state.world, e1, components.Tile)) |tile| tile.counter else 0;
         var counter2 = if (ecs.get(game.state.world, e2, components.Tile)) |tile| tile.counter else 0;
-        return @intCast(c_int, @boolToInt(counter1 > counter2)) - @intCast(c_int, @boolToInt(counter1 < counter2));
+        return @as(c_int, @intCast(@intFromBool(counter1 > counter2))) - @as(c_int, @intCast(@intFromBool(counter1 < counter2)));
     }
-    return @intCast(c_int, @boolToInt(position_1.y < position_2.y)) - @intCast(c_int, @boolToInt(position_1.y > position_2.y));
+    return @as(c_int, @intCast(@intFromBool(position_1.y < position_2.y))) - @as(c_int, @intCast(@intFromBool(position_1.y > position_2.y)));
 }

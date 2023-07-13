@@ -118,7 +118,6 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     // Ensure that auto-generated IDs are well above anything we will need.
     ecs.set_entity_range(world, 8000, 0);
 
-    //ecs.set_entity_range(world, 8000, 0);
     register(world, components);
 
     //Create all of our prefabs.
@@ -136,8 +135,8 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
 
     const batcher = try gfx.Batcher.init(allocator, gctx, settings.batcher_max_sprites);
 
-    const atlas = try gfx.Atlas.loadFromFile(std.heap.c_allocator, assets.aftersun_atlas.path);
-    const light_atlas = try gfx.Atlas.loadFromFile(std.heap.c_allocator, assets.aftersun_lights_atlas.path);
+    const atlas = try gfx.Atlas.initFromFile(std.heap.c_allocator, assets.aftersun_atlas.path);
+    const light_atlas = try gfx.Atlas.initFromFile(std.heap.c_allocator, assets.aftersun_lights_atlas.path);
 
     // Load game textures.
     const diffusemap = try gfx.Texture.loadFromFile(gctx, assets.aftersun_png.path, .{});
@@ -313,31 +312,31 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
 
     // - Cooldown
     var cooldown_system = @import("ecs/systems/cooldown.zig").system();
-    ecs.SYSTEM(world, "CooldownSystem", ecs.EcsOnUpdate, &cooldown_system);
+    ecs.SYSTEM(world, "CooldownSystem", ecs.OnUpdate, &cooldown_system);
 
     // - Input
     var movement_drag_system = @import("ecs/systems/movement_drag.zig").system(world);
-    ecs.SYSTEM(world, "MovementDragSystem", ecs.EcsOnUpdate, &movement_drag_system);
+    ecs.SYSTEM(world, "MovementDragSystem", ecs.OnUpdate, &movement_drag_system);
     var movement_request_system = @import("ecs/systems/movement_request.zig").system();
-    ecs.SYSTEM(world, "MovementRequestSystem", ecs.EcsOnUpdate, &movement_request_system);
+    ecs.SYSTEM(world, "MovementRequestSystem", ecs.OnUpdate, &movement_request_system);
 
     // - Movement
     var movement_collision_system = @import("ecs/systems/movement_collision.zig").system(world);
-    ecs.SYSTEM(world, "MovementCollisionSystem", ecs.EcsOnUpdate, &movement_collision_system);
+    ecs.SYSTEM(world, "MovementCollisionSystem", ecs.OnUpdate, &movement_collision_system);
     var movement_system = @import("ecs/systems/movement.zig").system();
-    ecs.SYSTEM(world, "MovementSystem", ecs.EcsOnUpdate, &movement_system);
+    ecs.SYSTEM(world, "MovementSystem", ecs.OnUpdate, &movement_system);
     var velocity_system = @import("ecs/systems/velocity.zig").system();
-    ecs.SYSTEM(world, "VelocitySystem", ecs.EcsOnUpdate, &velocity_system);
+    ecs.SYSTEM(world, "VelocitySystem", ecs.OnUpdate, &velocity_system);
 
     // - Other
     var inspect_system = @import("ecs/systems/inspect.zig").system();
-    ecs.SYSTEM(world, "InspectSystem", ecs.EcsOnUpdate, &inspect_system);
+    ecs.SYSTEM(world, "InspectSystem", ecs.OnUpdate, &inspect_system);
     var stack_system = @import("ecs/systems/stack.zig").system();
-    ecs.SYSTEM(world, "StackSystem", ecs.EcsOnUpdate, &stack_system);
+    ecs.SYSTEM(world, "StackSystem", ecs.OnUpdate, &stack_system);
     var use_system = @import("ecs/systems/use.zig").system(world);
-    ecs.SYSTEM(world, "UseSystem", ecs.EcsOnUpdate, &use_system);
+    ecs.SYSTEM(world, "UseSystem", ecs.OnUpdate, &use_system);
     var cook_system = @import("ecs/systems/cook.zig").system();
-    ecs.SYSTEM(world, "CookSystem", ecs.EcsOnUpdate, &cook_system);
+    ecs.SYSTEM(world, "CookSystem", ecs.OnUpdate, &cook_system);
 
     // - Observers
     var tile_observer = @import("ecs/observers/tile.zig").observer();
@@ -349,33 +348,33 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
 
     // - Camera
     var camera_follow_system = @import("ecs/systems/camera_follow.zig").system();
-    ecs.SYSTEM(world, "CameraFollowSystem", ecs.EcsOnUpdate, &camera_follow_system);
+    ecs.SYSTEM(world, "CameraFollowSystem", ecs.OnUpdate, &camera_follow_system);
     var camera_zoom_system = @import("ecs/systems/camera_zoom.zig").system();
-    ecs.SYSTEM(world, "CameraZoomSystem", ecs.EcsOnUpdate, &camera_zoom_system);
+    ecs.SYSTEM(world, "CameraZoomSystem", ecs.OnUpdate, &camera_zoom_system);
 
     // - Animation
     var animation_character_system = @import("ecs/systems/animation_character.zig").system();
-    ecs.SYSTEM(world, "AnimatorCharacterSystem", ecs.EcsOnUpdate, &animation_character_system);
+    ecs.SYSTEM(world, "AnimatorCharacterSystem", ecs.OnUpdate, &animation_character_system);
     var animation_sprite_system = @import("ecs/systems/animation_sprite.zig").system();
-    ecs.SYSTEM(world, "AnimatorSpriteSystem", ecs.EcsOnUpdate, &animation_sprite_system);
+    ecs.SYSTEM(world, "AnimatorSpriteSystem", ecs.OnUpdate, &animation_sprite_system);
     var particle_system = @import("ecs/systems/animation_particle.zig").system();
-    ecs.SYSTEM(world, "ParticleSystem", ecs.EcsOnUpdate, &particle_system);
+    ecs.SYSTEM(world, "ParticleSystem", ecs.OnUpdate, &particle_system);
 
     // - Render
     var render_culling_system = @import("ecs/systems/render_culling.zig").system();
-    ecs.SYSTEM(world, "RenderCullingSystem", ecs.EcsPostUpdate, &render_culling_system);
+    ecs.SYSTEM(world, "RenderCullingSystem", ecs.PostUpdate, &render_culling_system);
     var render_diffuse_system = @import("ecs/systems/render_diffuse_pass.zig").system();
-    ecs.SYSTEM(world, "RenderDiffuseSystem", ecs.EcsPostUpdate, &render_diffuse_system);
+    ecs.SYSTEM(world, "RenderDiffuseSystem", ecs.PostUpdate, &render_diffuse_system);
     var render_light_system = @import("ecs/systems/render_light_pass.zig").system();
-    ecs.SYSTEM(world, "RenderLightSystem", ecs.EcsPostUpdate, &render_light_system);
+    ecs.SYSTEM(world, "RenderLightSystem", ecs.PostUpdate, &render_light_system);
     var render_height_system = @import("ecs/systems/render_height_pass.zig").system();
-    ecs.SYSTEM(world, "RenderHeightSystem", ecs.EcsPostUpdate, &render_height_system);
+    ecs.SYSTEM(world, "RenderHeightSystem", ecs.PostUpdate, &render_height_system);
     var render_reverse_height_system = @import("ecs/systems/render_reverse_height_pass.zig").system();
-    ecs.SYSTEM(world, "RenderReverseHeightSystem", ecs.EcsPostUpdate, &render_reverse_height_system);
+    ecs.SYSTEM(world, "RenderReverseHeightSystem", ecs.PostUpdate, &render_reverse_height_system);
     var render_environment_system = @import("ecs/systems/render_environment_pass.zig").system();
-    ecs.SYSTEM(world, "RenderEnvironmentSystem", ecs.EcsPostUpdate, &render_environment_system);
+    ecs.SYSTEM(world, "RenderEnvironmentSystem", ecs.PostUpdate, &render_environment_system);
     var render_final_system = @import("ecs/systems/render_final_pass.zig").system();
-    ecs.SYSTEM(world, "RenderFinalSystem", ecs.EcsPostUpdate, &render_final_system);
+    ecs.SYSTEM(world, "RenderFinalSystem", ecs.PostUpdate, &render_final_system);
 
     state.entities.player = ecs.new_entity(world, "Player");
     const player = state.entities.player;
@@ -411,12 +410,12 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
 
     state.entities.debug = ecs.new_entity(world, "Debug");
     const debug = state.entities.debug;
-    ecs.add_pair(world, debug, ecs.EcsIsA, state.prefabs.ham);
+    ecs.add_pair(world, debug, ecs.IsA, state.prefabs.ham);
     _ = ecs.set(world, debug, components.Position, .{ .x = 0.0, .y = -64.0 });
     _ = ecs.set(world, debug, components.Tile, .{ .x = 0, .y = -2, .counter = state.counter.count() });
 
     const ham = ecs.new_id(world);
-    ecs.add_pair(world, ham, ecs.EcsIsA, state.prefabs.ham);
+    ecs.add_pair(world, ham, ecs.IsA, state.prefabs.ham);
     _ = ecs.set(world, ham, components.Position, .{ .x = 0.0, .y = -96.0 });
     _ = ecs.set(world, ham, components.Tile, .{ .x = 0, .y = -3, .counter = state.counter.count() });
     _ = ecs.set(world, ham, components.Stack, .{ .count = 3, .max = 5 });
@@ -516,7 +515,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
 
         const leaf_color = math.Color.initBytes(15, 0, 0, 255).toSlice();
 
-        const tree_leaves_01 = ecs.new_w_id(world, ecs.pair(ecs.EcsChildOf, tree));
+        const tree_leaves_01 = ecs.new_w_id(world, ecs.pair(ecs.ChildOf, tree));
         _ = ecs.set(world, tree_leaves_01, components.Position, position);
         _ = ecs.set(world, tree_leaves_01, components.Tile, position.toTile(state.counter.count()));
         _ = ecs.set(world, tree_leaves_01, components.SpriteRenderer, .{
@@ -526,7 +525,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
             .vert_mode = .top_sway,
         });
 
-        const tree_leaves_02 = ecs.new_w_id(world, ecs.pair(ecs.EcsChildOf, tree));
+        const tree_leaves_02 = ecs.new_w_id(world, ecs.pair(ecs.ChildOf, tree));
         _ = ecs.set(world, tree_leaves_02, components.Position, position);
         _ = ecs.set(world, tree_leaves_02, components.Tile, position.toTile(state.counter.count()));
         _ = ecs.set(world, tree_leaves_02, components.SpriteRenderer, .{
@@ -536,7 +535,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
             .vert_mode = .top_sway,
         });
 
-        const tree_leaves_03 = ecs.new_w_id(world, ecs.pair(ecs.EcsChildOf, tree));
+        const tree_leaves_03 = ecs.new_w_id(world, ecs.pair(ecs.ChildOf, tree));
         _ = ecs.set(world, tree_leaves_03, components.Position, position);
         _ = ecs.set(world, tree_leaves_03, components.Tile, position.toTile(state.counter.count()));
         _ = ecs.set(world, tree_leaves_03, components.SpriteRenderer, .{
@@ -546,7 +545,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
             .vert_mode = .top_sway,
         });
 
-        const tree_leaves_04 = ecs.new_w_id(world, ecs.pair(ecs.EcsChildOf, tree));
+        const tree_leaves_04 = ecs.new_w_id(world, ecs.pair(ecs.ChildOf, tree));
         _ = ecs.set(world, tree_leaves_04, components.Position, position);
         _ = ecs.set(world, tree_leaves_04, components.Tile, position.toTile(state.counter.count()));
         _ = ecs.set(world, tree_leaves_04, components.SpriteRenderer, .{
@@ -560,7 +559,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     // Create third tree
     {
         // Make sure its within another cell
-        const position = components.Position{ .x = @intToFloat(f32, settings.cell_size + 2) * settings.pixels_per_unit, .y = 0.0 };
+        const position = components.Position{ .x = @as(f32, @floatFromInt(settings.cell_size + 2)) * settings.pixels_per_unit, .y = 0.0 };
 
         const tree = ecs.new_entity(world, "Tree03");
         _ = ecs.set(world, tree, components.Position, position);
@@ -568,7 +567,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         _ = ecs.set(world, tree, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Pine_0_Trunk, .vert_mode = .top_sway });
         _ = ecs.set(world, tree, components.Collider, .{});
 
-        const tree_leaves_01 = ecs.new_w_id(world, ecs.pair(ecs.EcsChildOf, tree));
+        const tree_leaves_01 = ecs.new_w_id(world, ecs.pair(ecs.ChildOf, tree));
         _ = ecs.set(world, tree_leaves_01, components.Position, position);
         _ = ecs.set(world, tree_leaves_01, components.Tile, position.toTile(state.counter.count()));
         _ = ecs.set(world, tree_leaves_01, components.SpriteRenderer, .{
@@ -608,22 +607,20 @@ fn update() void {
     _ = ecs.progress(state.world, 0);
 
     if (zgui.begin("Prefabs", .{})) {
-        const prefab_names = std.meta.fieldNames(Prefabs);
-        for (prefab_names) |n| {
-            if (std.mem.indexOf(u8, n, "_")) |delimiter| {
-                if (delimiter == 0) continue;
-            }
-
-            if (zgui.button(zgui.formatZ("{s}", .{n}), .{ .w = -1 })) {
-                if (ecs.get(state.world, state.entities.player, components.Tile)) |tile| {
-                    if (ecs.get(state.world, state.entities.player, components.Position)) |position| {
-                        const new = ecs.new_w_id(state.world, ecs.pair(ecs.EcsIsA, ecs.lookup(state.world, n.ptr[0..n.len :0])));
-                        _ = ecs.set(state.world, new, components.Position, position.*);
-                        const end = tile.*;
-                        const start: components.Tile = .{ .x = end.x, .y = end.y, .z = end.z + 1 };
-                        _ = ecs.set(state.world, new, components.Tile, start);
-                        _ = ecs.set_pair(state.world, new, ecs.id(components.Request), ecs.id(components.Movement), components.Movement, .{ .start = start, .end = end, .curve = .sin });
-                        _ = ecs.set_pair(state.world, new, ecs.id(components.Cooldown), ecs.id(components.Movement), components.Cooldown, .{ .end = settings.movement_cooldown / 2 });
+        const prefab_names = comptime std.meta.fieldNames(Prefabs);
+        inline for (prefab_names) |n| {
+            if (n[0] != '_') {
+                if (zgui.button(zgui.formatZ("{s}", .{n}), .{ .w = -1 })) {
+                    if (ecs.get(state.world, state.entities.player, components.Tile)) |tile| {
+                        if (ecs.get(state.world, state.entities.player, components.Position)) |position| {
+                            const new = ecs.new_w_id(state.world, ecs.pair(ecs.IsA, ecs.lookup(state.world, n ++ &[_:0]u8{})));
+                            _ = ecs.set(state.world, new, components.Position, position.*);
+                            const end = tile.*;
+                            const start: components.Tile = .{ .x = end.x, .y = end.y, .z = end.z + 1 };
+                            _ = ecs.set(state.world, new, components.Tile, start);
+                            _ = ecs.set_pair(state.world, new, ecs.id(components.Request), ecs.id(components.Movement), components.Movement, .{ .start = start, .end = end, .curve = .sin });
+                            _ = ecs.set_pair(state.world, new, ecs.id(components.Cooldown), ecs.id(components.Movement), components.Cooldown, .{ .end = settings.movement_cooldown / 2 });
+                        }
                     }
                 }
             }
@@ -664,7 +661,7 @@ fn update() void {
             zgui.bulletText("Tile: x: {d}, y: {d}, z: {d}", .{ tile.x, tile.y, tile.z });
         }
 
-        if (ecs.get_id(state.world, state.entities.player, ecs.pair(ecs.id(components.Cell), ecs.EcsWildcard))) |cell_ptr| {
+        if (ecs.get_id(state.world, state.entities.player, ecs.pair(ecs.id(components.Cell), ecs.Wildcard))) |cell_ptr| {
             const cell = ecs.cast(components.Cell, cell_ptr);
             zgui.bulletText("Cell: x: {d}, y: {d}, z: {d}", .{ cell.x, cell.y, cell.z });
         }
@@ -761,10 +758,10 @@ pub fn main() !void {
     window.setSizeLimits(400, 400, -1, -1);
 
     // Set callbacks
-    window.setCursorPosCallback(input.callbacks.cursor);
-    window.setScrollCallback(input.callbacks.scroll);
-    window.setKeyCallback(input.callbacks.key);
-    window.setMouseButtonCallback(input.callbacks.button);
+    _ = window.setCursorPosCallback(input.callbacks.cursor);
+    _ = window.setScrollCallback(input.callbacks.scroll);
+    _ = window.setKeyCallback(input.callbacks.key);
+    _ = window.setMouseButtonCallback(input.callbacks.button);
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -776,13 +773,13 @@ pub fn main() !void {
 
     const scale_factor = scale_factor: {
         const scale = window.getContentScale();
-        break :scale_factor std.math.max(scale[0], scale[1]);
+        break :scale_factor @max(scale[0], scale[1]);
     };
 
     zgui.init(allocator);
     zgui.io.setIniFilename(assets.root ++ "imgui.ini");
     _ = zgui.io.addFontFromFile(assets.root ++ "fonts/CozetteVector.ttf", settings.zgui_font_size * scale_factor);
-    zgui.backend.init(window, state.gctx.device, @enumToInt(zgpu.GraphicsContext.swapchain_format));
+    zgui.backend.init(window, state.gctx.device, @intFromEnum(zgpu.GraphicsContext.swapchain_format));
 
     // TODO: Move GUI styling and color to its own file
     // Base style

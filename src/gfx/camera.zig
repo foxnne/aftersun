@@ -17,9 +17,9 @@ pub const Camera = struct {
     culling_margin: f32 = 256.0,
 
     pub fn init(design_size: zm.F32x4, window_size: struct { w: i32, h: i32 }, position: zm.F32x4) Camera {
-        const w_size = zm.f32x4(@intToFloat(f32, window_size.w), @intToFloat(f32, window_size.h), 0, 0);
+        const w_size = zm.f32x4(@as(f32, @floatFromInt(window_size.w)), @as(f32, @floatFromInt(window_size.h)), 0, 0);
         const zooms = zm.ceil(w_size / design_size);
-        const zoom = std.math.max(zooms[0], zooms[1]) + 1.0; // Initially set the zoom to be 1 step greater than minimum.
+        const zoom = @max(zooms[0], zooms[1]) + 1.0; // Initially set the zoom to be 1 step greater than minimum.
 
         return .{
             .design_size = design_size,
@@ -32,7 +32,7 @@ pub const Camera = struct {
     /// Sets window size from the window, call this everytime the window changes.
     pub fn setWindow(camera: *Camera, window: *zglfw.Window) void {
         const window_size = window.getSize();
-        camera.window_size = zm.f32x4(@intToFloat(f32, window_size[0]), @intToFloat(f32, window_size[1]), 0, 0);
+        camera.window_size = zm.f32x4(@as(f32, @floatFromInt(window_size[0])), @as(f32, @floatFromInt(window_size[1])), 0, 0);
         const min_zoom = camera.minZoom();
         const max_zoom = camera.maxZoom();
         if (camera.zoom < min_zoom) camera.zoom = min_zoom;
@@ -77,7 +77,7 @@ pub const Camera = struct {
     /// Returns the minimum zoom needed to render to the window without black bars.
     pub fn minZoom(camera: Camera) f32 {
         const zoom = zm.ceil(camera.window_size / camera.design_size);
-        return std.math.max(zoom[0], zoom[1]);
+        return @max(zoom[0], zoom[1]);
     }
 
     /// Returns the maximum zoom allowed for the current window size.

@@ -28,7 +28,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                             const emit_time = 1 / animators[i].rate;
 
                             if (animators[i].time_since_emit >= emit_time) {
-                                particles_to_emit = @floatToInt(usize, @floor(animators[i].time_since_emit / emit_time));
+                                particles_to_emit = @as(usize, @intFromFloat(@floor(animators[i].time_since_emit / emit_time)));
                             }
                         }
                     }
@@ -43,7 +43,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                 game.math.lerp(animators[i].start_color[2], animators[i].end_color[2], t),
                                 game.math.lerp(animators[i].start_color[3], animators[i].end_color[3], t),
                             }; // = animators[i].start_color.lerp(animators[i].end_color, t);
-                            const index = @floatToInt(usize, @trunc((@intToFloat(f32, animators[i].animation.len - 1)) * t));
+                            const index = @as(usize, @intFromFloat(@trunc((@as(f32, @floatFromInt(animators[i].animation.len - 1))) * t)));
 
                             if (index < animators[i].animation.len)
                                 particle.index = animators[i].animation[index];
@@ -60,7 +60,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                 new_particle.position[2] = positions[i].z;
                             }
 
-                            var prng = std.rand.DefaultPrng.init(@intCast(u64, j));
+                            var prng = std.rand.DefaultPrng.init(@as(u64, @intCast(j)));
                             const rand = prng.random();
                             const t = rand.float(f32);
 

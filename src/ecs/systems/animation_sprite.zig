@@ -21,7 +21,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                     if (animators[i].state == components.SpriteAnimator.State.play) {
                         animators[i].elapsed += it.delta_time;
 
-                        if (animators[i].elapsed > (1.0 / @intToFloat(f32, animators[i].fps))) {
+                        if (animators[i].elapsed > (1.0 / @as(f32, @floatFromInt(animators[i].fps)))) {
                             animators[i].elapsed = 0.0;
 
                             if (animators[i].frame < animators[i].animation.len - 1) {

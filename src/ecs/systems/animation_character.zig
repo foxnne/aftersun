@@ -196,7 +196,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 
                             animators[i].elapsed += it.delta_time;
 
-                            if (animators[i].elapsed > (1.0 / @intToFloat(f32, animators[i].fps))) {
+                            if (animators[i].elapsed > (1.0 / @as(f32, @floatFromInt(animators[i].fps)))) {
                                 animators[i].elapsed = 0.0;
 
                                 if (animators[i].frame < 7) {

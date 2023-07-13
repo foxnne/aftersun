@@ -7,7 +7,7 @@ const components = game.components;
 pub fn observer() ecs.observer_desc_t {
     var observer_desc = std.mem.zeroes(ecs.observer_desc_t);
     observer_desc.filter.terms[0] = std.mem.zeroInit(ecs.term_t, .{ .id = ecs.id(components.ParticleRenderer) });
-    observer_desc.events[0] = ecs.EcsOnRemove;
+    observer_desc.events[0] = ecs.OnRemove;
     observer_desc.run = run;
     return observer_desc;
 }

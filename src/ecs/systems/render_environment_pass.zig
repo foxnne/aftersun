@@ -42,7 +42,7 @@ pub fn callback(it: *ecs.iter_t) callconv(.C) void {
         .clear_color = game.math.Colors.white.value,
     }) catch unreachable;
 
-    const position = zm.f32x4(-@intToFloat(f32, game.state.environment_output.width) / 2, -@intToFloat(f32, game.state.environment_output.height) / 2, 0, 0);
+    const position = zm.f32x4(-@as(f32, @floatFromInt(game.state.environment_output.width)) / 2, -@as(f32, @floatFromInt(game.state.environment_output.height)) / 2, 0, 0);
 
     game.state.batcher.texture(position, game.state.environment_output, .{ .color = game.state.environment.ambientColor().value }) catch unreachable;
 

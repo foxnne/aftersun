@@ -27,7 +27,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
             if (ecs.field(it, components.Raw, 1)) |raws| {
                 if (ecs.field(it, components.Position, 4)) |positions| {
                     if (ecs.field(it, components.Tile, 5)) |tiles| {
-                        const new = ecs.new_w_id(world, ecs.pair(ecs.EcsIsA, raws[i].cooked_prefab));
+                        const new = ecs.new_w_id(world, ecs.pair(ecs.IsA, raws[i].cooked_prefab));
                         var tile = tiles[i];
                         tile.z += 1;
 

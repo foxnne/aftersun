@@ -27,10 +27,10 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
             if (ecs.field(it, components.Position, 1)) |positions| {
                 if (ecs.field(it, components.SpriteRenderer, 2)) |renderers| {
                     const sprite = game.state.atlas.sprites[renderers[i].index];
-                    const width = @intToFloat(f32, sprite.source.width);
-                    const height = @intToFloat(f32, sprite.source.height);
-                    const origin_x = @intToFloat(f32, sprite.origin.x);
-                    const origin_y = @intToFloat(f32, sprite.origin.y);
+                    const width = @as(f32, @floatFromInt(sprite.source[2]));
+                    const height = @as(f32, @floatFromInt(sprite.source[3]));
+                    const origin_x = @as(f32, @floatFromInt(sprite.origin[0]));
+                    const origin_y = @as(f32, @floatFromInt(sprite.origin[1]));
                     const offset_x = -origin_x;
                     const offset_y = -(height - origin_y);
                     const renderer_tl = zm.f32x4(positions[i].x + offset_x, positions[i].y + offset_y + height, 0, 0);
@@ -45,10 +45,10 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 
                 if (ecs.field(it, components.CharacterRenderer, 3)) |renderers| {
                     const sprite = game.state.atlas.sprites[renderers[i].body_index];
-                    const width = @intToFloat(f32, sprite.source.width);
-                    const height = @intToFloat(f32, sprite.source.height);
-                    const origin_x = @intToFloat(f32, sprite.origin.x);
-                    const origin_y = @intToFloat(f32, sprite.origin.y);
+                    const width = @as(f32, @floatFromInt(sprite.source[2]));
+                    const height = @as(f32, @floatFromInt(sprite.source[3]));
+                    const origin_x = @as(f32, @floatFromInt(sprite.origin[0]));
+                    const origin_y = @as(f32, @floatFromInt(sprite.origin[1]));
                     const offset_x = -origin_x;
                     const offset_y = -(height - origin_y);
                     const renderer_tl = zm.f32x4(positions[i].x + offset_x, positions[i].y + offset_y + height, 0, 0);

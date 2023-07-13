@@ -19,7 +19,7 @@ pub const FinalUniforms = extern struct {
 pub fn callback(it: *ecs.iter_t) callconv(.C) void {
     if (it.count() > 0) return;
 
-    const uniforms = FinalUniforms{ .mvp = zm.transpose(game.state.camera.frameBufferMatrix()), .output_channel = @enumToInt(game.state.output_channel) };
+    const uniforms = FinalUniforms{ .mvp = zm.transpose(game.state.camera.frameBufferMatrix()), .output_channel = @intFromEnum(game.state.output_channel) };
 
     game.state.batcher.begin(.{
         .pipeline_handle = game.state.pipeline_final,
