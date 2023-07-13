@@ -122,7 +122,8 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                 if (count > 1) {
                     const description = zgui.formatZ("{s} {d} {s}s.", .{ prefix, count, fixed_name });
                     const index = @as(usize, @intFromFloat(@trunc(game.state.controls.mouse.tile_timer * @as(f32, @floatFromInt(description.len)))));
-                    zgui.text("{s}", .{description[0..index]});
+                    _ = index;
+                    zgui.text("{s} {d} {s}s.", .{ prefix, count, fixed_name });
                 } else {
                     if (target != game.state.entities.player) {
                         const quantifier = switch (name[0]) {
@@ -132,11 +133,13 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 
                         const description = zgui.formatZ("{s} {s} {s}.", .{ prefix, quantifier, fixed_name });
                         const index = @as(usize, @intFromFloat(@trunc(game.state.controls.mouse.tile_timer * @as(f32, @floatFromInt(description.len)))));
-                        zgui.text("{s}", .{description[0..index]});
+                        _ = index;
+                        zgui.text("{s} {s} {s}.", .{ prefix, quantifier, fixed_name });
                     } else {
                         const description = zgui.formatZ("{s} {s}.", .{ prefix, fixed_name });
                         const index = @as(usize, @intFromFloat(@trunc(game.state.controls.mouse.tile_timer * @as(f32, @floatFromInt(description.len)))));
-                        zgui.text("{s}", .{description[0..index]});
+                        _ = index;
+                        zgui.text("{s} {s}", .{ prefix, fixed_name });
                     }
                 }
                 zgui.spacing();
