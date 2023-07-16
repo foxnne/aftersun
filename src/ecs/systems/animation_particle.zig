@@ -42,7 +42,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                 game.math.lerp(animators[i].start_color[1], animators[i].end_color[1], t),
                                 game.math.lerp(animators[i].start_color[2], animators[i].end_color[2], t),
                                 game.math.lerp(animators[i].start_color[3], animators[i].end_color[3], t),
-                            }; // = animators[i].start_color.lerp(animators[i].end_color, t);
+                            };
                             const index = @as(usize, @intFromFloat(@trunc((@as(f32, @floatFromInt(animators[i].animation.len - 1))) * t)));
 
                             if (index < animators[i].animation.len)
@@ -50,7 +50,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                             particle.color = color;
                             particle.position[0] += particle.velocity[0] * it.delta_time;
                             particle.position[1] += particle.velocity[1] * it.delta_time;
-                            particle.position[2] += particle.velocity[1] * it.delta_time;
+                            particle.position[2] += particle.velocity[1] * it.delta_time * 1.5;
                         } else if (particles_to_emit > 0) {
                             var new_particle: components.ParticleRenderer.Particle = .{};
                             new_particle.life = animators[i].start_life;
