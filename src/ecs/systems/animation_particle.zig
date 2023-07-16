@@ -50,6 +50,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                             particle.color = color;
                             particle.position[0] += particle.velocity[0] * it.delta_time;
                             particle.position[1] += particle.velocity[1] * it.delta_time;
+                            particle.position[2] += particle.velocity[1] * it.delta_time;
                         } else if (particles_to_emit > 0) {
                             var new_particle: components.ParticleRenderer.Particle = .{};
                             new_particle.life = animators[i].start_life;
