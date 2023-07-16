@@ -2,3 +2,6 @@
 	path = src/deps/zig-gamedev/zgpu/libs/dawn
 	url = https://github.com/michal-z/dawn-bin
 	branch = main
+[submodule "assets"]
+	path = assets
+	url = https://github.com/foxnne/aftersun-assets.git

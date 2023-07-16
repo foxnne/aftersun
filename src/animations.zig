@@ -2,47 +2,92 @@
 const std = @import("std");
 const assets = @import("assets.zig");
 
-pub var Oak_Needles = [_]usize {
-    assets.aftersun_atlas.Oak_0_Needles,
+pub var Ham_Layer = [_]usize {
+    assets.aftersun_atlas.Ham_0_Layer,
+    assets.aftersun_atlas.Ham_1_Layer,
+    assets.aftersun_atlas.Ham_2_Layer,
+    assets.aftersun_atlas.Ham_3_Layer,
+    assets.aftersun_atlas.Ham_4_Layer,
 };
-pub var Pine_Needles = [_]usize {
-    assets.aftersun_atlas.Pine_0_Needles,
+pub var Cooked_Ham_Layer = [_]usize {
+    assets.aftersun_atlas.Cooked_Ham_0_Layer,
+    assets.aftersun_atlas.Cooked_Ham_1_Layer,
+    assets.aftersun_atlas.Cooked_Ham_2_Layer,
+    assets.aftersun_atlas.Cooked_Ham_3_Layer,
+    assets.aftersun_atlas.Cooked_Ham_4_Layer,
 };
-pub var Oak_Leaves01 = [_]usize {
-    assets.aftersun_atlas.Oak_0_Leaves01,
+pub var Cooked_Meat_Layer = [_]usize {
+    assets.aftersun_atlas.Cooked_Meat_0_Layer,
+    assets.aftersun_atlas.Cooked_Meat_1_Layer,
+    assets.aftersun_atlas.Cooked_Meat_2_Layer,
+    assets.aftersun_atlas.Cooked_Meat_3_Layer,
+    assets.aftersun_atlas.Cooked_Meat_4_Layer,
 };
-pub var Pine_Leaves01 = [_]usize {
-    assets.aftersun_atlas.Pine_0_Leaves01,
+pub var Apple_Layer = [_]usize {
+    assets.aftersun_atlas.Apple_0_Layer,
+    assets.aftersun_atlas.Apple_1_Layer,
+    assets.aftersun_atlas.Apple_2_Layer,
+    assets.aftersun_atlas.Apple_3_Layer,
+    assets.aftersun_atlas.Apple_4_Layer,
 };
-pub var Oak_Leaves02 = [_]usize {
-    assets.aftersun_atlas.Oak_0_Leaves02,
+pub var Plum_Layer = [_]usize {
+    assets.aftersun_atlas.Plum_0_Layer,
+    assets.aftersun_atlas.Plum_1_Layer,
+    assets.aftersun_atlas.Plum_2_Layer,
+    assets.aftersun_atlas.Plum_3_Layer,
+    assets.aftersun_atlas.Plum_4_Layer,
 };
-pub var Pine_Leaves02 = [_]usize {
-    assets.aftersun_atlas.Pine_0_Leaves02,
+pub var Pear_Layer = [_]usize {
+    assets.aftersun_atlas.Pear_0_Layer,
+    assets.aftersun_atlas.Pear_1_Layer,
+    assets.aftersun_atlas.Pear_2_Layer,
+    assets.aftersun_atlas.Pear_3_Layer,
+    assets.aftersun_atlas.Pear_4_Layer,
 };
-pub var Oak_Leaves03 = [_]usize {
-    assets.aftersun_atlas.Oak_0_Leaves03,
+pub var Blueberry_Layer = [_]usize {
+    assets.aftersun_atlas.Blueberry_0_Layer,
+    assets.aftersun_atlas.Blueberry_1_Layer,
+    assets.aftersun_atlas.Blueberry_2_Layer,
 };
-pub var Pine_Leaves03 = [_]usize {
-    assets.aftersun_atlas.Pine_0_Leaves03,
+pub var Torch_Flame_Layer = [_]usize {
+    assets.aftersun_atlas.Torch_Flame_0_Layer,
+    assets.aftersun_atlas.Torch_Flame_1_Layer,
+    assets.aftersun_atlas.Torch_Flame_2_Layer,
+    assets.aftersun_atlas.Torch_Flame_3_Layer,
+    assets.aftersun_atlas.Torch_Flame_4_Layer,
+    assets.aftersun_atlas.Torch_Flame_5_Layer,
+    assets.aftersun_atlas.Torch_Flame_6_Layer,
+    assets.aftersun_atlas.Torch_Flame_7_Layer,
 };
-pub var Oak_Leaves04 = [_]usize {
-    assets.aftersun_atlas.Oak_0_Leaves04,
+pub var Torch_Layer = [_]usize {
+    assets.aftersun_atlas.Torch_0_Layer,
 };
-pub var Pine_Leaves04 = [_]usize {
-    assets.aftersun_atlas.Pine_0_Leaves04,
+pub var Bucket_Layer = [_]usize {
+    assets.aftersun_atlas.Bucket_0_Layer,
+    assets.aftersun_atlas.Bucket_1_Layer,
 };
-pub var Oak_Trunk = [_]usize {
-    assets.aftersun_atlas.Oak_0_Trunk,
+pub var Vial_Layer = [_]usize {
+    assets.aftersun_atlas.Vial_0_Layer,
 };
-pub var Pine_Trunk = [_]usize {
-    assets.aftersun_atlas.Pine_0_Trunk,
+pub var Smoke_Layer = [_]usize {
+    assets.aftersun_atlas.Smoke_0_Layer,
+    assets.aftersun_atlas.Smoke_1_Layer,
+    assets.aftersun_atlas.Smoke_2_Layer,
+    assets.aftersun_atlas.Smoke_3_Layer,
+    assets.aftersun_atlas.Smoke_4_Layer,
+    assets.aftersun_atlas.Smoke_5_Layer,
+    assets.aftersun_atlas.Smoke_6_Layer,
+    assets.aftersun_atlas.Smoke_7_Layer,
 };
-pub var Oak_Ground = [_]usize {
-    assets.aftersun_atlas.Oak_0_Ground,
+pub var Reeds_Layer = [_]usize {
+    assets.aftersun_atlas.Reeds_0_Layer,
 };
-pub var Pine_Ground = [_]usize {
-    assets.aftersun_atlas.Pine_0_Ground,
+pub var Gold_Layer = [_]usize {
+    assets.aftersun_atlas.Gold_0_Layer,
+    assets.aftersun_atlas.Gold_1_Layer,
+    assets.aftersun_atlas.Gold_2_Layer,
+    assets.aftersun_atlas.Gold_3_Layer,
+    assets.aftersun_atlas.Gold_4_Layer,
 };
 pub var Campfire_Layer_0 = [_]usize {
     assets.aftersun_atlas.Campfire_0_Layer_0,
@@ -854,95 +899,45 @@ pub var Idle_N_Body = [_]usize {
     assets.aftersun_atlas.Idle_N_6_Body,
     assets.aftersun_atlas.Idle_N_7_Body,
 };
-pub var Ham_Layer = [_]usize {
-    assets.aftersun_atlas.Ham_0_Layer,
-    assets.aftersun_atlas.Ham_1_Layer,
-    assets.aftersun_atlas.Ham_2_Layer,
-    assets.aftersun_atlas.Ham_3_Layer,
-    assets.aftersun_atlas.Ham_4_Layer,
+pub var Oak_Needles = [_]usize {
+    assets.aftersun_atlas.Oak_0_Needles,
 };
-pub var Cooked_Ham_Layer = [_]usize {
-    assets.aftersun_atlas.Cooked_Ham_0_Layer,
-    assets.aftersun_atlas.Cooked_Ham_1_Layer,
-    assets.aftersun_atlas.Cooked_Ham_2_Layer,
-    assets.aftersun_atlas.Cooked_Ham_3_Layer,
-    assets.aftersun_atlas.Cooked_Ham_4_Layer,
+pub var Pine_Needles = [_]usize {
+    assets.aftersun_atlas.Pine_0_Needles,
 };
-pub var Cooked_Meat_Layer = [_]usize {
-    assets.aftersun_atlas.Cooked_Meat_0_Layer,
-    assets.aftersun_atlas.Cooked_Meat_1_Layer,
-    assets.aftersun_atlas.Cooked_Meat_2_Layer,
-    assets.aftersun_atlas.Cooked_Meat_3_Layer,
-    assets.aftersun_atlas.Cooked_Meat_4_Layer,
+pub var Oak_Leaves01 = [_]usize {
+    assets.aftersun_atlas.Oak_0_Leaves01,
 };
-pub var Apple_Layer = [_]usize {
-    assets.aftersun_atlas.Apple_0_Layer,
-    assets.aftersun_atlas.Apple_1_Layer,
-    assets.aftersun_atlas.Apple_2_Layer,
-    assets.aftersun_atlas.Apple_3_Layer,
-    assets.aftersun_atlas.Apple_4_Layer,
+pub var Pine_Leaves01 = [_]usize {
+    assets.aftersun_atlas.Pine_0_Leaves01,
 };
-pub var Plum_Layer = [_]usize {
-    assets.aftersun_atlas.Plum_0_Layer,
-    assets.aftersun_atlas.Plum_1_Layer,
-    assets.aftersun_atlas.Plum_2_Layer,
-    assets.aftersun_atlas.Plum_3_Layer,
-    assets.aftersun_atlas.Plum_4_Layer,
+pub var Oak_Leaves02 = [_]usize {
+    assets.aftersun_atlas.Oak_0_Leaves02,
 };
-pub var Pear_Layer = [_]usize {
-    assets.aftersun_atlas.Pear_0_Layer,
-    assets.aftersun_atlas.Pear_1_Layer,
-    assets.aftersun_atlas.Pear_2_Layer,
-    assets.aftersun_atlas.Pear_3_Layer,
-    assets.aftersun_atlas.Pear_4_Layer,
+pub var Pine_Leaves02 = [_]usize {
+    assets.aftersun_atlas.Pine_0_Leaves02,
 };
-pub var Blueberry_Layer = [_]usize {
-    assets.aftersun_atlas.Blueberry_0_Layer,
-    assets.aftersun_atlas.Blueberry_1_Layer,
-    assets.aftersun_atlas.Blueberry_2_Layer,
+pub var Oak_Leaves03 = [_]usize {
+    assets.aftersun_atlas.Oak_0_Leaves03,
 };
-pub var Torch_Flame_Layer = [_]usize {
-    assets.aftersun_atlas.Torch_Flame_0_Layer,
-    assets.aftersun_atlas.Torch_Flame_1_Layer,
-    assets.aftersun_atlas.Torch_Flame_2_Layer,
-    assets.aftersun_atlas.Torch_Flame_3_Layer,
-    assets.aftersun_atlas.Torch_Flame_4_Layer,
-    assets.aftersun_atlas.Torch_Flame_5_Layer,
-    assets.aftersun_atlas.Torch_Flame_6_Layer,
-    assets.aftersun_atlas.Torch_Flame_7_Layer,
+pub var Pine_Leaves03 = [_]usize {
+    assets.aftersun_atlas.Pine_0_Leaves03,
 };
-pub var Torch_Layer = [_]usize {
-    assets.aftersun_atlas.Torch_0_Layer,
+pub var Oak_Leaves04 = [_]usize {
+    assets.aftersun_atlas.Oak_0_Leaves04,
 };
-pub var Bucket_Layer = [_]usize {
-    assets.aftersun_atlas.Bucket_0_Layer,
-    assets.aftersun_atlas.Bucket_1_Layer,
+pub var Pine_Leaves04 = [_]usize {
+    assets.aftersun_atlas.Pine_0_Leaves04,
 };
-pub var Vial_Layer = [_]usize {
-    assets.aftersun_atlas.Vial_0_Layer,
+pub var Oak_Trunk = [_]usize {
+    assets.aftersun_atlas.Oak_0_Trunk,
 };
-pub var Smoke_Layer = [_]usize {
-    assets.aftersun_atlas.Smoke_0_Layer,
-    assets.aftersun_atlas.Smoke_1_Layer,
-    assets.aftersun_atlas.Smoke_2_Layer,
-    assets.aftersun_atlas.Smoke_3_Layer,
-    assets.aftersun_atlas.Smoke_4_Layer,
-    assets.aftersun_atlas.Smoke_5_Layer,
-    assets.aftersun_atlas.Smoke_6_Layer,
-    assets.aftersun_atlas.Smoke_7_Layer,
+pub var Pine_Trunk = [_]usize {
+    assets.aftersun_atlas.Pine_0_Trunk,
 };
-pub var Reeds_Layer = [_]usize {
-    assets.aftersun_atlas.Reeds_0_Layer,
+pub var Oak_Ground = [_]usize {
+    assets.aftersun_atlas.Oak_0_Ground,
 };
-pub var Gold_Layer = [_]usize {
-    assets.aftersun_atlas.Gold_0_Layer,
-    assets.aftersun_atlas.Gold_1_Layer,
-    assets.aftersun_atlas.Gold_2_Layer,
-    assets.aftersun_atlas.Gold_3_Layer,
-    assets.aftersun_atlas.Gold_4_Layer,
-};
-pub var Drop_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Drop_0_Layer_0,
-    assets.aftersun_atlas.Drop_1_Layer_0,
-    assets.aftersun_atlas.Drop_2_Layer_0,
+pub var Pine_Ground = [_]usize {
+    assets.aftersun_atlas.Pine_0_Ground,
 };
