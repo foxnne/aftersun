@@ -59,11 +59,17 @@ pub const GameState = struct {
     pipeline_default: zgpu.RenderPipelineHandle = .{},
     pipeline_diffuse: zgpu.RenderPipelineHandle = .{},
     pipeline_height: zgpu.RenderPipelineHandle = .{},
+    pipeline_glow: zgpu.RenderPipelineHandle = .{},
+    pipeline_bloom_h: zgpu.RenderPipelineHandle = .{},
+    pipeline_bloom: zgpu.RenderPipelineHandle = .{},
     pipeline_environment: zgpu.RenderPipelineHandle = .{},
     pipeline_final: zgpu.RenderPipelineHandle = .{},
     bind_group_default: zgpu.BindGroupHandle,
     bind_group_diffuse: zgpu.BindGroupHandle,
     bind_group_height: zgpu.BindGroupHandle,
+    bind_group_glow: zgpu.BindGroupHandle,
+    bind_group_bloom_h: zgpu.BindGroupHandle,
+    bind_group_bloom: zgpu.BindGroupHandle,
     bind_group_environment: zgpu.BindGroupHandle,
     bind_group_light: zgpu.BindGroupHandle,
     bind_group_final: zgpu.BindGroupHandle,
@@ -75,6 +81,9 @@ pub const GameState = struct {
     lightmap: gfx.Texture,
     diffuse_output: gfx.Texture,
     height_output: gfx.Texture,
+    glow_output: gfx.Texture,
+    bloom_h_output: gfx.Texture,
+    bloom_output: gfx.Texture,
     reverse_height_output: gfx.Texture,
     environment_output: gfx.Texture,
     light_output: gfx.Texture,
@@ -89,6 +98,8 @@ pub const Channel = enum(i32) {
     reverse_height,
     environment,
     light,
+    glow,
+    bloom,
 };
 
 /// Holds global entities.
@@ -135,8 +146,8 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
 
     const batcher = try gfx.Batcher.init(allocator, gctx, settings.batcher_max_sprites);
 
-    const atlas = try gfx.Atlas.initFromFile(std.heap.c_allocator, assets.aftersun_atlas.path);
-    const light_atlas = try gfx.Atlas.initFromFile(std.heap.c_allocator, assets.aftersun_lights_atlas.path);
+    const atlas = try gfx.Atlas.initFromFile(allocator, assets.aftersun_atlas.path);
+    const light_atlas = try gfx.Atlas.initFromFile(allocator, assets.aftersun_lights_atlas.path);
 
     // Load game textures.
     const diffusemap = try gfx.Texture.loadFromFile(gctx, assets.aftersun_png.path, .{});
@@ -149,6 +160,13 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     // Create textures to render to.
     const diffuse_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
     const height_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
+    const glow_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
+    const bloom_h_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{
+        .filter = wgpu.FilterMode.linear,
+    });
+    const bloom_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{
+        .filter = wgpu.FilterMode.linear,
+    });
     const reverse_height_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
     const environment_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
     const light_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{
@@ -161,7 +179,6 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     const window_size = gctx.window.getSize();
     var camera = gfx.Camera.init(settings.design_size, .{ .w = window_size[0], .h = window_size[1] }, zm.f32x4(0, 0, 0, 0));
 
-    // Build the default bind group.
     const bind_group_layout_default = gctx.createBindGroupLayout(&.{
         zgpu.bufferEntry(0, .{ .vertex = true }, .uniform, true, 0),
         zgpu.textureEntry(1, .{ .fragment = true }, .float, .tvdim_2d, false),
@@ -181,7 +198,18 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         .{ .binding = 2, .sampler_handle = lightmap.sampler_handle },
     });
 
-    // Build the diffuse bind group.
+    const bind_group_bloom_h = gctx.createBindGroup(bind_group_layout_default, &[_]zgpu.BindGroupEntryInfo{
+        .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(gfx.Uniforms) },
+        .{ .binding = 1, .texture_view_handle = glow_output.view_handle },
+        .{ .binding = 2, .sampler_handle = glow_output.sampler_handle },
+    });
+
+    const bind_group_bloom = gctx.createBindGroup(bind_group_layout_default, &[_]zgpu.BindGroupEntryInfo{
+        .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(gfx.Uniforms) },
+        .{ .binding = 1, .texture_view_handle = bloom_h_output.view_handle },
+        .{ .binding = 2, .sampler_handle = bloom_h_output.sampler_handle },
+    });
+
     const bind_group_layout_diffuse = gctx.createBindGroupLayout(&.{
         zgpu.bufferEntry(0, .{ .vertex = true }, .uniform, true, 0),
         zgpu.textureEntry(1, .{ .fragment = true }, .float, .tvdim_2d, false),
@@ -197,7 +225,6 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         .{ .binding = 3, .sampler_handle = diffusemap.sampler_handle },
     });
 
-    // Build the height bind group.
     const bind_group_height = gctx.createBindGroup(bind_group_layout_diffuse, &[_]zgpu.BindGroupEntryInfo{
         .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(gfx.Uniforms) },
         .{ .binding = 1, .texture_view_handle = heightmap.view_handle },
@@ -205,7 +232,13 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         .{ .binding = 3, .sampler_handle = heightmap.sampler_handle },
     });
 
-    // Build the environment bind group.
+    const bind_group_glow = gctx.createBindGroup(bind_group_layout_diffuse, &[_]zgpu.BindGroupEntryInfo{
+        .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(gfx.Uniforms) },
+        .{ .binding = 1, .texture_view_handle = height_output.view_handle },
+        .{ .binding = 2, .texture_view_handle = diffuse_output.view_handle },
+        .{ .binding = 3, .sampler_handle = heightmap.sampler_handle },
+    });
+
     const bind_group_layout_environment = gctx.createBindGroupLayout(&.{
         zgpu.bufferEntry(0, .{ .vertex = true, .fragment = true }, .uniform, true, 0),
         zgpu.textureEntry(1, .{ .fragment = true }, .float, .tvdim_2d, false),
@@ -226,7 +259,6 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         .{ .binding = 5, .sampler_handle = light_output.sampler_handle },
     });
 
-    // Build the final bind group.
     const bind_group_layout_final = gctx.createBindGroupLayout(&.{
         zgpu.bufferEntry(0, .{ .vertex = true, .fragment = true }, .uniform, true, 0),
         zgpu.textureEntry(1, .{ .fragment = true }, .float, .tvdim_2d, false),
@@ -235,7 +267,9 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         zgpu.textureEntry(4, .{ .fragment = true }, .float, .tvdim_2d, false),
         zgpu.textureEntry(5, .{ .fragment = true }, .float, .tvdim_2d, false),
         zgpu.textureEntry(6, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.samplerEntry(7, .{ .fragment = true }, .filtering),
+        zgpu.textureEntry(7, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.textureEntry(8, .{ .fragment = true }, .float, .tvdim_2d, false),
+        zgpu.samplerEntry(9, .{ .fragment = true }, .filtering),
     });
     defer gctx.releaseResource(bind_group_layout_diffuse);
 
@@ -246,9 +280,11 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         .{ .binding = 2, .sampler_handle = diffuse_output.sampler_handle },
         .{ .binding = 3, .texture_view_handle = environment_output.view_handle },
         .{ .binding = 4, .texture_view_handle = height_output.view_handle },
-        .{ .binding = 5, .texture_view_handle = reverse_height_output.view_handle },
-        .{ .binding = 6, .texture_view_handle = light_output.view_handle },
-        .{ .binding = 7, .sampler_handle = light_output.sampler_handle },
+        .{ .binding = 5, .texture_view_handle = glow_output.view_handle },
+        .{ .binding = 6, .texture_view_handle = reverse_height_output.view_handle },
+        .{ .binding = 7, .texture_view_handle = light_output.view_handle },
+        .{ .binding = 8, .texture_view_handle = bloom_output.view_handle },
+        .{ .binding = 9, .sampler_handle = light_output.sampler_handle },
     });
 
     state = try allocator.create(GameState);
@@ -268,12 +304,18 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         .lightmap = lightmap,
         .diffuse_output = diffuse_output,
         .height_output = height_output,
+        .glow_output = glow_output,
+        .bloom_h_output = bloom_h_output,
+        .bloom_output = bloom_output,
         .reverse_height_output = reverse_height_output,
         .environment_output = environment_output,
         .light_output = light_output,
         .bind_group_default = bind_group_default,
         .bind_group_diffuse = bind_group_diffuse,
         .bind_group_height = bind_group_height,
+        .bind_group_glow = bind_group_glow,
+        .bind_group_bloom_h = bind_group_bloom_h,
+        .bind_group_bloom = bind_group_bloom,
         .bind_group_environment = bind_group_environment,
         .bind_group_light = bind_group_light,
         .bind_group_final = bind_group_final,
@@ -296,6 +338,24 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
             .vertex_shader = shaders.diffuse_vs,
             .fragment_shader = shaders.height_fs,
         }, &state.pipeline_height);
+
+        // (Async) Create glow render pipeline.
+        gfx.utils.createPipelineAsync(allocator, bind_group_layout_diffuse, .{
+            .vertex_shader = shaders.diffuse_vs,
+            .fragment_shader = shaders.glow_fs,
+        }, &state.pipeline_glow);
+
+        // (Async) Create bloom_h render pipeline.
+        gfx.utils.createPipelineAsync(allocator, bind_group_layout_default, .{
+            .vertex_shader = shaders.default_vs,
+            .fragment_shader = shaders.bloom_h_fs,
+        }, &state.pipeline_bloom_h);
+
+        // (Async) Create bloom render pipeline.
+        gfx.utils.createPipelineAsync(allocator, bind_group_layout_default, .{
+            .vertex_shader = shaders.default_vs,
+            .fragment_shader = shaders.bloom_fs,
+        }, &state.pipeline_bloom);
 
         // (Async) Create environment render pipeline.
         gfx.utils.createPipelineAsync(allocator, bind_group_layout_environment, .{
@@ -373,6 +433,12 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     ecs.SYSTEM(world, "RenderReverseHeightSystem", ecs.PostUpdate, &render_reverse_height_system);
     var render_environment_system = @import("ecs/systems/render_environment_pass.zig").system();
     ecs.SYSTEM(world, "RenderEnvironmentSystem", ecs.PostUpdate, &render_environment_system);
+    var render_glow_system = @import("ecs/systems/render_glow_pass.zig").system();
+    ecs.SYSTEM(world, "RenderGlowSystem", ecs.PostUpdate, &render_glow_system);
+    var render_bloom_h_system = @import("ecs/systems/render_bloom_h_pass.zig").system();
+    ecs.SYSTEM(world, "RenderBloomHSystem", ecs.PostUpdate, &render_bloom_h_system);
+    var render_bloom_system = @import("ecs/systems/render_bloom_pass.zig").system();
+    ecs.SYSTEM(world, "RenderBloomSystem", ecs.PostUpdate, &render_bloom_system);
     var render_final_system = @import("ecs/systems/render_final_pass.zig").system();
     ecs.SYSTEM(world, "RenderFinalSystem", ecs.PostUpdate, &render_final_system);
 
@@ -583,6 +649,12 @@ fn deinit(allocator: std.mem.Allocator) void {
     // Remove all particle renderers so observer can free particles.
     ecs.remove_all(state.world, ecs.id(components.ParticleRenderer));
 
+    allocator.free(state.atlas.sprites);
+    allocator.free(state.atlas.animations);
+
+    allocator.free(state.light_atlas.sprites);
+    allocator.free(state.light_atlas.animations);
+
     state.batcher.deinit();
     state.cells.deinit();
     zgui.backend.deinit();
@@ -644,6 +716,9 @@ fn update() void {
         if (zgui.radioButton("Environment", .{ .active = state.output_channel == .environment })) state.output_channel = .environment;
         zgui.sameLine(.{});
         if (zgui.radioButton("Light", .{ .active = state.output_channel == .light })) state.output_channel = .light;
+        if (zgui.radioButton("Glow", .{ .active = state.output_channel == .glow })) state.output_channel = .glow;
+        zgui.sameLine(.{});
+        if (zgui.radioButton("Bloom", .{ .active = state.output_channel == .bloom })) state.output_channel = .bloom;
 
         _ = zgui.sliderFloat("Timescale", .{ .v = &state.time.scale, .min = 0.1, .max = 2400.0 });
         zgui.bulletText("Day: {d:.4}, Hour: {d:.4}", .{ state.time.day(), state.time.hour() });
