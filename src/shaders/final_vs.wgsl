@@ -10,7 +10,7 @@ struct VertexOut {
     @location(1) color: vec4<f32>,
     @location(2) data: vec3<f32>
 }
-@stage(vertex) fn main(
+@vertex fn main(
     @location(0) position: vec3<f32>,
     @location(1) uv: vec2<f32>,
     @location(2) color: vec4<f32>,

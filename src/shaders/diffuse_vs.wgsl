@@ -10,7 +10,7 @@ struct VertexOut {
     @location(2) color: vec4<f32>,
     @location(3) data: vec3<f32>
 }
-@stage(vertex) fn main(
+@vertex fn main(
     @builtin(vertex_index) in_vertex_index: u32,
     @location(0) position: vec3<f32>,
     @location(1) uv: vec2<f32>,
@@ -18,13 +18,13 @@ struct VertexOut {
     @location(3) data: vec3<f32>
 ) -> VertexOut {
     var output: VertexOut;
-    let vert_mode = i32(data[0]);
-    let time = data[2];
+    var vert_mode = i32(data[0]);
+    var time = data[2];
     var pos = position;
 
     // Top sway
     if (vert_mode == 1) {
-        let vert_ind = i32(in_vertex_index) % 4;
+        var vert_ind = i32(in_vertex_index) % 4;
         if (vert_ind == 0) {
             pos.x += sin(time) * 5.0;
         } else if (vert_ind == 1) {

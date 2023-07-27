@@ -13,7 +13,7 @@ struct FinalUniforms {
 @group(0) @binding(7) var light: texture_2d<f32>;
 @group(0) @binding(8) var bloom: texture_2d<f32>;
 @group(0) @binding(9) var light_sampler: sampler;
-@stage(fragment) fn main(
+@fragment fn main(
     @location(0) uv: vec2<f32>,
     @location(1) color: vec4<f32>,
     @location(2) data: vec3<f32>,
@@ -34,10 +34,10 @@ struct FinalUniforms {
         return textureSample(bloom, diffuse_sampler, uv);
     } 
 
-    let diffuse = textureSample(diffuse, diffuse_sampler, uv);
-    let environment = textureSample(environment, diffuse_sampler, uv);
-    let bloom_mask = 1.0 - textureSample(height, diffuse_sampler, uv).bbbb;
-    let bloom = textureSample(bloom, light_sampler, uv) * bloom_mask * 0.3;
+    var diffuse = textureSample(diffuse, diffuse_sampler, uv);
+    var environment = textureSample(environment, diffuse_sampler, uv);
+    var bloom_mask = 1.0 - textureSample(height, diffuse_sampler, uv).bbbb;
+    var bloom = textureSample(bloom, light_sampler, uv) * bloom_mask * 0.3;
 
     return diffuse * environment * color + bloom;
 }
