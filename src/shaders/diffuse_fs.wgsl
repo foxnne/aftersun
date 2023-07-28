@@ -8,7 +8,7 @@ fn max3(channels: vec3<f32>) -> i32 {
     return i32(max(channels.z, max(channels.y , channels.x)));
 }
 
-fn pavarteCoord(base: vec3<f32>, vert: vec3<f32>) -> vec2<f32> {
+fn paletteCoord(base: vec3<f32>, vert: vec3<f32>) -> vec2<f32> {
     var channels = vec3(
         clamp(base.x + vert.x * multiplier, 0.0, 1.0),
         clamp(base.y + vert.y * multiplier, 0.0, 1.0) * 2.0,
@@ -30,7 +30,7 @@ fn pavarteCoord(base: vec3<f32>, vert: vec3<f32>) -> vec2<f32> {
     var base_color = textureSample(diffuse, diffuse_sampler, uv);
 
     var palette_size = textureDimensions(palette);
-    var palette_coord = pavarteCoord(base_color.rgb, (color.rgb * 255.0) / f32(palette_size.y - 1));
+    var palette_coord = paletteCoord(base_color.rgb, (color.rgb * 255.0) / f32(palette_size.y - 1));
     var sample = textureSample(palette, diffuse_sampler, palette_coord) * base_color.a;
 
     if (frag_mode == 1) {
