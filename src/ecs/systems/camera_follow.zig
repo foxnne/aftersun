@@ -20,7 +20,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
             if (ecs.field(it, components.Position, 2)) |positions| {
                 const position = positions[i].toF32x4();
                 const velocity = if (ecs.field(it, components.Velocity, 3)) |velocities| velocities[i].toF32x4() else zm.f32x4s(0);
-                const target = position + velocity * zm.f32x4s(game.settings.pixels_per_unit);
+                const target = position - velocity * zm.f32x4s(game.settings.pixels_per_unit);
 
                 game.state.camera.position = zm.trunc(target);
             }

@@ -37,7 +37,7 @@ struct FinalUniforms {
     var diffuse = textureSample(diffuse, diffuse_sampler, uv);
     var environment = textureSample(environment, diffuse_sampler, uv);
     var bloom_mask = 1.0 - textureSample(height, diffuse_sampler, uv).bbbb;
-    var bloom = textureSample(bloom, light_sampler, uv) * bloom_mask * 0.3;
+    var bloom = textureSample(bloom, light_sampler, uv) * bloom_mask * 0.35;
 
     return diffuse * environment * color + bloom;
 }
