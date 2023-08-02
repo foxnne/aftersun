@@ -23,7 +23,7 @@ pub const zoom_scroll_tolerance: f32 = 0.2;
 pub const pixels_per_unit: f32 = 32.0;
 
 /// The seconds it takes for a move to be completed from one tile to another.
-/// TODO: Embed this in character stats.
+// TODO: Embed this in character stats.
 pub const movement_cooldown: f32 = 0.38;
 
 /// The number of sprites expected per batch to the batcher.
@@ -36,7 +36,7 @@ pub const zgui_font_size = 14;
 pub const cell_size = 8;
 
 /// Speed at which the camera will lerp to new velocity.
-pub const camera_follow_speed = 1.5;
+pub const camera_follow_speed = 1.0;
 
 /// Padding to use when displaying inspection window popup.
 pub const inspect_window_padding = 4.0;
