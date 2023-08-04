@@ -113,13 +113,11 @@ pub const Entities = struct {
 fn register(world: *ecs.world_t, comptime T: type) void {
     const decls = comptime std.meta.declarations(T);
     inline for (decls) |decl| {
-        if (decl.is_pub) {
-            const Type = @field(T, decl.name);
-            if (@TypeOf(Type) == type) {
-                if (@sizeOf(Type) > 0) {
-                    ecs.COMPONENT(world, Type);
-                } else ecs.TAG(world, Type);
-            }
+        const Type = @field(T, decl.name);
+        if (@TypeOf(Type) == type) {
+            if (@sizeOf(Type) > 0) {
+                ecs.COMPONENT(world, Type);
+            } else ecs.TAG(world, Type);
         }
     }
 }
@@ -135,7 +133,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     var prefabs = Prefabs.init(world);
     prefabs.create(world);
 
-    const gctx = try zgpu.GraphicsContext.create(allocator, window);
+    const gctx = try zgpu.GraphicsContext.create(allocator, window, .{});
 
     var arena_state = std.heap.ArenaAllocator.init(allocator);
     defer arena_state.deinit();
