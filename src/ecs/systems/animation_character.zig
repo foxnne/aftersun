@@ -49,6 +49,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 
                             if (move_direction != .none) {
                                 animators[i].state = components.CharacterAnimator.State.walk;
+                                animators[i].fps = 12;
                                 body_directions[i] = move_direction;
 
                                 // Clamp face direction to directions close to the movement direction
@@ -119,6 +120,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                 }
                             } else {
                                 animators[i].state = components.CharacterAnimator.State.idle;
+                                animators[i].fps = 8;
 
                                 // When idle, only allow the 4 angled directions as body directions.
                                 body_directions[i] = switch (body_directions[i]) {
