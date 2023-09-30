@@ -58,7 +58,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                             if (ecs.field(it, components.Position, 3)) |positions| {
                                 new_particle.position[0] = positions[i].x + renderers[i].offset[0];
                                 new_particle.position[1] = positions[i].y + renderers[i].offset[1];
-                                new_particle.position[2] = positions[i].z;
+                                new_particle.position[2] = positions[i].z + 16.0;
                             }
 
                             var prng = std.rand.DefaultPrng.init(@as(u64, @intCast(j)));
