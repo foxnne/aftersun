@@ -508,7 +508,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
             .velocity_min = .{ -12.0, 28.0 },
             .velocity_max = .{ 0.0, 46.0 },
             .start_color = math.Color.initFloats(0.5, 0.5, 0.5, 1.0).toSlice(),
-            .end_color = math.Color.initFloats(1.0, 1.0, 1.0, 1.0).toSlice(),
+            .end_color = math.Color.initFloats(1.0, 1.0, 1.0, 0.3).toSlice(),
         });
         _ = ecs.set(world, campfire, components.LightRenderer, .{
             .index = assets.aftersun_lights_atlas.point256_png,
