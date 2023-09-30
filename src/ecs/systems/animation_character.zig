@@ -49,7 +49,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 
                             if (move_direction != .none) {
                                 animators[i].state = components.CharacterAnimator.State.walk;
-                                animators[i].fps = 12;
+                                animators[i].fps = 11;
                                 body_directions[i] = move_direction;
 
                                 // Clamp face direction to directions close to the movement direction

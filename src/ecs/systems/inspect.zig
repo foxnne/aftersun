@@ -76,7 +76,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
             const window_padding = game.settings.inspect_window_padding * scale;
             const window_spacing = game.settings.inspect_window_spacing * scale;
 
-            const bg = game.math.Color.initBytes(225, 225, 225, @as(u8, @intFromFloat(225.0 * game.state.controls.mouse.tile_timer)));
+            const bg = game.math.Color.initBytes(225, 225, 225, @as(u8, @intFromFloat(140.0 * game.state.controls.mouse.tile_timer)));
 
             zgui.pushStyleColor4f(.{ .idx = zgui.StyleCol.window_bg, .c = bg.toSlice() });
             defer zgui.popStyleColor(.{ .count = 1 });
