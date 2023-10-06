@@ -241,6 +241,106 @@ pub var Idle_N_HairF01 = [_]usize {
     assets.aftersun_atlas.Idle_N_6_HairF01,
     assets.aftersun_atlas.Idle_N_7_HairF01,
 };
+pub var Walk_S_Back = [_]usize {
+    assets.aftersun_atlas.Walk_S_0_Back,
+    assets.aftersun_atlas.Walk_S_1_Back,
+    assets.aftersun_atlas.Walk_S_2_Back,
+    assets.aftersun_atlas.Walk_S_3_Back,
+    assets.aftersun_atlas.Walk_S_4_Back,
+    assets.aftersun_atlas.Walk_S_5_Back,
+    assets.aftersun_atlas.Walk_S_6_Back,
+    assets.aftersun_atlas.Walk_S_7_Back,
+};
+pub var Idle_S_Back = [_]usize {
+    assets.aftersun_atlas.Idle_S_0_Back,
+    assets.aftersun_atlas.Idle_S_1_Back,
+    assets.aftersun_atlas.Idle_S_2_Back,
+    assets.aftersun_atlas.Idle_S_3_Back,
+    assets.aftersun_atlas.Idle_S_4_Back,
+    assets.aftersun_atlas.Idle_S_5_Back,
+    assets.aftersun_atlas.Idle_S_6_Back,
+    assets.aftersun_atlas.Idle_S_7_Back,
+};
+pub var Walk_SE_Back = [_]usize {
+    assets.aftersun_atlas.Walk_SE_0_Back,
+    assets.aftersun_atlas.Walk_SE_1_Back,
+    assets.aftersun_atlas.Walk_SE_2_Back,
+    assets.aftersun_atlas.Walk_SE_3_Back,
+    assets.aftersun_atlas.Walk_SE_4_Back,
+    assets.aftersun_atlas.Walk_SE_5_Back,
+    assets.aftersun_atlas.Walk_SE_6_Back,
+    assets.aftersun_atlas.Walk_SE_7_Back,
+};
+pub var Idle_SE_Back = [_]usize {
+    assets.aftersun_atlas.Idle_SE_0_Back,
+    assets.aftersun_atlas.Idle_SE_1_Back,
+    assets.aftersun_atlas.Idle_SE_2_Back,
+    assets.aftersun_atlas.Idle_SE_3_Back,
+    assets.aftersun_atlas.Idle_SE_4_Back,
+    assets.aftersun_atlas.Idle_SE_5_Back,
+    assets.aftersun_atlas.Idle_SE_6_Back,
+    assets.aftersun_atlas.Idle_SE_7_Back,
+};
+pub var Walk_E_Back = [_]usize {
+    assets.aftersun_atlas.Walk_E_0_Back,
+    assets.aftersun_atlas.Walk_E_1_Back,
+    assets.aftersun_atlas.Walk_E_2_Back,
+    assets.aftersun_atlas.Walk_E_3_Back,
+    assets.aftersun_atlas.Walk_E_4_Back,
+    assets.aftersun_atlas.Walk_E_5_Back,
+    assets.aftersun_atlas.Walk_E_6_Back,
+    assets.aftersun_atlas.Walk_E_7_Back,
+};
+pub var Idle_E_Back = [_]usize {
+    assets.aftersun_atlas.Idle_E_0_Back,
+    assets.aftersun_atlas.Idle_E_1_Back,
+    assets.aftersun_atlas.Idle_E_2_Back,
+    assets.aftersun_atlas.Idle_E_3_Back,
+    assets.aftersun_atlas.Idle_E_4_Back,
+    assets.aftersun_atlas.Idle_E_5_Back,
+    assets.aftersun_atlas.Idle_E_6_Back,
+    assets.aftersun_atlas.Idle_E_7_Back,
+};
+pub var Walk_NE_Back = [_]usize {
+    assets.aftersun_atlas.Walk_NE_0_Back,
+    assets.aftersun_atlas.Walk_NE_1_Back,
+    assets.aftersun_atlas.Walk_NE_2_Back,
+    assets.aftersun_atlas.Walk_NE_3_Back,
+    assets.aftersun_atlas.Walk_NE_4_Back,
+    assets.aftersun_atlas.Walk_NE_5_Back,
+    assets.aftersun_atlas.Walk_NE_6_Back,
+    assets.aftersun_atlas.Walk_NE_7_Back,
+};
+pub var Idle_NE_Back = [_]usize {
+    assets.aftersun_atlas.Idle_NE_0_Back,
+    assets.aftersun_atlas.Idle_NE_1_Back,
+    assets.aftersun_atlas.Idle_NE_2_Back,
+    assets.aftersun_atlas.Idle_NE_3_Back,
+    assets.aftersun_atlas.Idle_NE_4_Back,
+    assets.aftersun_atlas.Idle_NE_5_Back,
+    assets.aftersun_atlas.Idle_NE_6_Back,
+    assets.aftersun_atlas.Idle_NE_7_Back,
+};
+pub var Walk_N_Back = [_]usize {
+    assets.aftersun_atlas.Walk_N_0_Back,
+    assets.aftersun_atlas.Walk_N_1_Back,
+    assets.aftersun_atlas.Walk_N_2_Back,
+    assets.aftersun_atlas.Walk_N_3_Back,
+    assets.aftersun_atlas.Walk_N_4_Back,
+    assets.aftersun_atlas.Walk_N_5_Back,
+    assets.aftersun_atlas.Walk_N_6_Back,
+    assets.aftersun_atlas.Walk_N_7_Back,
+};
+pub var Idle_N_Back = [_]usize {
+    assets.aftersun_atlas.Idle_N_0_Back,
+    assets.aftersun_atlas.Idle_N_1_Back,
+    assets.aftersun_atlas.Idle_N_2_Back,
+    assets.aftersun_atlas.Idle_N_3_Back,
+    assets.aftersun_atlas.Idle_N_4_Back,
+    assets.aftersun_atlas.Idle_N_5_Back,
+    assets.aftersun_atlas.Idle_N_6_Back,
+    assets.aftersun_atlas.Idle_N_7_Back,
+};
 pub var Walk_S_TopF01 = [_]usize {
     assets.aftersun_atlas.Walk_S_0_TopF01,
     assets.aftersun_atlas.Walk_S_1_TopF01,

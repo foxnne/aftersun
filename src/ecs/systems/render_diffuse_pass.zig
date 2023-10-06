@@ -110,6 +110,17 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         },
                     ) catch unreachable;
 
+                    // Back
+                    game.state.batcher.sprite(
+                        position,
+                        game.state.diffusemap,
+                        game.state.atlas.sprites[renderers[i].back_index],
+                        .{
+                            .flip_x = renderers[i].flip_body,
+                            .rotation = rotation,
+                        },
+                    ) catch unreachable;
+
                     // Hair
                     game.state.batcher.sprite(
                         position,

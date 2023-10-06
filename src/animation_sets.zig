@@ -103,3 +103,16 @@ pub const bottom_f_02: AnimationSet = .{
     .walk_se = animations.Walk_SE_BottomF02[0..],
     .walk_s = animations.Walk_S_BottomF02[0..],
 };
+
+pub const back_f_01: AnimationSet = .{
+    .idle_n = animations.Idle_NE_Back[0..],
+    .idle_ne = animations.Idle_NE_Back[0..],
+    .idle_e = animations.Idle_NE_Back[0..],
+    .idle_se = animations.Idle_SE_Back[0..],
+    .idle_s = animations.Idle_SE_Back[0..],
+    .walk_n = animations.Walk_N_Back[0..],
+    .walk_ne = animations.Walk_NE_Back[0..],
+    .walk_e = animations.Walk_E_Back[0..],
+    .walk_se = animations.Walk_SE_Back[0..],
+    .walk_s = animations.Walk_S_Back[0..],
+};
