@@ -100,7 +100,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         },
                     ) catch unreachable;
 
-                    // Top
+                    // Back
                     game.state.batcher.sprite(
                         position,
                         game.state.heightmap,

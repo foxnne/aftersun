@@ -56,33 +56,23 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                 }
 
                 if (ecs.field(it, components.CharacterRenderer, 4)) |renderers| {
-                    // Body
-                    game.state.batcher.sprite(
-                        position,
-                        game.state.heightmap,
-                        game.state.atlas.sprites[renderers[i].body_index],
-                        .{
-                            .flip_x = renderers[i].flip_body,
-                            .rotation = rotation,
-                        },
-                    ) catch unreachable;
 
-                    // Head
+                    // Hair
                     game.state.batcher.sprite(
                         position,
                         game.state.heightmap,
-                        game.state.atlas.sprites[renderers[i].head_index],
+                        game.state.atlas.sprites[renderers[i].hair_index],
                         .{
                             .flip_x = renderers[i].flip_head,
                             .rotation = rotation,
                         },
                     ) catch unreachable;
 
-                    // Bottom
+                    // Back
                     game.state.batcher.sprite(
                         position,
                         game.state.heightmap,
-                        game.state.atlas.sprites[renderers[i].bottom_index],
+                        game.state.atlas.sprites[renderers[i].back_index],
                         .{
                             .flip_x = renderers[i].flip_body,
                             .rotation = rotation,
@@ -100,24 +90,35 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         },
                     ) catch unreachable;
 
-                    // Top
+                    // Bottom
                     game.state.batcher.sprite(
                         position,
                         game.state.heightmap,
-                        game.state.atlas.sprites[renderers[i].back_index],
+                        game.state.atlas.sprites[renderers[i].bottom_index],
                         .{
                             .flip_x = renderers[i].flip_body,
                             .rotation = rotation,
                         },
                     ) catch unreachable;
 
-                    // Hair
+                    // Head
                     game.state.batcher.sprite(
                         position,
                         game.state.heightmap,
-                        game.state.atlas.sprites[renderers[i].hair_index],
+                        game.state.atlas.sprites[renderers[i].head_index],
                         .{
                             .flip_x = renderers[i].flip_head,
+                            .rotation = rotation,
+                        },
+                    ) catch unreachable;
+
+                    // Body
+                    game.state.batcher.sprite(
+                        position,
+                        game.state.heightmap,
+                        game.state.atlas.sprites[renderers[i].body_index],
+                        .{
+                            .flip_x = renderers[i].flip_body,
                             .rotation = rotation,
                         },
                     ) catch unreachable;
