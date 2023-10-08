@@ -90,6 +90,17 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         },
                     ) catch unreachable;
 
+                    // Feet
+                    game.state.batcher.sprite(
+                        position,
+                        game.state.heightmap,
+                        game.state.atlas.sprites[renderers[i].feet_index],
+                        .{
+                            .flip_x = renderers[i].flip_body,
+                            .rotation = rotation,
+                        },
+                    ) catch unreachable;
+
                     // Bottom
                     game.state.batcher.sprite(
                         position,

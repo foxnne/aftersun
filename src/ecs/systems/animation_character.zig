@@ -45,6 +45,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                             var body_animation: []usize = undefined;
                             var top_animation: []usize = undefined;
                             var bottom_animation: []usize = undefined;
+                            var feet_animation: []usize = undefined;
                             var hair_animation: []usize = undefined;
                             var back_animation: []usize = undefined;
 
@@ -72,30 +73,35 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                         body_animation = animators[i].body_set.walk_n;
                                         top_animation = animators[i].top_set.walk_n;
                                         bottom_animation = animators[i].bottom_set.walk_n;
+                                        feet_animation = animators[i].feet_set.walk_n;
                                         back_animation = animators[i].back_set.walk_n;
                                     },
                                     .nw, .ne => {
                                         body_animation = animators[i].body_set.walk_ne;
                                         top_animation = animators[i].top_set.walk_ne;
                                         bottom_animation = animators[i].bottom_set.walk_ne;
+                                        feet_animation = animators[i].feet_set.walk_ne;
                                         back_animation = animators[i].back_set.walk_ne;
                                     },
                                     .w, .e => {
                                         body_animation = animators[i].body_set.walk_e;
                                         top_animation = animators[i].top_set.walk_e;
                                         bottom_animation = animators[i].bottom_set.walk_e;
+                                        feet_animation = animators[i].feet_set.walk_e;
                                         back_animation = animators[i].back_set.walk_e;
                                     },
                                     .sw, .se => {
                                         body_animation = animators[i].body_set.walk_se;
                                         top_animation = animators[i].top_set.walk_se;
                                         bottom_animation = animators[i].bottom_set.walk_se;
+                                        feet_animation = animators[i].feet_set.walk_se;
                                         back_animation = animators[i].back_set.walk_se;
                                     },
                                     .s => {
                                         body_animation = animators[i].body_set.walk_s;
                                         top_animation = animators[i].top_set.walk_s;
                                         bottom_animation = animators[i].bottom_set.walk_s;
+                                        feet_animation = animators[i].feet_set.walk_s;
                                         back_animation = animators[i].back_set.walk_s;
                                     },
                                     else => {},
@@ -153,30 +159,35 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                         body_animation = animators[i].body_set.idle_n;
                                         top_animation = animators[i].top_set.idle_n;
                                         bottom_animation = animators[i].bottom_set.idle_n;
+                                        feet_animation = animators[i].feet_set.idle_n;
                                         back_animation = animators[i].back_set.idle_n;
                                     },
                                     .nw, .ne => {
                                         body_animation = animators[i].body_set.idle_ne;
                                         top_animation = animators[i].top_set.idle_ne;
                                         bottom_animation = animators[i].bottom_set.idle_ne;
+                                        feet_animation = animators[i].feet_set.idle_ne;
                                         back_animation = animators[i].back_set.idle_ne;
                                     },
                                     .w, .e => {
                                         body_animation = animators[i].body_set.idle_e;
                                         top_animation = animators[i].top_set.idle_e;
                                         bottom_animation = animators[i].bottom_set.idle_e;
+                                        feet_animation = animators[i].feet_set.idle_e;
                                         back_animation = animators[i].back_set.idle_e;
                                     },
                                     .sw, .se => {
                                         body_animation = animators[i].body_set.idle_se;
                                         top_animation = animators[i].top_set.idle_se;
                                         bottom_animation = animators[i].bottom_set.idle_se;
+                                        feet_animation = animators[i].feet_set.idle_se;
                                         back_animation = animators[i].back_set.idle_se;
                                     },
                                     .s => {
                                         body_animation = animators[i].body_set.idle_s;
                                         top_animation = animators[i].top_set.idle_s;
                                         bottom_animation = animators[i].bottom_set.idle_s;
+                                        feet_animation = animators[i].feet_set.idle_s;
                                         back_animation = animators[i].back_set.idle_s;
                                     },
                                     else => {},
@@ -224,6 +235,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                             renderers[i].head_index = head_animation[animators[i].frame];
                             renderers[i].top_index = top_animation[animators[i].frame];
                             renderers[i].bottom_index = bottom_animation[animators[i].frame];
+                            renderers[i].feet_index = feet_animation[animators[i].frame];
                             renderers[i].hair_index = hair_animation[animators[i].frame];
                             renderers[i].back_index = back_animation[animators[i].frame];
                         }

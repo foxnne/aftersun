@@ -97,6 +97,19 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         },
                     ) catch unreachable;
 
+                    // Feet
+                    game.state.batcher.sprite(
+                        position,
+                        game.state.diffusemap,
+                        game.state.atlas.sprites[renderers[i].feet_index],
+                        .{
+                            .color = renderers[i].feet_color,
+                            .frag_mode = .palette,
+                            .flip_x = renderers[i].flip_body,
+                            .rotation = rotation,
+                        },
+                    ) catch unreachable;
+
                     // Top
                     game.state.batcher.sprite(
                         position,

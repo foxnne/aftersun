@@ -451,6 +451,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         .body_index = assets.aftersun_atlas.Idle_SE_0_Body,
         .head_index = assets.aftersun_atlas.Idle_SE_0_Head,
         .bottom_index = assets.aftersun_atlas.Idle_SE_0_BottomF02,
+        .feet_index = assets.aftersun_atlas.Idle_SE_0_FeetF01,
         .top_index = assets.aftersun_atlas.Idle_SE_0_TopF02,
         .back_index = assets.aftersun_atlas.Idle_SE_0_Back,
         .hair_index = assets.aftersun_atlas.Idle_SE_0_HairF01,
@@ -459,6 +460,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         .bottom_color = math.Color.initBytes(2, 0, 0, 255).toSlice(),
         .top_color = math.Color.initBytes(3, 0, 0, 255).toSlice(),
         .hair_color = math.Color.initBytes(1, 0, 0, 255).toSlice(),
+        .feet_color = math.Color.initBytes(4, 0, 0, 255).toSlice(),
         .flip_head = true,
     });
     _ = ecs.set(world, player, components.CharacterAnimator, .{
@@ -466,6 +468,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         .body_set = animation_sets.body,
         .top_set = animation_sets.top_f_02,
         .bottom_set = animation_sets.bottom_f_02,
+        .feet_set = animation_sets.feet_f_01,
         .back_set = animation_sets.back_f_01,
         .hair_set = animation_sets.hair_f_01,
     });
