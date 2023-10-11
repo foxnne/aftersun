@@ -41,8 +41,8 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 
             if (ecs.field(it, components.Tile, 2)) |tiles| {
                 if (ecs.field(it, components.Use, 3)) |uses| {
-                    const dist_x = std.math.absInt(uses[i].target.x - tiles[i].x) catch unreachable;
-                    const dist_y = std.math.absInt(uses[i].target.y - tiles[i].y) catch unreachable;
+                    const dist_x = @abs(uses[i].target.x - tiles[i].x);
+                    const dist_y = @abs(uses[i].target.y - tiles[i].y);
 
                     if (dist_x <= 1 and dist_y <= 1) {
                         var target_entity: ?ecs.entity_t = null;

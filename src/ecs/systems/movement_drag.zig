@@ -41,8 +41,8 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 
             if (ecs.field(it, components.Tile, 2)) |tiles| {
                 if (ecs.field(it, components.Drag, 3)) |drags| {
-                    const dist_x = std.math.absInt(drags[i].start.x - tiles[i].x) catch unreachable;
-                    const dist_y = std.math.absInt(drags[i].start.y - tiles[i].y) catch unreachable;
+                    const dist_x = @abs(drags[i].start.x - tiles[i].x);
+                    const dist_y = @abs(drags[i].start.y - tiles[i].y);
 
                     if (dist_x <= 1 and dist_y <= 1 and drags[i].start.z == tiles[i].z) {
                         var target_entity: ?ecs.entity_t = null;

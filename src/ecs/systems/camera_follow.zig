@@ -21,8 +21,8 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                 const position = positions[i].toF32x4();
                 const velocity = if (ecs.field(it, components.Velocity, 3)) |velocities| velocities[i].toF32x4() else zm.f32x4s(0);
                 var target: zm.F32x4 = position;
-                target[0] -= game.math.ease(0, std.math.sign(velocity[0]) * game.settings.pixels_per_unit, @fabs(velocity[0]), .ease_in);
-                target[1] -= game.math.ease(0, std.math.sign(velocity[1]) * game.settings.pixels_per_unit, @fabs(velocity[1]), .ease_in);
+                target[0] -= game.math.ease(0, std.math.sign(velocity[0]) * game.settings.pixels_per_unit, @abs(velocity[0]), .ease_in);
+                target[1] -= game.math.ease(0, std.math.sign(velocity[1]) * game.settings.pixels_per_unit, @abs(velocity[1]), .ease_in);
                 game.state.camera.position = zm.trunc(target);
             }
         }

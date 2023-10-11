@@ -173,7 +173,7 @@ fn orderBy(e1: ecs.entity_t, c1: ?*const anyopaque, e2: ecs.entity_t, c2: ?*cons
     const position_1 = ecs.cast(components.Position, c1);
     const position_2 = ecs.cast(components.Position, c2);
 
-    if (@fabs(position_1.y - position_2.y) <= 16) {
+    if (@abs(position_1.y - position_2.y) <= 16) {
         var counter1 = if (ecs.get(game.state.world, e1, components.Tile)) |tile| tile.counter else 0;
         var counter2 = if (ecs.get(game.state.world, e2, components.Tile)) |tile| tile.counter else 0;
         return @as(c_int, @intCast(@intFromBool(counter1 > counter2))) - @as(c_int, @intCast(@intFromBool(counter1 < counter2)));
