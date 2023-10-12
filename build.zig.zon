@@ -1,22 +1,22 @@
-.{ .name = "Aftersun", .version = "0.1.0", .dependencies = .{
-    .dawn_x86_64_windows_gnu = .{
-        .url = "https://github.com/michal-z/webgpu_dawn-x86_64-windows-gnu/archive/d3a68014e6b6b53fd330a0ccba99e4dcfffddae5.tar.gz",
-        .hash = "1220f9448cde02ef3cd51bde2e0850d4489daa0541571d748154e89c6eb46c76a267",
+.{
+    .name = "Aftersun",
+    .version = "0.1.0",
+    .dependencies = .{
+        .mach_core = .{
+            .url = "https://pkg.machengine.org/mach-core/71ea86090c3095acdbc13bcc45b0666e39b53114.tar.gz",
+            .hash = "12203917ad7153ba955004d3b436ead6fc314de29d21ef0a7fda142025dd631c2709",
+        },
+        .mach_gpu_dawn = .{
+            .url = "https://pkg.machengine.org/mach-gpu-dawn/3690dfbd0b8b64203b83d651ca95b8c0d776019e.tar.gz",
+            .hash = "122037f1ecd3b4b4da9bb1b0507984d1d5286720ca8a39d562c3b6178d6dfdd199e4",
+        },
+        .direct3d_headers = .{
+            .url = "https://pkg.machengine.org/direct3d-headers/4b9e3c969d537ea09a6e512f8251e540ab5bbaca.tar.gz",
+            .hash = "1220f786406f31ae794a8eabf1f7f40c386d93755bfde2f677eb480af559130b499a",
+        },
+        .xcode_frameworks = .{
+            .url = "https://github.com/hexops/xcode-frameworks-pkg/archive/d486474a6af7fafd89e8314e0bf7eca4709f811b.tar.gz",
+            .hash = "1220293eae4bf67a7c27a18a8133621337cde91a97bc6859a9431b3b2d4217dfb5fb",
+        },
     },
-    .dawn_x86_64_linux_gnu = .{
-        .url = "https://github.com/michal-z/webgpu_dawn-x86_64-linux-gnu/archive/ea7f4c3c0142f796f69c696cae57c120b8661c62.tar.gz",
-        .hash = "122000e98fb8a591194cd104e211ee298d3b8265d7501742d107f860edfab53620f3",
-    },
-    .dawn_aarch64_linux_gnu = .{
-        .url = "https://github.com/michal-z/webgpu_dawn-aarch64-linux-gnu/archive/c1f55e740a62f6942ff046e709ecd509a005dbeb.tar.gz",
-        .hash = "12205cd13f6849f94ef7688ee88c6b74c7918a5dfb514f8a403fcc2929a0aa342627",
-    },
-    .dawn_aarch64_macos = .{
-        .url = "https://github.com/michal-z/webgpu_dawn-aarch64-macos/archive/d2360cdfff0cf4a780cb77aa47c57aca03cc6dfe.tar.gz",
-        .hash = "12201fe677e9c7cfb8984a36446b329d5af23d03dc1e4f79a853399529e523a007fa",
-    },
-    .dawn_x86_64_macos = .{
-        .url = "https://github.com/michal-z/webgpu_dawn-x86_64-macos/archive/901716b10b31ce3e0d3fe479326b41e91d59c661.tar.gz",
-        .hash = "1220b1f02f2f7edd98a078c64e3100907d90311d94880a3cc5927e1ac009d002667a",
-    },
-} }
+}

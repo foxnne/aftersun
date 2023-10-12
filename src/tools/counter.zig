@@ -1,5 +1,5 @@
 const std = @import("std");
-const game = @import("root");
+const game = @import("../aftersun.zig");
 
 pub const Counter = struct {
     var value: u64 = 0;

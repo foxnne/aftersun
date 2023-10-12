@@ -1,28 +1,30 @@
 const std = @import("std");
-const zm = @import("zmath");
+const zmath = @import("zmath");
+
+const core = @import("mach-core");
 
 pub const Color = struct {
-    value: zm.F32x4,
+    value: zmath.F32x4,
 
     pub fn initFloats(r: f32, g: f32, b: f32, a: f32) Color {
         return .{
-            .value = zm.f32x4(r, g, b, a),
+            .value = zmath.f32x4(r, g, b, a),
         };
     }
 
     pub fn initBytes(r: u8, g: u8, b: u8, a: u8) Color {
         return .{
-            .value = zm.f32x4(@as(f32, @floatFromInt(r)) / 255, @as(f32, @floatFromInt(g)) / 255, @as(f32, @floatFromInt(b)) / 255, @as(f32, @floatFromInt(a)) / 255),
+            .value = zmath.f32x4(@as(f32, @floatFromInt(r)) / 255, @as(f32, @floatFromInt(g)) / 255, @as(f32, @floatFromInt(b)) / 255, @as(f32, @floatFromInt(a)) / 255),
         };
     }
 
     pub fn lerp(self: Color, other: Color, t: f32) Color {
-        return .{ .value = zm.lerp(self.value, other.value, t) };
+        return .{ .value = zmath.lerp(self.value, other.value, t) };
     }
 
     pub fn toSlice(self: Color) [4]f32 {
         var slice: [4]f32 = undefined;
-        zm.storeArr4(&slice, self.value);
+        zmath.storeArr4(&slice, self.value);
         return slice;
     }
 
@@ -42,6 +44,15 @@ pub const Color = struct {
         };
 
         return @as(u32, @bitCast(p));
+    }
+
+    pub fn toGpuColor(self: Color) core.gpu.Color {
+        return .{
+            .r = self.value[0],
+            .g = self.value[1],
+            .b = self.value[2],
+            .a = self.value[3],
+        };
     }
 };
 

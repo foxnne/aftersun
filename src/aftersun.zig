@@ -1,11 +1,10 @@
 const std = @import("std");
-const zglfw = @import("zglfw");
-const zgpu = @import("zgpu");
-const wgpu = zgpu.wgpu;
-const zgui = @import("zgui");
 const zstbi = @import("zstbi");
-const zm = @import("zmath");
+const zmath = @import("zmath");
 const ecs = @import("zflecs");
+
+const core = @import("mach-core");
+const gpu = core.gpu;
 
 pub const name: [:0]const u8 = "Aftersun";
 pub const settings = @import("settings.zig");
@@ -36,59 +35,69 @@ test {
 const Counter = @import("tools/counter.zig").Counter;
 const Prefabs = @import("ecs/prefabs/prefabs.zig");
 
-// TODO: Find somewhere to keep track of the characters outfit and choices.
-var top: u32 = 1;
-var bottom: u32 = 1;
+pub const App = @This();
+
+timer: core.Timer,
 
 pub var state: *GameState = undefined;
+pub var content_scale: [2]f32 = undefined;
+pub var window_size: [2]f32 = undefined;
+pub var framebuffer_size: [2]f32 = undefined;
+
+var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 
 /// Holds the global game state.
 pub const GameState = struct {
-    allocator: std.mem.Allocator,
-    gctx: *zgpu.GraphicsContext,
-    world: *ecs.world_t,
+    allocator: std.mem.Allocator = undefined,
+    root_path: [:0]const u8 = undefined,
+    delta_time: f32 = 0.0,
+    game_time: f32 = 0.0,
+    world: *ecs.world_t = undefined,
     entities: Entities = .{},
-    prefabs: Prefabs,
-    camera: gfx.Camera,
-    controls: input.Controls = .{},
+    prefabs: Prefabs = undefined,
+    camera: gfx.Camera = undefined,
     time: time.Time = .{},
     environment: environment.Environment = .{},
     counter: Counter = .{},
-    cells: std.AutoArrayHashMap(components.Cell, ecs.entity_t),
+    cells: std.AutoArrayHashMap(components.Cell, ecs.entity_t) = undefined,
     output_channel: Channel = .final,
-    pipeline_default: zgpu.RenderPipelineHandle = .{},
-    pipeline_diffuse: zgpu.RenderPipelineHandle = .{},
-    pipeline_height: zgpu.RenderPipelineHandle = .{},
-    pipeline_glow: zgpu.RenderPipelineHandle = .{},
-    pipeline_bloom_h: zgpu.RenderPipelineHandle = .{},
-    pipeline_bloom: zgpu.RenderPipelineHandle = .{},
-    pipeline_environment: zgpu.RenderPipelineHandle = .{},
-    pipeline_final: zgpu.RenderPipelineHandle = .{},
-    bind_group_default: zgpu.BindGroupHandle,
-    bind_group_diffuse: zgpu.BindGroupHandle,
-    bind_group_height: zgpu.BindGroupHandle,
-    bind_group_glow: zgpu.BindGroupHandle,
-    bind_group_bloom_h: zgpu.BindGroupHandle,
-    bind_group_bloom: zgpu.BindGroupHandle,
-    bind_group_environment: zgpu.BindGroupHandle,
-    bind_group_light: zgpu.BindGroupHandle,
-    bind_group_final: zgpu.BindGroupHandle,
-    batcher: gfx.Batcher,
-    cursor_drag: *zglfw.Cursor,
-    diffusemap: gfx.Texture,
-    palettemap: gfx.Texture,
-    heightmap: gfx.Texture,
-    lightmap: gfx.Texture,
-    diffuse_output: gfx.Texture,
-    height_output: gfx.Texture,
-    glow_output: gfx.Texture,
-    bloom_h_output: gfx.Texture,
-    bloom_output: gfx.Texture,
-    reverse_height_output: gfx.Texture,
-    environment_output: gfx.Texture,
-    light_output: gfx.Texture,
-    atlas: gfx.Atlas,
-    light_atlas: gfx.Atlas,
+    pipeline_default: *gpu.RenderPipeline = undefined,
+    pipeline_diffuse: *gpu.RenderPipeline = undefined,
+    pipeline_height: *gpu.RenderPipeline = undefined,
+    pipeline_glow: *gpu.RenderPipeline = undefined,
+    pipeline_bloom_h: *gpu.RenderPipeline = undefined,
+    pipeline_bloom: *gpu.RenderPipeline = undefined,
+    pipeline_environment: *gpu.RenderPipeline = undefined,
+    pipeline_final: *gpu.RenderPipeline = undefined,
+    bind_group_default: *gpu.BindGroup = undefined,
+    bind_group_diffuse: *gpu.BindGroup = undefined,
+    bind_group_height: *gpu.BindGroup = undefined,
+    bind_group_glow: *gpu.BindGroup = undefined,
+    bind_group_bloom_h: *gpu.BindGroup = undefined,
+    bind_group_bloom: *gpu.BindGroup = undefined,
+    bind_group_environment: *gpu.BindGroup = undefined,
+    bind_group_light: *gpu.BindGroup = undefined,
+    bind_group_final: *gpu.BindGroup = undefined,
+    uniform_buffer_default: *gpu.Buffer = undefined,
+    uniform_buffer_environment: *gpu.Buffer = undefined,
+    uniform_buffer_final: *gpu.Buffer = undefined,
+    batcher: gfx.Batcher = undefined,
+    diffusemap: gfx.Texture = undefined,
+    palettemap: gfx.Texture = undefined,
+    heightmap: gfx.Texture = undefined,
+    lightmap: gfx.Texture = undefined,
+    diffuse_output: gfx.Texture = undefined,
+    height_output: gfx.Texture = undefined,
+    glow_output: gfx.Texture = undefined,
+    bloom_h_output: gfx.Texture = undefined,
+    bloom_output: gfx.Texture = undefined,
+    reverse_height_output: gfx.Texture = undefined,
+    environment_output: gfx.Texture = undefined,
+    light_output: gfx.Texture = undefined,
+    atlas: gfx.Atlas = undefined,
+    light_atlas: gfx.Atlas = undefined,
+    mouse: input.Mouse = undefined,
+    hotkeys: input.Hotkeys = undefined,
 };
 
 pub const Channel = enum(i32) {
@@ -108,265 +117,88 @@ pub const Entities = struct {
     debug: ecs.entity_t = 5001,
 };
 
-/// Registers all public declarations within the passed type
-/// as components.
-fn register(world: *ecs.world_t, comptime T: type) void {
-    const decls = comptime std.meta.declarations(T);
-    inline for (decls) |decl| {
-        const Type = @field(T, decl.name);
-        if (@TypeOf(Type) == type) {
-            if (@sizeOf(Type) > 0) {
-                ecs.COMPONENT(world, Type);
-            } else ecs.TAG(world, Type);
-        }
-    }
-}
+pub fn init(app: *App) !void {
+    const allocator = gpa.allocator();
 
-fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
-    const world = ecs.init();
-    // Ensure that auto-generated IDs are well above anything we will need.
-    ecs.set_entity_range(world, 8000, 0);
+    var buffer: [1024]u8 = undefined;
+    const root_path = std.fs.selfExeDirPath(buffer[0..]) catch ".";
 
-    register(world, components);
+    try core.init(.{
+        .title = name,
+        .size = .{ .width = 1280, .height = 720 },
+    });
 
-    //Create all of our prefabs.
-    var prefabs = Prefabs.init(world);
-    prefabs.create(world);
+    const descriptor = core.descriptor;
+    window_size = .{ @floatFromInt(core.size().width), @floatFromInt(core.size().height) };
+    framebuffer_size = .{ @floatFromInt(descriptor.width), @floatFromInt(descriptor.height) };
+    content_scale = .{
+        framebuffer_size[0] / window_size[0],
+        framebuffer_size[1] / window_size[1],
+    };
 
-    const gctx = try zgpu.GraphicsContext.create(allocator, window, .{});
+    state = try allocator.create(GameState);
+    state.* = .{ .root_path = try allocator.dupeZ(u8, root_path) };
 
-    var arena_state = std.heap.ArenaAllocator.init(allocator);
-    defer arena_state.deinit();
-    const arena = arena_state.allocator();
+    state.allocator = allocator;
 
-    zstbi.init(arena);
-    defer zstbi.deinit();
+    state.mouse = try input.Mouse.initDefault(allocator);
+    state.hotkeys = try input.Hotkeys.initDefault(allocator);
 
-    const batcher = try gfx.Batcher.init(allocator, gctx, settings.batcher_max_sprites);
+    state.batcher = try gfx.Batcher.init(allocator, settings.batcher_max_sprites);
+    state.cells = std.AutoArrayHashMap(components.Cell, ecs.entity_t).init(allocator);
+    state.camera = gfx.Camera.init(settings.design_size, window_size, zmath.f32x4s(0));
 
-    const atlas = try gfx.Atlas.initFromFile(allocator, assets.aftersun_atlas.path);
-    const light_atlas = try gfx.Atlas.initFromFile(allocator, assets.aftersun_lights_atlas.path);
+    state.atlas = try gfx.Atlas.initFromFile(allocator, assets.aftersun_atlas.path);
+    state.light_atlas = try gfx.Atlas.initFromFile(allocator, assets.aftersun_lights_atlas.path);
+
+    zstbi.init(allocator);
 
     // Load game textures.
-    const diffusemap = try gfx.Texture.loadFromFile(gctx, assets.aftersun_png.path, .{});
-    const palettemap = try gfx.Texture.loadFromFile(gctx, assets.aftersun_palette_png.path, .{});
-    const heightmap = try gfx.Texture.loadFromFile(gctx, assets.aftersun_h_png.path, .{});
-    const lightmap = try gfx.Texture.loadFromFile(gctx, assets.aftersun_lights_png.path, .{
-        .filter = wgpu.FilterMode.linear,
+    state.diffusemap = try gfx.Texture.loadFromFile(assets.aftersun_png.path, .{});
+    state.palettemap = try gfx.Texture.loadFromFile(assets.aftersun_palette_png.path, .{});
+    state.heightmap = try gfx.Texture.loadFromFile(assets.aftersun_h_png.path, .{});
+    state.lightmap = try gfx.Texture.loadFromFile(assets.aftersun_lights_png.path, .{
+        .filter = .linear,
     });
 
     // Create textures to render to.
-    const diffuse_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
-    const height_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
-    const glow_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
-    const bloom_h_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{
-        .filter = wgpu.FilterMode.linear,
+    state.diffuse_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{ .format = core.descriptor.format });
+    state.height_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{ .format = core.descriptor.format });
+    state.glow_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{ .format = core.descriptor.format });
+    state.bloom_h_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{
+        .filter = .linear,
+        .format = core.descriptor.format,
     });
-    const bloom_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{
-        .filter = wgpu.FilterMode.linear,
+    state.bloom_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{
+        .filter = .linear,
+        .format = core.descriptor.format,
     });
-    const reverse_height_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
-    const environment_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{});
-    const light_output = gfx.Texture.init(gctx, settings.design_width, settings.design_height, .{
-        .filter = wgpu.FilterMode.linear,
-    });
-
-    // Create cursors
-    const cursor_drag = try zglfw.Cursor.createStandard(.hand);
-
-    const window_size = gctx.window.getSize();
-    var camera = gfx.Camera.init(settings.design_size, .{ .w = window_size[0], .h = window_size[1] }, zm.f32x4(0, 0, 0, 0));
-
-    const bind_group_layout_default = gctx.createBindGroupLayout(&.{
-        zgpu.bufferEntry(0, .{ .vertex = true }, .uniform, true, 0),
-        zgpu.textureEntry(1, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.samplerEntry(2, .{ .fragment = true }, .filtering),
-    });
-    defer gctx.releaseResource(bind_group_layout_default);
-
-    const bind_group_default = gctx.createBindGroup(bind_group_layout_default, &[_]zgpu.BindGroupEntryInfo{
-        .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(gfx.Uniforms) },
-        .{ .binding = 1, .texture_view_handle = diffusemap.view_handle },
-        .{ .binding = 2, .sampler_handle = diffusemap.sampler_handle },
+    state.reverse_height_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{ .format = core.descriptor.format });
+    state.environment_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{ .format = core.descriptor.format });
+    state.light_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{
+        .filter = .linear,
+        .format = core.descriptor.format,
     });
 
-    const bind_group_light = gctx.createBindGroup(bind_group_layout_default, &[_]zgpu.BindGroupEntryInfo{
-        .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(gfx.Uniforms) },
-        .{ .binding = 1, .texture_view_handle = lightmap.view_handle },
-        .{ .binding = 2, .sampler_handle = lightmap.sampler_handle },
-    });
-
-    const bind_group_bloom_h = gctx.createBindGroup(bind_group_layout_default, &[_]zgpu.BindGroupEntryInfo{
-        .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(gfx.Uniforms) },
-        .{ .binding = 1, .texture_view_handle = glow_output.view_handle },
-        .{ .binding = 2, .sampler_handle = glow_output.sampler_handle },
-    });
-
-    const bind_group_bloom = gctx.createBindGroup(bind_group_layout_default, &[_]zgpu.BindGroupEntryInfo{
-        .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(gfx.Uniforms) },
-        .{ .binding = 1, .texture_view_handle = bloom_h_output.view_handle },
-        .{ .binding = 2, .sampler_handle = bloom_h_output.sampler_handle },
-    });
-
-    const bind_group_layout_diffuse = gctx.createBindGroupLayout(&.{
-        zgpu.bufferEntry(0, .{ .vertex = true }, .uniform, true, 0),
-        zgpu.textureEntry(1, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.textureEntry(2, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.samplerEntry(3, .{ .fragment = true }, .filtering),
-    });
-    defer gctx.releaseResource(bind_group_layout_diffuse);
-
-    const bind_group_diffuse = gctx.createBindGroup(bind_group_layout_diffuse, &[_]zgpu.BindGroupEntryInfo{
-        .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(gfx.Uniforms) },
-        .{ .binding = 1, .texture_view_handle = diffusemap.view_handle },
-        .{ .binding = 2, .texture_view_handle = palettemap.view_handle },
-        .{ .binding = 3, .sampler_handle = diffusemap.sampler_handle },
-    });
-
-    const bind_group_height = gctx.createBindGroup(bind_group_layout_diffuse, &[_]zgpu.BindGroupEntryInfo{
-        .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(gfx.Uniforms) },
-        .{ .binding = 1, .texture_view_handle = heightmap.view_handle },
-        .{ .binding = 2, .texture_view_handle = diffusemap.view_handle },
-        .{ .binding = 3, .sampler_handle = heightmap.sampler_handle },
-    });
-
-    const bind_group_glow = gctx.createBindGroup(bind_group_layout_diffuse, &[_]zgpu.BindGroupEntryInfo{
-        .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(gfx.Uniforms) },
-        .{ .binding = 1, .texture_view_handle = height_output.view_handle },
-        .{ .binding = 2, .texture_view_handle = diffuse_output.view_handle },
-        .{ .binding = 3, .sampler_handle = heightmap.sampler_handle },
-    });
-
-    const bind_group_layout_environment = gctx.createBindGroupLayout(&.{
-        zgpu.bufferEntry(0, .{ .vertex = true, .fragment = true }, .uniform, true, 0),
-        zgpu.textureEntry(1, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.samplerEntry(2, .{ .fragment = true }, .filtering),
-        zgpu.textureEntry(3, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.textureEntry(4, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.samplerEntry(5, .{ .fragment = true }, .filtering),
-    });
-    defer gctx.releaseResource(bind_group_layout_environment);
-
-    const EnvironmentUniforms = @import("ecs/systems/render_environment_pass.zig").EnvironmentUniforms;
-    const bind_group_environment = gctx.createBindGroup(bind_group_layout_environment, &[_]zgpu.BindGroupEntryInfo{
-        .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(EnvironmentUniforms) },
-        .{ .binding = 1, .texture_view_handle = height_output.view_handle },
-        .{ .binding = 2, .sampler_handle = height_output.sampler_handle },
-        .{ .binding = 3, .texture_view_handle = reverse_height_output.view_handle },
-        .{ .binding = 4, .texture_view_handle = light_output.view_handle },
-        .{ .binding = 5, .sampler_handle = light_output.sampler_handle },
-    });
-
-    const bind_group_layout_final = gctx.createBindGroupLayout(&.{
-        zgpu.bufferEntry(0, .{ .vertex = true, .fragment = true }, .uniform, true, 0),
-        zgpu.textureEntry(1, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.samplerEntry(2, .{ .fragment = true }, .filtering),
-        zgpu.textureEntry(3, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.textureEntry(4, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.textureEntry(5, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.textureEntry(6, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.textureEntry(7, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.textureEntry(8, .{ .fragment = true }, .float, .tvdim_2d, false),
-        zgpu.samplerEntry(9, .{ .fragment = true }, .filtering),
-    });
-    defer gctx.releaseResource(bind_group_layout_diffuse);
-
-    const FinalUniforms = @import("ecs/systems/render_final_pass.zig").FinalUniforms;
-    const bind_group_final = gctx.createBindGroup(bind_group_layout_final, &[_]zgpu.BindGroupEntryInfo{
-        .{ .binding = 0, .buffer_handle = gctx.uniforms.buffer, .offset = 0, .size = @sizeOf(FinalUniforms) },
-        .{ .binding = 1, .texture_view_handle = diffuse_output.view_handle },
-        .{ .binding = 2, .sampler_handle = diffuse_output.sampler_handle },
-        .{ .binding = 3, .texture_view_handle = environment_output.view_handle },
-        .{ .binding = 4, .texture_view_handle = height_output.view_handle },
-        .{ .binding = 5, .texture_view_handle = glow_output.view_handle },
-        .{ .binding = 6, .texture_view_handle = reverse_height_output.view_handle },
-        .{ .binding = 7, .texture_view_handle = light_output.view_handle },
-        .{ .binding = 8, .texture_view_handle = bloom_output.view_handle },
-        .{ .binding = 9, .sampler_handle = light_output.sampler_handle },
-    });
-
-    state = try allocator.create(GameState);
-    state.* = .{
-        .allocator = allocator,
-        .gctx = gctx,
-        .world = world,
-        .prefabs = prefabs,
-        .camera = camera,
-        .batcher = batcher,
-        .cells = std.AutoArrayHashMap(components.Cell, ecs.entity_t).init(allocator),
-        .atlas = atlas,
-        .light_atlas = light_atlas,
-        .diffusemap = diffusemap,
-        .palettemap = palettemap,
-        .heightmap = heightmap,
-        .lightmap = lightmap,
-        .diffuse_output = diffuse_output,
-        .height_output = height_output,
-        .glow_output = glow_output,
-        .bloom_h_output = bloom_h_output,
-        .bloom_output = bloom_output,
-        .reverse_height_output = reverse_height_output,
-        .environment_output = environment_output,
-        .light_output = light_output,
-        .bind_group_default = bind_group_default,
-        .bind_group_diffuse = bind_group_diffuse,
-        .bind_group_height = bind_group_height,
-        .bind_group_glow = bind_group_glow,
-        .bind_group_bloom_h = bind_group_bloom_h,
-        .bind_group_bloom = bind_group_bloom,
-        .bind_group_environment = bind_group_environment,
-        .bind_group_light = bind_group_light,
-        .bind_group_final = bind_group_final,
-        .cursor_drag = cursor_drag,
+    app.* = .{
+        .timer = try core.Timer.start(),
     };
 
-    // Create render pipelines.
-    {
-        // (Async) Create default render pipeline.
-        gfx.utils.createPipelineAsync(allocator, bind_group_layout_default, .{}, &state.pipeline_default);
+    try gfx.init(state);
 
-        // (Async) Create diffuse render pipeline.
-        gfx.utils.createPipelineAsync(allocator, bind_group_layout_diffuse, .{
-            .vertex_shader = shaders.diffuse_vs,
-            .fragment_shader = shaders.diffuse_fs,
-        }, &state.pipeline_diffuse);
+    // Set up ECS world
+    const world = ecs.init();
+    state.world = world;
 
-        // (Async) Create height render pipeline.
-        gfx.utils.createPipelineAsync(allocator, bind_group_layout_diffuse, .{
-            .vertex_shader = shaders.diffuse_vs,
-            .fragment_shader = shaders.height_fs,
-        }, &state.pipeline_height);
+    // Ensure that auto-generated IDs are well above anything we will need.
+    ecs.set_entity_range(world, 8000, 0);
 
-        // (Async) Create glow render pipeline.
-        gfx.utils.createPipelineAsync(allocator, bind_group_layout_diffuse, .{
-            .vertex_shader = shaders.diffuse_vs,
-            .fragment_shader = shaders.glow_fs,
-        }, &state.pipeline_glow);
+    // Register all components
+    components.register(world);
 
-        // (Async) Create bloom_h render pipeline.
-        gfx.utils.createPipelineAsync(allocator, bind_group_layout_default, .{
-            .vertex_shader = shaders.default_vs,
-            .fragment_shader = shaders.bloom_h_fs,
-        }, &state.pipeline_bloom_h);
-
-        // (Async) Create bloom render pipeline.
-        gfx.utils.createPipelineAsync(allocator, bind_group_layout_default, .{
-            .vertex_shader = shaders.default_vs,
-            .fragment_shader = shaders.bloom_fs,
-        }, &state.pipeline_bloom);
-
-        // (Async) Create environment render pipeline.
-        gfx.utils.createPipelineAsync(allocator, bind_group_layout_environment, .{
-            .vertex_shader = shaders.environment_vs,
-            .fragment_shader = shaders.environment_fs,
-        }, &state.pipeline_environment);
-
-        // (Async) Create final render pipeline.
-        gfx.utils.createPipelineAsync(allocator, bind_group_layout_final, .{
-            .vertex_shader = shaders.final_vs,
-            .fragment_shader = shaders.final_fs,
-        }, &state.pipeline_final);
-    }
+    // Create all of our prefabs
+    var prefabs = Prefabs.init(world);
+    prefabs.create(world);
 
     // - Cooldown
     var cooldown_system = @import("ecs/systems/cooldown.zig").system();
@@ -387,8 +219,8 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
     ecs.SYSTEM(world, "VelocitySystem", ecs.OnUpdate, &velocity_system);
 
     // - Other
-    var inspect_system = @import("ecs/systems/inspect.zig").system();
-    ecs.SYSTEM(world, "InspectSystem", ecs.OnUpdate, &inspect_system);
+    // var inspect_system = @import("ecs/systems/inspect.zig").system();
+    // ecs.SYSTEM(world, "InspectSystem", ecs.OnUpdate, &inspect_system);
     var stack_system = @import("ecs/systems/stack.zig").system();
     ecs.SYSTEM(world, "StackSystem", ecs.OnUpdate, &stack_system);
     var use_system = @import("ecs/systems/use.zig").system(world);
@@ -504,7 +336,7 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
         ecs.add_pair(world, campfire, ecs.id(components.Trigger), ecs.id(components.Cook));
         _ = ecs.set(world, campfire, components.ParticleRenderer, .{
             .particles = try allocator.alloc(components.ParticleRenderer.Particle, 32),
-            .offset = zm.f32x4(0, settings.pixels_per_unit / 1.5, 0, 0),
+            .offset = zmath.f32x4(0, settings.pixels_per_unit / 1.5, 0, 0),
         });
         _ = ecs.set(world, campfire, components.ParticleAnimator, .{
             .animation = &animations.Smoke_Layer,
@@ -644,262 +476,133 @@ fn init(allocator: std.mem.Allocator, window: *zglfw.Window) !*GameState {
             .vert_mode = .top_sway,
         });
     }
-
-    return state;
 }
 
-fn deinit(allocator: std.mem.Allocator) void {
-    // Remove all particle renderers so observer can free particles.
-    ecs.remove_all(state.world, ecs.id(components.ParticleRenderer));
-
-    allocator.free(state.atlas.sprites);
-    allocator.free(state.atlas.animations);
-
-    allocator.free(state.light_atlas.sprites);
-    allocator.free(state.light_atlas.animations);
-
-    state.batcher.deinit();
-    state.cells.deinit();
-    zgui.backend.deinit();
-    zgui.deinit();
-    state.gctx.destroy(allocator);
-    allocator.destroy(state);
+pub fn updateMainThread(_: *App) !bool {
+    return false;
 }
 
-fn update() void {
-    zgui.backend.newFrame(state.gctx.swapchain_descriptor.width, state.gctx.swapchain_descriptor.height);
+pub fn update(app: *App) !bool {
+    state.delta_time = app.timer.lap();
+    state.game_time += state.delta_time;
 
-    // Handle setting mouse cursor as with imgui we need to each frame.
-    switch (state.controls.mouse.cursor) {
-        .standard => {
-            zgui.setMouseCursor(.arrow);
-        },
-        .drag => {
-            zgui.setMouseCursor(.hand);
-        },
+    const descriptor = core.descriptor;
+    window_size = .{ @floatFromInt(core.size().width), @floatFromInt(core.size().height) };
+    framebuffer_size = .{ @floatFromInt(descriptor.width), @floatFromInt(descriptor.height) };
+    content_scale = .{
+        framebuffer_size[0] / window_size[0],
+        framebuffer_size[1] / window_size[1],
+    };
+
+    var iter = core.pollEvents();
+    while (iter.next()) |event| {
+        switch (event) {
+            .key_press => |key_press| {
+                state.hotkeys.setHotkeyState(key_press.key, key_press.mods, .press);
+            },
+            .key_repeat => |key_repeat| {
+                state.hotkeys.setHotkeyState(key_repeat.key, key_repeat.mods, .repeat);
+            },
+            .key_release => |key_release| {
+                state.hotkeys.setHotkeyState(key_release.key, key_release.mods, .release);
+            },
+            .mouse_scroll => |mouse_scroll| {
+                state.mouse.setScrollState(mouse_scroll.xoffset, mouse_scroll.yoffset);
+            },
+            .mouse_motion => |mouse_motion| {
+                state.mouse.position = .{ @floatCast(mouse_motion.pos.x * content_scale[0]), @floatCast(mouse_motion.pos.y * content_scale[1]) };
+            },
+            .mouse_press => |mouse_press| {
+                state.mouse.setButtonState(mouse_press.button, mouse_press.mods, .press);
+            },
+            .mouse_release => |mouse_release| {
+                state.mouse.setButtonState(mouse_release.button, mouse_release.mods, .release);
+            },
+            .close => {
+                return true;
+            },
+            .framebuffer_resize => |size| {
+                state.camera.frameBufferResize(size);
+            },
+            else => {},
+        }
     }
 
     _ = ecs.progress(state.world, 0);
 
-    if (zgui.begin("Prefabs", .{})) {
-        const prefab_names = comptime std.meta.fieldNames(Prefabs);
-        inline for (prefab_names) |n| {
-            if (n[0] != '_') {
-                if (zgui.button(zgui.formatZ("{s}", .{n}), .{ .w = -1 })) {
-                    if (ecs.get(state.world, state.entities.player, components.Tile)) |tile| {
-                        if (ecs.get(state.world, state.entities.player, components.Position)) |position| {
-                            const new = ecs.new_w_id(state.world, ecs.pair(ecs.IsA, ecs.lookup(state.world, n ++ &[_:0]u8{})));
-                            _ = ecs.set(state.world, new, components.Position, position.*);
-                            const end = tile.*;
-                            const start: components.Tile = .{ .x = end.x, .y = end.y, .z = end.z + 1 };
-                            _ = ecs.set(state.world, new, components.Tile, start);
-                            _ = ecs.set_pair(state.world, new, ecs.id(components.Request), ecs.id(components.Movement), components.Movement, .{ .start = start, .end = end, .curve = .sin });
-                            _ = ecs.set_pair(state.world, new, ecs.id(components.Cooldown), ecs.id(components.Movement), components.Cooldown, .{ .end = settings.movement_cooldown / 2 });
-                        }
-                    }
-                }
-            }
-        }
-    }
-    zgui.end();
-
-    if (zgui.begin("Game Settings", .{})) {
-        zgui.bulletText(
-            "Average :  {d:.3} ms/frame ({d:.1} fps)",
-            .{ state.gctx.stats.average_cpu_time, state.gctx.stats.fps },
-        );
-
-        zgui.bulletText("Channel:", .{});
-        if (zgui.radioButton("Final", .{ .active = state.output_channel == .final })) state.output_channel = .final;
-        zgui.sameLine(.{});
-        if (zgui.radioButton("Diffuse", .{ .active = state.output_channel == .diffuse })) state.output_channel = .diffuse;
-        if (zgui.radioButton("Height##1", .{ .active = state.output_channel == .height })) state.output_channel = .height;
-        zgui.sameLine(.{});
-        if (zgui.radioButton("Reverse Height", .{ .active = state.output_channel == .reverse_height })) state.output_channel = .reverse_height;
-        if (zgui.radioButton("Environment", .{ .active = state.output_channel == .environment })) state.output_channel = .environment;
-        zgui.sameLine(.{});
-        if (zgui.radioButton("Light", .{ .active = state.output_channel == .light })) state.output_channel = .light;
-        if (zgui.radioButton("Glow", .{ .active = state.output_channel == .glow })) state.output_channel = .glow;
-        zgui.sameLine(.{});
-        if (zgui.radioButton("Bloom", .{ .active = state.output_channel == .bloom })) state.output_channel = .bloom;
-
-        _ = zgui.sliderFloat("Timescale", .{ .v = &state.time.scale, .min = 0.1, .max = 2400.0 });
-        zgui.bulletText("Day: {d:.4}, Hour: {d:.4}", .{ state.time.day(), state.time.hour() });
-        zgui.bulletText("Phase: {s}, Next Phase: {s}", .{ state.environment.phase().name, state.environment.nextPhase().name });
-        zgui.bulletText("Ambient XY Angle: {d:.4}", .{state.environment.ambientXYAngle()});
-        zgui.bulletText("Ambient Z Angle: {d:.4}", .{state.environment.ambientZAngle()});
-
-        zgui.bulletText("Movement Input: {s}", .{state.controls.movement().fmt()});
-
-        if (ecs.get(state.world, state.entities.player, components.Velocity)) |velocity| {
-            zgui.bulletText("Velocity: x: {d} y: {d}", .{ velocity.x, velocity.y });
-        }
-
-        if (ecs.get(state.world, state.entities.player, components.Tile)) |tile| {
-            zgui.bulletText("Tile: x: {d}, y: {d}, z: {d}", .{ tile.x, tile.y, tile.z });
-        }
-
-        if (ecs.get_id(state.world, state.entities.player, ecs.pair(ecs.id(components.Cell), ecs.Wildcard))) |cell_ptr| {
-            const cell = ecs.cast(components.Cell, cell_ptr);
-            zgui.bulletText("Cell: x: {d}, y: {d}, z: {d}", .{ cell.x, cell.y, cell.z });
-        }
-
-        if (ecs.get_id(state.world, state.entities.player, ecs.pair(ecs.id(components.Direction), ecs.id(components.Movement)))) |direction_ptr| {
-            const direction = ecs.cast(components.Direction, direction_ptr);
-            zgui.bulletText("Movement Direction: {s}", .{direction.fmt()});
-        }
-
-        if (ecs.get_id(state.world, state.entities.player, ecs.pair(ecs.id(components.Direction), ecs.id(components.Head)))) |direction_ptr| {
-            const direction = ecs.cast(components.Direction, direction_ptr);
-            zgui.bulletText("Head Direction: {s}", .{direction.fmt()});
-        }
-
-        if (ecs.get_id(state.world, state.entities.player, ecs.pair(ecs.id(components.Direction), ecs.id(components.Body)))) |direction_ptr| {
-            const direction = ecs.cast(components.Direction, direction_ptr);
-            zgui.bulletText("Body Direction: {s}", .{direction.fmt()});
-        }
-
-        if (ecs.get_mut(state.world, state.entities.player, components.Position)) |position| {
-            var z = position.z;
-            _ = zgui.sliderFloat("Height##2", .{ .v = &z, .min = 0.0, .max = 128.0 });
-            position.z = z;
-        }
-
-        if (ecs.get_mut(state.world, state.entities.player, components.CharacterAnimator)) |animator| {
-            zgui.bulletText("Player Clothing:", .{});
-            if (zgui.radioButton("TopF01", .{ .active = top == 0 })) {
-                top = 0;
-                animator.top_set = animation_sets.top_f_01;
-            }
-            zgui.sameLine(.{});
-            if (zgui.radioButton("TopF02", .{ .active = top == 1 })) {
-                top = 1;
-                animator.top_set = animation_sets.top_f_02;
-            }
-            if (zgui.radioButton("BottomF01", .{ .active = bottom == 0 })) {
-                bottom = 0;
-                animator.bottom_set = animation_sets.bottom_f_01;
-            }
-            zgui.sameLine(.{});
-            if (zgui.radioButton("BottomF02", .{ .active = bottom == 1 })) {
-                bottom = 1;
-                animator.bottom_set = animation_sets.bottom_f_02;
-            }
-        }
-    }
-    zgui.end();
-}
-
-fn draw() void {
-    const swapchain_texv = state.gctx.swapchain.getCurrentTextureView();
-    defer swapchain_texv.release();
-
-    const zgui_commands = commands: {
-        const encoder = state.gctx.device.createCommandEncoder(null);
-        defer encoder.release();
-
-        // Gui pass.
-        {
-            const pass = zgpu.beginRenderPassSimple(encoder, .load, swapchain_texv, null, null, null);
-            defer zgpu.endReleasePass(pass);
-            zgui.backend.draw(pass);
-        }
-
-        break :commands encoder.finish(null);
-    };
-    defer zgui_commands.release();
-
-    const batcher_commands = state.batcher.finish() catch unreachable;
+    const batcher_commands = try state.batcher.finish();
     defer batcher_commands.release();
 
-    state.gctx.submit(&.{ batcher_commands, zgui_commands });
+    core.queue.submit(&.{batcher_commands});
+    core.swap_chain.present();
 
-    if (state.gctx.present() == .swap_chain_resized) {
-        state.camera.setWindow(state.gctx.window);
+    for (state.hotkeys.hotkeys) |*hotkey| {
+        hotkey.previous_state = hotkey.state;
     }
+
+    for (state.mouse.buttons) |*button| {
+        button.previous_state = button.state;
+    }
+
+    state.mouse.previous_position = state.mouse.position;
+
+    return false;
 }
 
-pub fn main() !void {
-    // Change current working directory to where the executable is located.
-    {
-        var buffer: [1024]u8 = undefined;
-        const path = std.fs.selfExeDirPath(buffer[0..]) catch ".";
-        std.os.chdir(path) catch {};
-    }
+pub fn deinit(_: *App) void {
+    // Remove all particle renderers so observer can free particles.
+    ecs.remove_all(state.world, ecs.id(components.ParticleRenderer));
 
-    try zglfw.init();
-    defer zglfw.terminate();
+    state.pipeline_default.release();
+    state.pipeline_diffuse.release();
+    state.pipeline_height.release();
+    state.pipeline_glow.release();
+    state.pipeline_environment.release();
+    state.pipeline_bloom.release();
+    state.pipeline_bloom_h.release();
+    state.pipeline_final.release();
 
-    // Create window
-    const window = try zglfw.Window.create(settings.design_width, settings.design_height, name, null);
-    defer window.destroy();
-    window.setSizeLimits(400, 400, -1, -1);
+    state.bind_group_default.release();
+    state.bind_group_diffuse.release();
+    state.bind_group_height.release();
+    state.bind_group_environment.release();
+    state.bind_group_glow.release();
+    state.bind_group_bloom.release();
+    state.bind_group_bloom_h.release();
+    state.bind_group_final.release();
 
-    // Set callbacks
-    _ = window.setCursorPosCallback(input.callbacks.cursor);
-    _ = window.setScrollCallback(input.callbacks.scroll);
-    _ = window.setKeyCallback(input.callbacks.key);
-    _ = window.setMouseButtonCallback(input.callbacks.button);
+    state.diffusemap.deinit();
+    state.palettemap.deinit();
+    state.lightmap.deinit();
+    state.heightmap.deinit();
 
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+    state.diffuse_output.deinit();
+    state.height_output.deinit();
+    state.environment_output.deinit();
+    state.glow_output.deinit();
+    state.bloom_output.deinit();
+    state.bloom_h_output.deinit();
+    state.light_output.deinit();
+    state.reverse_height_output.deinit();
 
-    const allocator = gpa.allocator();
+    state.allocator.free(state.atlas.sprites);
+    state.allocator.free(state.atlas.animations);
 
-    state = try init(allocator, window);
-    defer deinit(allocator);
+    state.allocator.free(state.light_atlas.sprites);
+    state.allocator.free(state.light_atlas.animations);
 
-    const scale_factor = scale_factor: {
-        const scale = window.getContentScale();
-        break :scale_factor @max(scale[0], scale[1]);
-    };
+    state.allocator.free(state.mouse.buttons);
+    state.allocator.free(state.hotkeys.hotkeys);
 
-    zgui.init(allocator);
-    zgui.io.setIniFilename(assets.root ++ "imgui.ini");
-    _ = zgui.io.addFontFromFile(assets.root ++ "fonts/CozetteVector.ttf", settings.zgui_font_size * scale_factor);
-    zgui.backend.init(window, state.gctx.device, @intFromEnum(zgpu.GraphicsContext.swapchain_format));
+    state.batcher.deinit();
+    state.cells.clearAndFree();
+    state.cells.deinit();
 
-    // TODO: Move GUI styling and color to its own file
-    // Base style
-    var style = zgui.getStyle();
-    style.window_rounding = 10.0 * scale_factor;
-    style.frame_rounding = 10.0 * scale_factor;
-    style.window_padding = .{ 4.0 * scale_factor, 4.0 * scale_factor };
-    style.item_spacing = .{ 4.0 * scale_factor, 4.0 * scale_factor };
-    style.window_title_align = .{ 0.5, 0.5 };
-    style.window_menu_button_position = zgui.Direction.none;
+    state.allocator.free(state.root_path);
 
-    const bg = math.Color.initBytes(225, 225, 225, 225).toSlice();
-    const fg = math.Color.initBytes(245, 245, 245, 225).toSlice();
-    const text = math.Color.initBytes(0, 0, 0, 225).toSlice();
-    const text_disabled = math.Color.initBytes(80, 80, 80, 255).toSlice();
+    state.allocator.destroy(state);
 
-    // Base colors
-    style.setColor(zgui.StyleCol.text, text);
-    style.setColor(zgui.StyleCol.text_disabled, text_disabled);
-    style.setColor(zgui.StyleCol.border, .{ 0.0, 0.0, 0.0, 0.0 });
-    style.setColor(zgui.StyleCol.menu_bar_bg, bg);
-    style.setColor(zgui.StyleCol.header, bg);
-    style.setColor(zgui.StyleCol.title_bg, bg);
-    style.setColor(zgui.StyleCol.title_bg_active, bg);
-    style.setColor(zgui.StyleCol.window_bg, bg);
-    style.setColor(zgui.StyleCol.frame_bg, .{ bg[0] * 0.8, bg[1] * 0.8, bg[2] * 0.8, 0.6 });
-    style.setColor(zgui.StyleCol.frame_bg_hovered, .{ bg[0] * 0.6, bg[1] * 0.6, bg[2] * 0.6, 0.8 });
-    style.setColor(zgui.StyleCol.frame_bg_active, .{ bg[0] * 0.6, bg[1] * 0.6, bg[2] * 0.6, 1.0 });
-    style.setColor(zgui.StyleCol.button, fg);
-    style.setColor(zgui.StyleCol.button_hovered, bg);
-    style.setColor(zgui.StyleCol.button_active, .{ bg[0] * 0.8, bg[1] * 0.8, bg[2] * 0.8, 0.8 });
-    style.setColor(zgui.StyleCol.slider_grab, text);
-    style.setColor(zgui.StyleCol.slider_grab_active, text);
-    style.setColor(zgui.StyleCol.child_bg, bg);
-    style.setColor(zgui.StyleCol.resize_grip, text);
-    style.setColor(zgui.StyleCol.resize_grip_active, text);
-    style.setColor(zgui.StyleCol.resize_grip_hovered, text);
-    style.setColor(zgui.StyleCol.check_mark, text);
-
-    while (!window.shouldClose()) {
-        zglfw.pollEvents();
-        update();
-        draw();
-    }
+    core.deinit();
+    // TODO: Figure out why autohashmap is leaking
+    //_ = gpa.detectLeaks();
 }

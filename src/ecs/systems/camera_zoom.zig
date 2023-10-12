@@ -1,7 +1,7 @@
 const std = @import("std");
-const zm = @import("zmath");
+const zmath = @import("zmath");
 const ecs = @import("zflecs");
-const game = @import("root");
+const game = @import("../../aftersun.zig");
 const components = game.components;
 
 pub fn system() ecs.system_desc_t {
@@ -11,8 +11,6 @@ pub fn system() ecs.system_desc_t {
 }
 
 pub fn run(it: *ecs.iter_t) callconv(.C) void {
-    game.input.callbacks.scroll(game.state.gctx.window, 0.0, game.state.controls.zoom());
-
     if (game.state.camera.zoom_progress >= 0.0) {
         game.state.camera.zoom_progress += it.delta_time * game.settings.zoom_speed;
         if (game.state.camera.zoom_progress >= 1.0) {

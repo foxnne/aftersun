@@ -1,5 +1,5 @@
 const std = @import("std");
-const zm = @import("zmath");
+const zmath = @import("zmath");
 
 const sqrt = 0.70710678118654752440084436210485;
 const sqrt2 = 1.4142135623730950488016887242097;
@@ -89,22 +89,22 @@ pub const Direction = enum(u8) {
     }
 
     /// Returns direction as a F32x4.
-    pub fn f32x4(self: Direction) zm.F32x4 {
-        return zm.f32x4(self.x(), self.y(), 0, 0);
+    pub fn f32x4(self: Direction) zmath.F32x4 {
+        return zmath.f32x4(self.x(), self.y(), 0, 0);
     }
 
     /// Returns direction as a normalized F32x4.
-    pub fn normalized(self: Direction) zm.F32x4 {
+    pub fn normalized(self: Direction) zmath.F32x4 {
         return switch (self) {
-            .none => zm.f32x4s(0),
-            .s => zm.f32x4(0, -1, 0, 0),
-            .se => zm.f32x4(sqrt, -sqrt, 0, 0),
-            .e => zm.f32x4(1, 0, 0, 0),
-            .ne => zm.f32x4(sqrt, sqrt, 0, 0),
-            .n => zm.f32x4(0, 1, 0, 0),
-            .nw => zm.f32x4(-sqrt, sqrt, 0, 0),
-            .w => zm.f32x4(-1, 0, 0, 0),
-            .sw => zm.f32x4(-1, -1, 0, 0),
+            .none => zmath.f32x4s(0),
+            .s => zmath.f32x4(0, -1, 0, 0),
+            .se => zmath.f32x4(sqrt, -sqrt, 0, 0),
+            .e => zmath.f32x4(1, 0, 0, 0),
+            .ne => zmath.f32x4(sqrt, sqrt, 0, 0),
+            .n => zmath.f32x4(0, 1, 0, 0),
+            .nw => zmath.f32x4(-sqrt, sqrt, 0, 0),
+            .w => zmath.f32x4(-1, 0, 0, 0),
+            .sw => zmath.f32x4(-1, -1, 0, 0),
         };
     }
 
@@ -172,8 +172,8 @@ test "Direction" {
 
     direction = Direction.find(8, 1, 1);
     std.testing.expect(direction == .se);
-    std.testing.expectEqual(zm.f32x4(1, 1, 0, 0), direction.f32x4());
-    std.testing.expectEqual(zm.f32x4(sqrt, sqrt, 0, 0), direction.normalized());
+    std.testing.expectEqual(zmath.f32x4(1, 1, 0, 0), direction.f32x4());
+    std.testing.expectEqual(zmath.f32x4(sqrt, sqrt, 0, 0), direction.normalized());
 
     direction = Direction.find(8, 0, 1);
     std.testing.expect(direction == .s);

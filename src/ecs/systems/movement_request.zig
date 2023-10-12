@@ -1,7 +1,7 @@
 const std = @import("std");
-const zm = @import("zmath");
+const zmath = @import("zmath");
 const ecs = @import("zflecs");
-const game = @import("root");
+const game = @import("../../aftersun.zig");
 const components = game.components;
 
 pub fn system() ecs.system_desc_t {
@@ -25,7 +25,12 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 
             if (entity != game.state.entities.player) break;
 
-            const direction = game.state.controls.movement();
+            const n: bool = if (game.state.hotkeys.hotkey(.directional_up)) |hk| hk.down() else false;
+            const s: bool = if (game.state.hotkeys.hotkey(.directional_down)) |hk| hk.down() else false;
+            const e: bool = if (game.state.hotkeys.hotkey(.directional_right)) |hk| hk.down() else false;
+            const w: bool = if (game.state.hotkeys.hotkey(.directional_left)) |hk| hk.down() else false;
+
+            const direction = game.math.Direction.write(n, s, e, w);
             if (ecs.field(it, components.Tile, 2)) |tiles| {
                 if (direction != .none) {
                     const end_tile = components.Tile{

@@ -1,4 +1,4 @@
-const game = @import("root");
+const game = @import("../../aftersun.zig");
 const gfx = game.gfx;
 const math = game.math;
 

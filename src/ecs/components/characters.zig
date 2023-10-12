@@ -1,5 +1,5 @@
-const zm = @import("zmath");
-const game = @import("root");
+const zmath = @import("zmath");
+const game = @import("../../aftersun.zig");
 
 const AnimationSet = game.animation_sets.AnimationSet;
 

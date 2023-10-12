@@ -1,6 +1,6 @@
 const std = @import("std");
-const zm = @import("zmath");
-const game = @import("root");
+const zmath = @import("zmath");
+const game = @import("../aftersun.zig");
 const gfx = game.gfx;
 
 pub const Quad = struct {
@@ -60,19 +60,35 @@ pub const Quad = struct {
 
     pub fn rotate(self: *Quad, rotation: f32, pos_x: f32, pos_y: f32, origin_x: f32, origin_y: f32) void {
         for (self.vertices, 0..) |vert, i| {
-            var position = zm.loadArr3(vert.position);
-            const offset = zm.f32x4(pos_x, pos_y, 0, 0);
+            var position = zmath.loadArr3(vert.position);
+            const offset = zmath.f32x4(pos_x, pos_y, 0, 0);
 
             const radians = std.math.degreesToRadians(f32, rotation);
 
-            const translation_matrix = zm.translation(origin_x, origin_y, 0);
-            const rotation_matrix = zm.rotationZ(radians);
+            const translation_matrix = zmath.translation(origin_x, origin_y, 0);
+            const rotation_matrix = zmath.rotationZ(radians);
 
             position -= offset;
-            position = zm.mul(position, zm.mul(translation_matrix, rotation_matrix));
+            position = zmath.mul(position, zmath.mul(translation_matrix, rotation_matrix));
             position += offset;
 
-            zm.storeArr3(&self.vertices[i].position, position);
+            zmath.storeArr3(&self.vertices[i].position, position);
+        }
+    }
+
+    pub fn scale(self: *Quad, s: [2]f32, pos_x: f32, pos_y: f32, origin_x: f32, origin_y: f32) void {
+        for (self.vertices, 0..) |vert, i| {
+            var position = zmath.loadArr3(vert.position);
+            const offset = zmath.f32x4(pos_x, pos_y, 0, 0);
+
+            const translation_matrix = zmath.translation(origin_x, origin_y, 0);
+            const scale_matrix = zmath.scaling(s[0], s[1], 0);
+
+            position -= offset;
+            position = zmath.mul(position, zmath.mul(translation_matrix, scale_matrix));
+            position += offset;
+
+            zmath.storeArr3(&self.vertices[i].position, position);
         }
     }
 };

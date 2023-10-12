@@ -1,5 +1,5 @@
 const std = @import("std");
-const zm = @import("zmath");
+const zmath = @import("zmath");
 
 /// The design texture width for render-textures.
 pub const design_width: u32 = 1280;
@@ -8,7 +8,7 @@ pub const design_width: u32 = 1280;
 pub const design_height: u32 = 720;
 
 /// The design texture size for render-textures as an f32x4.
-pub const design_size = zm.f32x4(@as(f32, @floatFromInt(design_width)), @as(f32, @floatFromInt(design_height)), 0, 0);
+pub const design_size = zmath.f32x4(@as(f32, @floatFromInt(design_width)), @as(f32, @floatFromInt(design_height)), 0, 0);
 
 /// The number of zoom steps to have above minimum, camera.maxZoom() returns camera.minZoom + this value.
 pub const max_zoom_offset: f32 = 3.0;
