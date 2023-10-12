@@ -1,7 +1,5 @@
 const std = @import("std");
 const zm = @import("zmath");
-const zgpu = @import("zgpu");
-const zglfw = @import("zglfw");
 const game = @import("root");
 
 pub const Camera = struct {
@@ -16,8 +14,8 @@ pub const Camera = struct {
     target_tile: zm.F32x4 = zm.f32x4s(0),
     culling_margin: f32 = 256.0,
 
-    pub fn init(design_size: zm.F32x4, window_size: struct { w: i32, h: i32 }, position: zm.F32x4) Camera {
-        const w_size = zm.f32x4(@as(f32, @floatFromInt(window_size.w)), @as(f32, @floatFromInt(window_size.h)), 0, 0);
+    pub fn init(design_size: zm.F32x4, window_size: [2]f32, position: zm.F32x4) Camera {
+        const w_size = zm.f32x4(window_size[0], window_size[1], 0, 0);
         const zooms = zm.ceil(w_size / design_size);
         const zoom = @max(zooms[0], zooms[1]) + 1.0; // Initially set the zoom to be 1 step greater than minimum.
 
@@ -27,16 +25,6 @@ pub const Camera = struct {
             .zoom = zoom,
             .position = position,
         };
-    }
-
-    /// Sets window size from the window, call this everytime the window changes.
-    pub fn setWindow(camera: *Camera, window: *zglfw.Window) void {
-        const window_size = window.getSize();
-        camera.window_size = zm.f32x4(@as(f32, @floatFromInt(window_size[0])), @as(f32, @floatFromInt(window_size[1])), 0, 0);
-        const min_zoom = camera.minZoom();
-        const max_zoom = camera.maxZoom();
-        if (camera.zoom < min_zoom) camera.zoom = min_zoom;
-        if (camera.zoom > max_zoom) camera.zoom = max_zoom;
     }
 
     /// Use this matrix when drawing to the framebuffer.

@@ -1,7 +1,7 @@
 const std = @import("std");
 const zm = @import("zmath");
 const ecs = @import("zflecs");
-const game = @import("root");
+const game = @import("../../aftersun.zig");
 const gfx = game.gfx;
 const math = game.math;
 const components = game.components;
@@ -20,14 +20,14 @@ pub fn system() ecs.system_desc_t {
 }
 
 pub fn run(it: *ecs.iter_t) callconv(.C) void {
-    const uniforms = gfx.Uniforms{ .mvp = zm.transpose(game.state.camera.renderTextureMatrix()) };
+    const uniforms = gfx.UniformBufferObject{ .mvp = zm.transpose(game.state.camera.renderTextureMatrix()) };
 
     // Draw diffuse texture sprites using diffuse pipeline
     game.state.batcher.begin(.{
         .pipeline_handle = game.state.pipeline_diffuse,
         .bind_group_handle = game.state.bind_group_diffuse,
         .output_handle = game.state.diffuse_output.view_handle,
-        .clear_color = math.Colors.grass.value,
+        .clear_color = math.Colors.grass.toGpuColor(),
     }) catch unreachable;
 
     while (ecs.query_next(it)) {
@@ -43,13 +43,13 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 
                     game.state.batcher.sprite(
                         position,
-                        game.state.diffusemap,
+                        &game.state.diffusemap,
                         game.state.atlas.sprites[renderers[i].index],
                         .{
                             .color = renderers[i].color,
                             .vert_mode = renderers[i].vert_mode,
                             .frag_mode = renderers[i].frag_mode,
-                            .time = @as(f32, @floatCast(game.state.gctx.stats.time)) + @as(f32, @floatFromInt(renderers[i].order)),
+                            .time = game.state.game_time + @as(f32, @floatFromInt(renderers[i].order)),
                             .flip_x = renderers[i].flip_x,
                             .flip_y = renderers[i].flip_y,
                             .rotation = rotation,
@@ -61,7 +61,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                     // Body
                     game.state.batcher.sprite(
                         position,
-                        game.state.diffusemap,
+                        &game.state.diffusemap,
                         game.state.atlas.sprites[renderers[i].body_index],
                         .{
                             .color = renderers[i].body_color,
@@ -74,7 +74,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                     // Head
                     game.state.batcher.sprite(
                         position,
-                        game.state.diffusemap,
+                        &game.state.diffusemap,
                         game.state.atlas.sprites[renderers[i].head_index],
                         .{
                             .color = renderers[i].head_color,
@@ -87,7 +87,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                     // Bottom
                     game.state.batcher.sprite(
                         position,
-                        game.state.diffusemap,
+                        &game.state.diffusemap,
                         game.state.atlas.sprites[renderers[i].bottom_index],
                         .{
                             .color = renderers[i].bottom_color,
@@ -100,7 +100,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                     // Feet
                     game.state.batcher.sprite(
                         position,
-                        game.state.diffusemap,
+                        &game.state.diffusemap,
                         game.state.atlas.sprites[renderers[i].feet_index],
                         .{
                             .color = renderers[i].feet_color,
@@ -113,7 +113,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                     // Top
                     game.state.batcher.sprite(
                         position,
-                        game.state.diffusemap,
+                        &game.state.diffusemap,
                         game.state.atlas.sprites[renderers[i].top_index],
                         .{
                             .color = renderers[i].top_color,
@@ -126,7 +126,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                     // Back
                     game.state.batcher.sprite(
                         position,
-                        game.state.diffusemap,
+                        &game.state.diffusemap,
                         game.state.atlas.sprites[renderers[i].back_index],
                         .{
                             .flip_x = renderers[i].flip_body,
@@ -137,7 +137,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                     // Hair
                     game.state.batcher.sprite(
                         position,
-                        game.state.diffusemap,
+                        &game.state.diffusemap,
                         game.state.atlas.sprites[renderers[i].hair_index],
                         .{
                             .color = renderers[i].hair_color,
@@ -153,7 +153,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         if (particle.alive()) {
                             game.state.batcher.sprite(
                                 zm.f32x4(particle.position[0], particle.position[1], particle.position[2], 0),
-                                game.state.diffusemap,
+                                &game.state.diffusemap,
                                 game.state.atlas.sprites[particle.index],
                                 .{
                                     .color = particle.color,
@@ -166,7 +166,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
         }
     }
 
-    game.state.batcher.end(uniforms) catch unreachable;
+    game.state.batcher.end(uniforms, game.state.uniform_buffer_default) catch unreachable;
 }
 
 fn orderBy(e1: ecs.entity_t, c1: ?*const anyopaque, e2: ecs.entity_t, c2: ?*const anyopaque) callconv(.C) c_int {

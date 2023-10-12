@@ -1,6 +1,6 @@
 const std = @import("std");
 const zm = @import("zmath");
-const game = @import("root");
+const game = @import("../../aftersun.zig");
 const ecs = @import("zflecs");
 
 const sprites = @import("sprites.zig");
@@ -8,6 +8,20 @@ const characters = @import("characters.zig");
 const stacks = @import("stacks.zig");
 const particles = @import("particles.zig");
 const lights = @import("lights.zig");
+
+/// Registers all public declarations.
+pub fn register(world: *ecs.world_t) void {
+    const T = @This();
+    const decls = comptime std.meta.declarations(T);
+    inline for (decls) |decl| {
+        const Type = @field(T, decl.name);
+        if (@TypeOf(Type) == type) {
+            if (@sizeOf(Type) > 0) {
+                ecs.COMPONENT(world, Type);
+            } else ecs.TAG(world, Type);
+        }
+    }
+}
 
 pub const SpriteRenderer = sprites.SpriteRenderer;
 pub const SpriteAnimator = sprites.SpriteAnimator;

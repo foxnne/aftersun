@@ -1,7 +1,7 @@
 const std = @import("std");
-const zm = @import("zmath");
+const zmath = @import("zmath");
 const ecs = @import("zflecs");
-const game = @import("root");
+const game = @import("../../aftersun.zig");
 const gfx = game.gfx;
 const components = game.components;
 
@@ -15,7 +15,7 @@ pub fn system() ecs.system_desc_t {
 // ! but arrays and vectors need to be manually aligned to 16 bytes.
 // ! https://gpuweb.github.io/gpuweb/wgsl/#alignment-and-size
 pub const EnvironmentUniforms = extern struct {
-    mvp: zm.Mat,
+    mvp: zmath.Mat,
     ambient_xy_angle: f32 = 45,
     ambient_z_angle: f32 = 82,
     _pad0: f64 = 0,
@@ -28,7 +28,7 @@ pub fn callback(it: *ecs.iter_t) callconv(.C) void {
 
     const shadow_color = game.state.environment.shadowColor().toSlice();
     const uniforms = EnvironmentUniforms{
-        .mvp = zm.transpose(zm.orthographicLh(game.state.camera.design_size[0], game.state.camera.design_size[1], -100, 100)),
+        .mvp = zmath.transpose(zmath.orthographicLh(game.state.camera.design_size[0], game.state.camera.design_size[1], -100, 100)),
         .ambient_xy_angle = game.state.environment.ambientXYAngle(),
         .ambient_z_angle = game.state.environment.ambientZAngle(),
         .shadow_color = .{ shadow_color[0], shadow_color[1], shadow_color[2] },
@@ -39,12 +39,12 @@ pub fn callback(it: *ecs.iter_t) callconv(.C) void {
         .pipeline_handle = game.state.pipeline_environment,
         .bind_group_handle = game.state.bind_group_environment,
         .output_handle = game.state.environment_output.view_handle,
-        .clear_color = game.math.Colors.white.value,
+        .clear_color = game.math.Colors.white.toGpuColor(),
     }) catch unreachable;
 
-    const position = zm.f32x4(-@as(f32, @floatFromInt(game.state.environment_output.width)) / 2, -@as(f32, @floatFromInt(game.state.environment_output.height)) / 2, 0, 0);
+    const position = zmath.f32x4(-@as(f32, @floatFromInt(game.state.environment_output.image.width)) / 2, -@as(f32, @floatFromInt(game.state.environment_output.image.height)) / 2, 0, 0);
 
-    game.state.batcher.texture(position, game.state.environment_output, .{ .color = game.state.environment.ambientColor().value }) catch unreachable;
+    game.state.batcher.texture(position, &game.state.environment_output, .{ .color = game.state.environment.ambientColor().value }) catch unreachable;
 
-    game.state.batcher.end(uniforms) catch unreachable;
+    game.state.batcher.end(uniforms, game.state.uniform_buffer_environment) catch unreachable;
 }

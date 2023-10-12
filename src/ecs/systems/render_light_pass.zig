@@ -1,7 +1,7 @@
 const std = @import("std");
 const zm = @import("zmath");
 const ecs = @import("zflecs");
-const game = @import("root");
+const game = @import("../../aftersun.zig");
 const gfx = game.gfx;
 const math = game.math;
 const components = game.components;
@@ -17,14 +17,14 @@ pub fn system() ecs.system_desc_t {
 }
 
 pub fn run(it: *ecs.iter_t) callconv(.C) void {
-    const uniforms = gfx.Uniforms{ .mvp = zm.transpose(game.state.camera.renderTextureMatrix()) };
+    const uniforms = gfx.UniformBufferObject{ .mvp = zm.transpose(game.state.camera.renderTextureMatrix()) };
 
     // Draw diffuse texture sprites using diffuse pipeline
     game.state.batcher.begin(.{
         .pipeline_handle = game.state.pipeline_default,
         .bind_group_handle = game.state.bind_group_light,
         .output_handle = game.state.light_output.view_handle,
-        .clear_color = math.Color.initBytes(0, 0, 0, 255).value,
+        .clear_color = math.Color.initBytes(0, 0, 0, 255).toGpuColor(),
     }) catch unreachable;
 
     while (ecs.iter_next(it)) {
@@ -37,7 +37,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                 if (ecs.field(it, components.LightRenderer, 2)) |renderers| {
                     game.state.batcher.sprite(
                         position,
-                        game.state.lightmap,
+                        &game.state.lightmap,
                         game.state.light_atlas.sprites[renderers[i].index],
                         .{
                             .color = renderers[i].color,
@@ -47,7 +47,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
             }
         }
     }
-    game.state.batcher.end(uniforms) catch unreachable;
+    game.state.batcher.end(uniforms, game.state.uniform_buffer_default) catch unreachable;
 }
 
 fn orderBy(e1: ecs.entity_t, c1: ?*const anyopaque, e2: ecs.entity_t, c2: ?*const anyopaque) callconv(.C) c_int {

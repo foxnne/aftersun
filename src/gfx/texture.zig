@@ -5,94 +5,130 @@ const zstbi = @import("zstbi");
 const wgpu = zgpu.wgpu;
 const zm = @import("zmath");
 
-const game = @import("root");
+const core = @import("mach-core");
+const gpu = core.gpu;
+
+const game = @import("../aftersun.zig");
 
 pub const Texture = struct {
-    handle: zgpu.TextureHandle,
-    view_handle: zgpu.TextureViewHandle,
-    sampler_handle: zgpu.SamplerHandle,
-    width: u32,
-    height: u32,
+    handle: *gpu.Texture,
+    view_handle: *gpu.TextureView,
+    sampler_handle: *gpu.Sampler,
+    image: zstbi.Image,
 
-    pub const SamplerOptions = struct {
-        address_mode: wgpu.AddressMode = .clamp_to_edge,
-        filter: wgpu.FilterMode = .nearest,
+    pub const TextureOptions = struct {
+        address_mode: gpu.Sampler.AddressMode = .clamp_to_edge,
+        filter: gpu.FilterMode = .nearest,
+        format: gpu.Texture.Format = .rgba8_unorm,
     };
 
-    pub fn init(gctx: *zgpu.GraphicsContext, width: u32, height: u32, options: Texture.SamplerOptions) Texture {
-        const handle = gctx.createTexture(.{
-            .usage = .{ .texture_binding = true, .render_attachment = true, .copy_dst = true },
-            .size = .{
-                .width = width,
-                .height = height,
-                .depth_or_array_layers = 1,
-            },
-            .format = .bgra8_unorm,
-        });
-        const view_handle = gctx.createTextureView(handle, .{});
+    pub fn createEmpty(width: u32, height: u32, options: Texture.TextureOptions) !Texture {
+        var image = try zstbi.Image.createEmpty(width, height, 4, .{});
+        return create(image, options);
+    }
 
-        const sampler_handle = gctx.createSampler(.{
+    pub fn loadFromFile(file: [:0]const u8, options: Texture.TextureOptions) !Texture {
+        var image = try zstbi.Image.loadFromFile(file, 4);
+        return create(image, .{ .address_mode = options.address_mode, .filter = options.filter });
+    }
+
+    pub fn loadFromMemory(data: []const u8, options: Texture.TextureOptions) !Texture {
+        var image = try zstbi.Image.loadFromMemory(data, 0);
+        return create(image, .{ .address_mode = options.address_mode, .filter = options.filter });
+    }
+
+    pub fn create(image: zstbi.Image, options: Texture.TextureOptions) Texture {
+        const image_size = .{ .width = image.width, .height = image.height };
+
+        const texture_descriptor = .{
+            .size = image_size,
+            .format = options.format,
+            .usage = .{
+                .texture_binding = true,
+                .copy_dst = true,
+                .render_attachment = true,
+            },
+        };
+
+        const texture = core.device.createTexture(&texture_descriptor);
+
+        const view_descriptor = .{
+            .format = options.format,
+            .dimension = .dimension_2d,
+            .array_layer_count = 1,
+        };
+
+        const view = texture.createView(&view_descriptor);
+
+        const queue = core.device.getQueue();
+
+        const data_layout = gpu.Texture.DataLayout{
+            .bytes_per_row = image.width * 4,
+            .rows_per_image = image.height,
+        };
+
+        queue.writeTexture(&.{ .texture = texture }, &data_layout, &image_size, image.data);
+
+        const sampler_descriptor = .{
             .address_mode_u = options.address_mode,
             .address_mode_v = options.address_mode,
             .address_mode_w = options.address_mode,
             .mag_filter = options.filter,
             .min_filter = options.filter,
-        });
+        };
 
-        return .{
-            .handle = handle,
-            .view_handle = view_handle,
-            .sampler_handle = sampler_handle,
-            .width = width,
-            .height = height,
+        const sampler = core.device.createSampler(&sampler_descriptor);
+
+        return Texture{
+            .handle = texture,
+            .view_handle = view,
+            .sampler_handle = sampler,
+            .image = image,
         };
     }
 
-    pub fn loadFromFile(gctx: *zgpu.GraphicsContext, file: [:0]const u8, options: Texture.SamplerOptions) !Texture {
-        var image = try zstbi.Image.loadFromFile(file, 4);
-        defer image.deinit();
+    pub fn blit(self: *Texture, src_pixels: [][4]u8, dst_rect: [4]u32) void {
+        const x = @as(usize, @intCast(dst_rect[0]));
+        const y = @as(usize, @intCast(dst_rect[1]));
+        const width = @as(usize, @intCast(dst_rect[2]));
+        const height = @as(usize, @intCast(dst_rect[3]));
 
-        const handle = gctx.createTexture(.{
-            .usage = .{ .texture_binding = true, .copy_dst = true },
-            .size = .{
-                .width = image.width,
-                .height = image.height,
-                .depth_or_array_layers = 1,
-            },
-            .format = zgpu.imageInfoToTextureFormat(
-                image.num_components,
-                image.bytes_per_component,
-                image.is_hdr,
-            ),
-        });
+        const tex_width = @as(usize, @intCast(self.image.width));
 
-        const view_handle = gctx.createTextureView(handle, .{});
+        var yy = y;
+        var h = height;
 
-        gctx.queue.writeTexture(
-            .{ .texture = gctx.lookupResource(handle).? },
-            .{
-                .bytes_per_row = image.bytes_per_row,
-                .rows_per_image = image.height,
-            },
-            .{ .width = image.width, .height = image.height },
-            u8,
-            image.data,
-        );
+        var dst_pixels = @as([*][4]u8, @ptrCast(self.image.data.ptr))[0 .. self.image.data.len / 4];
 
-        const sampler_handle = gctx.createSampler(.{
-            .address_mode_u = options.address_mode,
-            .address_mode_v = options.address_mode,
-            .address_mode_w = options.address_mode,
-            .mag_filter = options.filter,
-            .min_filter = options.filter,
-        });
+        var data = dst_pixels[x + yy * tex_width .. x + yy * tex_width + width];
+        var src_y: usize = 0;
+        while (h > 0) : (h -= 1) {
+            const src_row = src_pixels[src_y * width .. (src_y * width) + width];
+            @memcpy(data, src_row);
 
-        return Texture{
-            .handle = handle,
-            .view_handle = view_handle,
-            .sampler_handle = sampler_handle,
-            .width = image.width,
-            .height = image.height,
+            // next row and move our slice to it as well
+            src_y += 1;
+            yy += 1;
+            data = dst_pixels[x + yy * tex_width .. x + yy * tex_width + width];
+        }
+    }
+
+    pub fn update(texture: *Texture, device: *gpu.Device) void {
+        const image_size = gpu.Extent3D{ .width = texture.image.width, .height = texture.image.height };
+        const queue = device.getQueue();
+
+        const data_layout = gpu.Texture.DataLayout{
+            .bytes_per_row = texture.image.width * 4,
+            .rows_per_image = texture.image.height,
         };
+
+        queue.writeTexture(&.{ .texture = texture.handle }, &data_layout, &image_size, texture.image.data);
+    }
+
+    pub fn deinit(texture: *Texture) void {
+        texture.handle.release();
+        texture.view_handle.release();
+        texture.sampler_handle.release();
+        texture.image.deinit();
     }
 };
