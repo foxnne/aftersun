@@ -507,8 +507,7 @@ pub fn update(app: *App) !bool {
                 state.hotkeys.setHotkeyState(key_release.key, key_release.mods, .release);
             },
             .mouse_scroll => |mouse_scroll| {
-                state.mouse.scroll_x = mouse_scroll.xoffset;
-                state.mouse.scroll_y = mouse_scroll.yoffset;
+                state.mouse.setScrollState(mouse_scroll.xoffset, mouse_scroll.yoffset);
             },
             .mouse_motion => |mouse_motion| {
                 state.mouse.position = .{ @floatCast(mouse_motion.pos.x * content_scale[0]), @floatCast(mouse_motion.pos.y * content_scale[1]) };
@@ -523,7 +522,7 @@ pub fn update(app: *App) !bool {
                 return true;
             },
             .framebuffer_resize => |size| {
-                state.camera.window_size = zmath.f32x4(@floatFromInt(size.width), @floatFromInt(size.height), 0, 0);
+                state.camera.frameBufferResize(size);
             },
             else => {},
         }

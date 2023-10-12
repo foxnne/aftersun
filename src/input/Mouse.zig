@@ -85,6 +85,28 @@ pub fn setButtonState(self: *Self, b: MouseButton, mods: Mods, state: ButtonStat
     }
 }
 
+pub fn setScrollState(self: *Self, x: f32, y: f32) void {
+    self.scroll_x = x;
+    self.scroll_y = y;
+
+    if (y > game.settings.zoom_scroll_tolerance and game.state.camera.zoom_progress < 0.0) {
+        const max_zoom = game.state.camera.maxZoom();
+        game.state.camera.zoom_step = @round(game.state.camera.zoom);
+        if (game.state.camera.zoom_step + 1.0 <= max_zoom) {
+            game.state.camera.zoom_progress = 0.0;
+            game.state.camera.zoom_step_next = game.state.camera.zoom_step + 1.0;
+        }
+    }
+    if (y < -game.settings.zoom_scroll_tolerance and game.state.camera.zoom_progress < 0.0) {
+        const min_zoom = game.state.camera.minZoom();
+        game.state.camera.zoom_step = @round(game.state.camera.zoom);
+        if (game.state.camera.zoom_step - 1.0 >= min_zoom) {
+            game.state.camera.zoom_progress = 0.0;
+            game.state.camera.zoom_step_next = game.state.camera.zoom_step - 1.0;
+        }
+    }
+}
+
 pub fn initDefault(allocator: std.mem.Allocator) !Self {
     var buttons = std.ArrayList(Button).init(allocator);
 
