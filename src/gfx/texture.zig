@@ -3,7 +3,7 @@ const glfw = @import("glfw");
 const zgpu = @import("zgpu");
 const zstbi = @import("zstbi");
 const wgpu = zgpu.wgpu;
-const zm = @import("zmath");
+const zmath = @import("zmath");
 
 const core = @import("mach-core");
 const gpu = core.gpu;

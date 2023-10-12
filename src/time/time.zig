@@ -1,5 +1,5 @@
 const std = @import("std");
-const game = @import("root");
+const game = @import("../aftersun.zig");
 
 pub const Time = struct {
     start_time: f32 = 6.0,

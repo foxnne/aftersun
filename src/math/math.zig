@@ -1,5 +1,5 @@
-const zm = @import("zmath");
-const game = @import("root");
+const zmath = @import("zmath");
+const game = @import("../aftersun.zig");
 
 pub const sqrt2: f32 = 1.414213562373095;
 

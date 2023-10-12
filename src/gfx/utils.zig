@@ -3,9 +3,9 @@ const glfw = @import("glfw");
 const zgpu = @import("zgpu");
 const wgpu = zgpu.wgpu;
 const zgui = zgpu.zgui;
-const zm = @import("zmath");
+const zmath = @import("zmath");
 const flecs = @import("flecs");
-const game = @import("root");
+const game = @import("../../aftersun.zig");
 const gfx = game.gfx;
 
 pub const PipelineSettings = struct {

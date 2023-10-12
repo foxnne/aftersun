@@ -1,7 +1,7 @@
-const game = @import("root");
+const game = @import("../../aftersun.zig");
 const gfx = game.gfx;
 const math = game.math;
-const zm = @import("zmath");
+const zmath = @import("zmath");
 
 pub const ParticleRenderer = struct {
     particles: []Particle,

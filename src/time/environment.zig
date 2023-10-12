@@ -1,6 +1,6 @@
 const std = @import("std");
-const zm = @import("zmath");
-const game = @import("root");
+const zmath = @import("zmath");
+const game = @import("../aftersun.zig");
 
 pub const Environment = struct {
     transition: f32 = 2.0,

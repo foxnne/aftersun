@@ -1,7 +1,7 @@
 const std = @import("std");
 const game = @import("../aftersun.zig");
 const gfx = game.gfx;
-const zm = @import("zmath");
+const zmath = @import("zmath");
 const core = @import("mach-core");
 
 pub const Batcher = struct {
@@ -138,19 +138,19 @@ pub const Batcher = struct {
     }
 
     pub const TextureOptions = struct {
-        color: zm.F32x4 = game.math.Colors.white.value,
+        color: zmath.F32x4 = game.math.Colors.white.value,
         flip_y: bool = false,
         flip_x: bool = false,
     };
 
     /// Appends a quad at the passed position set to the size needed to render the target texture.
-    pub fn texture(self: *Batcher, position: zm.F32x4, t: *gfx.Texture, options: TextureOptions) !void {
+    pub fn texture(self: *Batcher, position: zmath.F32x4, t: *gfx.Texture, options: TextureOptions) !void {
         const width = @as(f32, @floatFromInt(t.image.width));
         const height = @as(f32, @floatFromInt(t.image.height));
-        const pos = zm.trunc(position);
+        const pos = zmath.trunc(position);
 
         var color: [4]f32 = [_]f32{ 1.0, 1.0, 1.0, 1.0 };
-        zm.store(&color, options.color, 4);
+        zmath.store(&color, options.color, 4);
 
         const max: f32 = if (!options.flip_y) 1.0 else 0.0;
         const min: f32 = if (!options.flip_y) 0.0 else 1.0;
@@ -205,7 +205,7 @@ pub const Batcher = struct {
     };
 
     /// Appends a quad to the batcher set to the size needed to render the target sprite from the target texture.
-    pub fn sprite(self: *Batcher, position: zm.F32x4, t: *gfx.Texture, s: gfx.Sprite, options: SpriteOptions) !void {
+    pub fn sprite(self: *Batcher, position: zmath.F32x4, t: *gfx.Texture, s: gfx.Sprite, options: SpriteOptions) !void {
         const x = @as(f32, @floatFromInt(s.source[0]));
         const y = @as(f32, @floatFromInt(s.source[1]));
         const width = @as(f32, @floatFromInt(s.source[2]));
@@ -217,7 +217,7 @@ pub const Batcher = struct {
 
         const origin_x = if (options.flip_x) o_x - width else -o_x;
         const origin_y = if (options.flip_y) -o_y else o_y - height;
-        const pos = zm.trunc(position);
+        const pos = zmath.trunc(position);
 
         const vert_mode: f32 = switch (options.vert_mode) {
             .standard => 0.0,

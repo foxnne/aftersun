@@ -1,8 +1,8 @@
 // const std = @import("std");
-// const zm = @import("zmath");
+// const zmath = @import("zmath");
 // const ecs = @import("zflecs");
 // const zgui = @import("zgui");
-// const game = @import("root");
+// const game = @import("../../aftersun.zig");
 // const components = game.components;
 
 // pub fn groupBy(world: *ecs.world_t, table: *ecs.table_t, id: ecs.entity_t, ctx: ?*anyopaque) callconv(.C) ecs.entity_t {
@@ -89,8 +89,8 @@
 //             const direction: game.math.Direction = .e;
 //             const normalized_direction = direction.normalized();
 
-//             const pos_1 = screen_position + normalized_direction * zm.f32x4s(game.math.lerp(0.0, radius, game.state.controls.mouse.tile_timer));
-//             const pos_2 = pos_1 + normalized_direction * zm.f32x4s(game.math.lerp(0.0, leader_length, game.state.controls.mouse.tile_timer));
+//             const pos_1 = screen_position + normalized_direction * zmath.f32x4s(game.math.lerp(0.0, radius, game.state.controls.mouse.tile_timer));
+//             const pos_2 = pos_1 + normalized_direction * zmath.f32x4s(game.math.lerp(0.0, leader_length, game.state.controls.mouse.tile_timer));
 
 //             zgui.setNextWindowPos(.{ .x = pos_2[0], .y = pos_2[1] - text_spacing - window_padding - window_spacing, .cond = .always });
 //             if (zgui.begin(name[0..std.mem.len(name) :0], .{ .flags = zgui.WindowFlags{

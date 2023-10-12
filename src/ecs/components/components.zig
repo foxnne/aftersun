@@ -1,5 +1,5 @@
 const std = @import("std");
-const zm = @import("zmath");
+const zmath = @import("zmath");
 const game = @import("../../aftersun.zig");
 const ecs = @import("zflecs");
 
@@ -58,8 +58,8 @@ pub const Position = struct {
     }
 
     /// Returns the position as a vector.
-    pub fn toF32x4(self: Position) zm.F32x4 {
-        return zm.f32x4(self.x, self.y, self.z, 0.0);
+    pub fn toF32x4(self: Position) zmath.F32x4 {
+        return zmath.f32x4(self.x, self.y, self.z, 0.0);
     }
 };
 
@@ -107,8 +107,8 @@ pub const Velocity = struct {
         return game.math.Direction.find(8, self.x, self.y);
     }
 
-    pub fn toF32x4(self: Velocity) zm.F32x4 {
-        return zm.f32x4(self.x, self.y, 0.0, 0.0);
+    pub fn toF32x4(self: Velocity) zmath.F32x4 {
+        return zmath.f32x4(self.x, self.y, 0.0, 0.0);
     }
 };
 

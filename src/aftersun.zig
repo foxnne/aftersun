@@ -553,15 +553,56 @@ pub fn deinit(_: *App) void {
     // Remove all particle renderers so observer can free particles.
     ecs.remove_all(state.world, ecs.id(components.ParticleRenderer));
 
+    state.pipeline_default.release();
+    state.pipeline_diffuse.release();
+    state.pipeline_height.release();
+    state.pipeline_glow.release();
+    state.pipeline_environment.release();
+    state.pipeline_bloom.release();
+    state.pipeline_bloom_h.release();
+    state.pipeline_final.release();
+
+    state.bind_group_default.release();
+    state.bind_group_diffuse.release();
+    state.bind_group_height.release();
+    state.bind_group_environment.release();
+    state.bind_group_glow.release();
+    state.bind_group_bloom.release();
+    state.bind_group_bloom_h.release();
+    state.bind_group_final.release();
+
+    state.diffusemap.deinit();
+    state.palettemap.deinit();
+    state.lightmap.deinit();
+    state.heightmap.deinit();
+
+    state.diffuse_output.deinit();
+    state.height_output.deinit();
+    state.environment_output.deinit();
+    state.glow_output.deinit();
+    state.bloom_output.deinit();
+    state.bloom_h_output.deinit();
+    state.light_output.deinit();
+    state.reverse_height_output.deinit();
+
     state.allocator.free(state.atlas.sprites);
     state.allocator.free(state.atlas.animations);
 
     state.allocator.free(state.light_atlas.sprites);
     state.allocator.free(state.light_atlas.animations);
 
+    state.allocator.free(state.mouse.buttons);
+    state.allocator.free(state.hotkeys.hotkeys);
+
     state.batcher.deinit();
+    state.cells.clearAndFree();
     state.cells.deinit();
 
+    state.allocator.free(state.root_path);
+
     state.allocator.destroy(state);
-    _ = gpa.detectLeaks();
+
+    core.deinit();
+    // TODO: Figure out why autohashmap is leaking
+    //_ = gpa.detectLeaks();
 }

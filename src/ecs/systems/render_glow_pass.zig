@@ -1,5 +1,5 @@
 const std = @import("std");
-const zm = @import("zmath");
+const zmath = @import("zmath");
 const ecs = @import("zflecs");
 const game = @import("../../aftersun.zig");
 const gfx = game.gfx;
@@ -15,7 +15,7 @@ pub fn callback(it: *ecs.iter_t) callconv(.C) void {
     if (it.count() > 0) return;
 
     const uniforms = gfx.UniformBufferObject{
-        .mvp = zm.transpose(zm.orthographicLh(game.state.camera.design_size[0], game.state.camera.design_size[1], -100, 100)),
+        .mvp = zmath.transpose(zmath.orthographicLh(game.state.camera.design_size[0], game.state.camera.design_size[1], -100, 100)),
     };
 
     game.state.batcher.begin(.{
@@ -24,7 +24,7 @@ pub fn callback(it: *ecs.iter_t) callconv(.C) void {
         .output_handle = game.state.glow_output.view_handle,
     }) catch unreachable;
 
-    const position = zm.f32x4(-@as(f32, @floatFromInt(game.state.glow_output.image.width)) / 2, -@as(f32, @floatFromInt(game.state.glow_output.image.height)) / 2, 0, 0);
+    const position = zmath.f32x4(-@as(f32, @floatFromInt(game.state.glow_output.image.width)) / 2, -@as(f32, @floatFromInt(game.state.glow_output.image.height)) / 2, 0, 0);
 
     game.state.batcher.texture(position, &game.state.glow_output, .{}) catch unreachable;
 

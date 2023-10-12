@@ -1,5 +1,5 @@
 const std = @import("std");
-const zm = @import("zmath");
+const zmath = @import("zmath");
 const ecs = @import("zflecs");
 const game = @import("../../aftersun.zig");
 const gfx = game.gfx;
@@ -20,7 +20,7 @@ pub fn system() ecs.system_desc_t {
 }
 
 pub fn run(it: *ecs.iter_t) callconv(.C) void {
-    const uniforms = gfx.UniformBufferObject{ .mvp = zm.transpose(game.state.camera.renderTextureMatrix()) };
+    const uniforms = gfx.UniformBufferObject{ .mvp = zmath.transpose(game.state.camera.renderTextureMatrix()) };
 
     // Draw diffuse texture sprites using diffuse pipeline
     game.state.batcher.begin(.{
@@ -139,7 +139,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                     for (renderers[i].particles) |particle| {
                         if (particle.alive()) {
                             game.state.batcher.sprite(
-                                zm.f32x4(particle.position[0], particle.position[1], particle.position[2], 0),
+                                zmath.f32x4(particle.position[0], particle.position[1], particle.position[2], 0),
                                 &game.state.heightmap,
                                 game.state.atlas.sprites[particle.index],
                                 .{},

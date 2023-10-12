@@ -1,7 +1,7 @@
 const std = @import("std");
-const zm = @import("zmath");
+const zmath = @import("zmath");
 const ecs = @import("zflecs");
-const game = @import("root");
+const game = @import("../../aftersun.zig");
 const components = game.components;
 
 pub fn system() ecs.system_desc_t {
@@ -47,7 +47,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                             _ = ecs.set_pair(world, entity, ecs.id(components.Direction), ecs.id(components.Movement), components.Direction, direction);
 
                             // Update position
-                            const position = zm.lerp(start_position, end_position, t);
+                            const position = zmath.lerp(start_position, end_position, t);
                             positions[i].x = position[0];
                             positions[i].y = position[1];
                             positions[i].z = if (movements[i].curve == .sin) @sin(std.math.pi * t) * 10.0 else position[2];
