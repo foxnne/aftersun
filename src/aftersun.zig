@@ -197,8 +197,8 @@ pub fn init(app: *App) !void {
     components.register(world);
 
     // Create all of our prefabs
-    var prefabs = Prefabs.init(world);
-    prefabs.create(world);
+    state.prefabs = Prefabs.init(world);
+    state.prefabs.create(world);
 
     // - Cooldown
     var cooldown_system = @import("ecs/systems/cooldown.zig").system();

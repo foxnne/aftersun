@@ -39,10 +39,6 @@ pub fn build(b: *std.Build) !void {
         .optimize = optimize,
     });
 
-    const install_step = b.step("aftersun", "Install aftersun");
-    install_step.dependOn(&app.install.step);
-    b.getInstallStep().dependOn(install_step);
-
     const run_step = b.step("run", "Run aftersun");
     run_step.dependOn(&app.run.step);
 
