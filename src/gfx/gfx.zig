@@ -4,8 +4,6 @@ const core = @import("mach-core");
 const gpu = core.gpu;
 const game = @import("../aftersun.zig");
 
-pub const utils = @import("utils.zig");
-
 pub const Animation = @import("animation.zig").Animation;
 pub const Atlas = @import("atlas.zig").Atlas;
 pub const Sprite = @import("sprite.zig").Sprite;
