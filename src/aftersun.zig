@@ -528,6 +528,14 @@ pub fn update(app: *App) !bool {
         }
     }
 
+    const fb = state.camera.frameBufferMatrix();
+    const world = state.camera.screenToWorld(zmath.f32x4(state.mouse.position[0], state.mouse.position[1], 0, 0), fb);
+
+    _ = ecs.set(state.world, state.entities.debug, components.Position, .{
+        .x = world[0],
+        .y = world[1],
+    });
+
     _ = ecs.progress(state.world, 0);
 
     const batcher_commands = try state.batcher.finish();

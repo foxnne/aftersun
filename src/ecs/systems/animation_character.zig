@@ -34,7 +34,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                             var temp_head_direction = head_directions[i];
 
                             if (entity == game.state.entities.player) {
-                                const mouse_world = zmath.f32x4(game.state.mouse.position[0], game.state.mouse.position[1], 0, 0);
+                                const mouse_world = game.state.camera.screenToWorld(zmath.f32x4(game.state.mouse.position[0], game.state.mouse.position[1], 0, 0));
                                 const player_position = if (ecs.get(world, entity, components.Position)) |position| position.toF32x4() else zmath.f32x4s(0);
                                 const mouse_vector = mouse_world - player_position;
                                 temp_head_direction = Direction.find(8, mouse_vector[0], mouse_vector[1]);
