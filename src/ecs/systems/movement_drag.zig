@@ -17,7 +17,7 @@ pub fn system(world: *ecs.world_t) ecs.system_desc_t {
     var desc: ecs.system_desc_t = .{};
     desc.query.filter.terms[0] = .{ .id = ecs.id(components.Player) };
     desc.query.filter.terms[1] = .{ .id = ecs.id(components.Tile) };
-    desc.query.filter.terms[2] = .{ .id = ecs.pair(ecs.id(components.Request), ecs.id(components.Drag)) };
+    desc.query.filter.terms[2] = .{ .id = ecs.pair(ecs.id(components.Request), ecs.id(components.Drag)), .oper = ecs.oper_kind_t.Optional };
     desc.run = run;
 
     var ctx_desc: ecs.query_desc_t = .{};
@@ -106,6 +106,17 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         }
                     }
                     ecs.remove_pair(world, entity, ecs.id(components.Request), ecs.id(components.Drag));
+                } else {
+                    // Drag request is not yet present
+                    if (game.state.mouse.button(.primary)) |bt| {
+                        if (bt.released() and !std.mem.eql(i32, &bt.pressed_tile, &bt.released_tile)) {
+                            _ = ecs.set_pair(game.state.world, game.state.entities.player, ecs.id(components.Request), ecs.id(components.Drag), components.Drag, .{
+                                .start = .{ .x = bt.pressed_tile[0], .y = bt.pressed_tile[1] },
+                                .end = .{ .x = bt.released_tile[0], .y = bt.released_tile[1] },
+                                .modifier = if (bt.released_mods.shift) components.Drag.Modifier.half else if (bt.released_mods.control) components.Drag.Modifier.one else components.Drag.Modifier.all,
+                            });
+                        }
+                    }
                 }
             }
         }
