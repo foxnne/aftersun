@@ -510,7 +510,7 @@ pub fn update(app: *App) !bool {
                 state.mouse.setScrollState(mouse_scroll.xoffset, mouse_scroll.yoffset);
             },
             .mouse_motion => |mouse_motion| {
-                state.mouse.position = .{ @floatCast(mouse_motion.pos.x * content_scale[0]), @floatCast(mouse_motion.pos.y * content_scale[1]) };
+                state.mouse.position = .{ @floatCast(mouse_motion.pos.x), @floatCast(mouse_motion.pos.y) };
             },
             .mouse_press => |mouse_press| {
                 state.mouse.setButtonState(mouse_press.button, mouse_press.mods, .press);
