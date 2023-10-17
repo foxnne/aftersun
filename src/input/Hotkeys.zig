@@ -56,11 +56,15 @@ pub const Hotkey = struct {
 };
 
 pub fn hotkey(self: *Self, action: Action) ?*Hotkey {
+    var found: ?*Hotkey = null;
     for (self.hotkeys) |*hk| {
-        if (hk.action == action)
-            return hk;
+        if (hk.action == action) {
+            if (hk.state or found == null) {
+                found = hk;
+            }
+        }
     }
-    return null;
+    return found;
 }
 
 pub fn setHotkeyState(self: *Self, k: Key, mods: Mods, state: KeyState) void {
@@ -70,14 +74,16 @@ pub fn setHotkeyState(self: *Self, k: Key, mods: Mods, state: KeyState) void {
                 hk.previous_state = hk.state;
                 hk.state = switch (state) {
                     .release => false,
-                    else => true,
+                    .press => true,
+                    .repeat => hk.state,
                 };
             } else if (hk.mods) |md| {
                 if (@as(u8, @bitCast(md)) == @as(u8, @bitCast(mods))) {
                     hk.previous_state = hk.state;
                     hk.state = switch (state) {
                         .release => false,
-                        else => true,
+                        .press => true,
+                        .repeat => hk.state,
                     };
                 }
             }
@@ -114,6 +120,30 @@ pub fn initDefault(allocator: std.mem.Allocator) !Self {
         try hotkeys.append(.{
             .shortcut = "right arrow",
             .key = Key.right,
+            .action = .directional_right,
+        });
+
+        try hotkeys.append(.{
+            .shortcut = "w",
+            .key = Key.w,
+            .action = .directional_up,
+        });
+
+        try hotkeys.append(.{
+            .shortcut = "s",
+            .key = Key.s,
+            .action = .directional_down,
+        });
+
+        try hotkeys.append(.{
+            .shortcut = "a",
+            .key = Key.a,
+            .action = .directional_left,
+        });
+
+        try hotkeys.append(.{
+            .shortcut = "d",
+            .key = Key.d,
             .action = .directional_right,
         });
     }
