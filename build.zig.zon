@@ -1,22 +1,17 @@
 .{
+    .paths = .{
+        "src",
+        "build.zig",
+        "build.zig.zon",
+        "LICENSE",
+        "README.md",
+    },
     .name = "Aftersun",
     .version = "0.1.0",
     .dependencies = .{
         .mach_core = .{
-            .url = "https://pkg.machengine.org/mach-core/71ea86090c3095acdbc13bcc45b0666e39b53114.tar.gz",
-            .hash = "12203917ad7153ba955004d3b436ead6fc314de29d21ef0a7fda142025dd631c2709",
-        },
-        .mach_gpu_dawn = .{
-            .url = "https://pkg.machengine.org/mach-gpu-dawn/3690dfbd0b8b64203b83d651ca95b8c0d776019e.tar.gz",
-            .hash = "122037f1ecd3b4b4da9bb1b0507984d1d5286720ca8a39d562c3b6178d6dfdd199e4",
-        },
-        .direct3d_headers = .{
-            .url = "https://pkg.machengine.org/direct3d-headers/4b9e3c969d537ea09a6e512f8251e540ab5bbaca.tar.gz",
-            .hash = "1220f786406f31ae794a8eabf1f7f40c386d93755bfde2f677eb480af559130b499a",
-        },
-        .xcode_frameworks = .{
-            .url = "https://github.com/hexops/xcode-frameworks-pkg/archive/d486474a6af7fafd89e8314e0bf7eca4709f811b.tar.gz",
-            .hash = "1220293eae4bf67a7c27a18a8133621337cde91a97bc6859a9431b3b2d4217dfb5fb",
+            .url = "https://pkg.machengine.org/mach-core/331ce61cb8c075be6d7c46e49da8ccbd5967d9b7.tar.gz",
+            .hash = "12203bdeb8af9b1da2a521beafb51e3657e1c4f49b058cdd114f607b75dbb95ad306",
         },
     },
 }
