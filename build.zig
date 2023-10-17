@@ -67,6 +67,7 @@ pub fn build(b: *std.Build) !void {
     const assets = ProcessAssetsStep.init(b, "assets", "src/assets.zig", "src/animations.zig");
     const process_assets_step = b.step("process-assets", "generates struct for all assets");
     process_assets_step.dependOn(&assets.step);
+    app.compile.step.dependOn(&assets.step);
 
     const install_content_step = b.addInstallDirectory(.{
         .source_dir = .{ .path = thisDir() ++ "/" ++ content_dir },

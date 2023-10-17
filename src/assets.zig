@@ -3,6 +3,24 @@ const std = @import("std");
 
 pub const root = "assets/";
 
+pub const aftersun_lights_png = struct {
+  pub const path = "assets/images/aftersun_lights.png";
+};
+
+pub const aftersun_lights_atlas = struct {
+  pub const path = "assets/images/aftersun_lights.atlas";
+  pub const point128_png = 0;
+  pub const point256_png = 1;
+};
+
+pub const aftersun_png = struct {
+  pub const path = "assets/images/aftersun.png";
+};
+
+pub const aftersun_h_png = struct {
+  pub const path = "assets/images/aftersun_h.png";
+};
+
 pub const aftersun_atlas = struct {
   pub const path = "assets/images/aftersun.atlas";
   pub const Walk_S_0_HairF01 = 0;
@@ -811,24 +829,6 @@ pub const aftersun_atlas = struct {
   pub const Pine_0_Trunk = 803;
   pub const Oak_0_Ground = 804;
   pub const Pine_0_Ground = 805;
-};
-
-pub const aftersun_png = struct {
-  pub const path = "assets/images/aftersun.png";
-};
-
-pub const aftersun_h_png = struct {
-  pub const path = "assets/images/aftersun_h.png";
-};
-
-pub const aftersun_lights_atlas = struct {
-  pub const path = "assets/images/aftersun_lights.atlas";
-  pub const point128_png = 0;
-  pub const point256_png = 1;
-};
-
-pub const aftersun_lights_png = struct {
-  pub const path = "assets/images/aftersun_lights.png";
 };
 
 pub const aftersun_palette_png = struct {
