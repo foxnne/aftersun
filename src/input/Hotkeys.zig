@@ -74,16 +74,14 @@ pub fn setHotkeyState(self: *Self, k: Key, mods: Mods, state: KeyState) void {
                 hk.previous_state = hk.state;
                 hk.state = switch (state) {
                     .release => false,
-                    .press => true,
-                    .repeat => hk.state,
+                    else => true,
                 };
             } else if (hk.mods) |md| {
                 if (@as(u8, @bitCast(md)) == @as(u8, @bitCast(mods))) {
                     hk.previous_state = hk.state;
                     hk.state = switch (state) {
                         .release => false,
-                        .press => true,
-                        .repeat => hk.state,
+                        else => true,
                     };
                 }
             }
