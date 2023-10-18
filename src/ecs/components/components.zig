@@ -99,15 +99,15 @@ pub const Cell = struct {
 
 /// Values ramp up from 0.0 to 1.0 when movement starts and back down when movement stops.
 /// Do not use velocity direction to determine when something stops as it will continue past the moment of stopping.
-pub const Velocity = struct {
+pub const Inertia = struct {
     x: f32 = 0.0,
     y: f32 = 0.0,
 
-    pub fn direction(self: Velocity) game.math.Direction {
+    pub fn direction(self: Inertia) game.math.Direction {
         return game.math.Direction.find(8, self.x, self.y);
     }
 
-    pub fn toF32x4(self: Velocity) zmath.F32x4 {
+    pub fn toF32x4(self: Inertia) zmath.F32x4 {
         return zmath.f32x4(self.x, self.y, 0.0, 0.0);
     }
 };

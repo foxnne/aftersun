@@ -215,8 +215,6 @@ pub fn init(app: *App) !void {
     ecs.SYSTEM(world, "MovementCollisionSystem", ecs.OnUpdate, &movement_collision_system);
     var movement_system = @import("ecs/systems/movement.zig").system();
     ecs.SYSTEM(world, "MovementSystem", ecs.OnUpdate, &movement_system);
-    var velocity_system = @import("ecs/systems/velocity.zig").system();
-    ecs.SYSTEM(world, "VelocitySystem", ecs.OnUpdate, &velocity_system);
 
     // - Other
     // var inspect_system = @import("ecs/systems/inspect.zig").system();
@@ -237,6 +235,8 @@ pub fn init(app: *App) !void {
     ecs.OBSERVER(world, "FreeParticlesObserver", &free_particles_observer);
 
     // - Camera
+    var camera_inertia_system = @import("ecs/systems/camera_inertia.zig").system();
+    ecs.SYSTEM(world, "VelocitySystem", ecs.OnUpdate, &camera_inertia_system);
     var camera_follow_system = @import("ecs/systems/camera_follow.zig").system();
     ecs.SYSTEM(world, "CameraFollowSystem", ecs.OnUpdate, &camera_follow_system);
     var camera_zoom_system = @import("ecs/systems/camera_zoom.zig").system();
@@ -278,7 +278,7 @@ pub fn init(app: *App) !void {
     _ = ecs.set(world, player, components.Position, .{ .x = 0.0, .y = -32.0 });
     _ = ecs.set(world, player, components.Tile, .{ .x = 0, .y = -1, .counter = state.counter.count() });
     _ = ecs.set(world, player, components.Collider, .{});
-    _ = ecs.set(world, player, components.Velocity, .{});
+    _ = ecs.set(world, player, components.Inertia, .{});
     _ = ecs.set(world, player, components.CharacterRenderer, .{
         .body_index = assets.aftersun_atlas.Idle_SE_0_Body,
         .head_index = assets.aftersun_atlas.Idle_SE_0_Head,
