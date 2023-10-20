@@ -32,7 +32,8 @@ struct VertexOut {
 @group(0) @binding(6) var reverse_height: texture_2d<f32>;
 @group(0) @binding(7) var light: texture_2d<f32>;
 @group(0) @binding(8) var bloom: texture_2d<f32>;
-@group(0) @binding(9) var light_sampler: sampler;
+@group(0) @binding(9) var reflection: texture_2d<f32>;
+@group(0) @binding(10) var light_sampler: sampler;
 @fragment fn frag_main(
     @location(0) uv: vec2<f32>,
     @location(1) color: vec4<f32>,
@@ -55,9 +56,19 @@ struct VertexOut {
     } 
 
     var diffuse = textureSample(diffuse, diffuse_sampler, uv);
+    var reflection = textureSample(reflection, diffuse_sampler, uv);
     var environment = textureSample(environment, diffuse_sampler, uv);
     var bloom_mask = 1.0 - textureSample(height, diffuse_sampler, uv).bbbb;
     var bloom = textureSample(bloom, light_sampler, uv) * bloom_mask * 0.35;
 
-    return diffuse * environment * color + bloom;
+    const grass = vec4(110.0 / 255.0, 138.0 / 255.0, 92.0 / 255.0, 1.0);
+
+    if (diffuse.a == 0.0) {
+        if (reflection.a == 0.0) {
+            return grass * environment + bloom;
+        }
+        return reflection * environment * color + bloom;
+    } else {
+        return diffuse * environment * color + bloom;
+    }
 }

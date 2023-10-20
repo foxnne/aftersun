@@ -218,6 +218,17 @@ pub fn init(state: *game.GameState) !void {
         }),
     );
 
+    state.bind_group_reflection = core.device.createBindGroup(
+        &gpu.BindGroup.Descriptor.init(.{
+            .layout = state.pipeline_default.getBindGroupLayout(0),
+            .entries = &.{
+                gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
+                gpu.BindGroup.Entry.textureView(1, state.reflection_output.view_handle),
+                gpu.BindGroup.Entry.sampler(2, state.reflection_output.sampler_handle),
+            },
+        }),
+    );
+
     state.bind_group_diffuse = core.device.createBindGroup(
         &gpu.BindGroup.Descriptor.init(.{
             .layout = state.pipeline_diffuse.getBindGroupLayout(0),
@@ -313,7 +324,8 @@ pub fn init(state: *game.GameState) !void {
                 gpu.BindGroup.Entry.textureView(6, state.reverse_height_output.view_handle),
                 gpu.BindGroup.Entry.textureView(7, state.light_output.view_handle),
                 gpu.BindGroup.Entry.textureView(8, state.bloom_output.view_handle),
-                gpu.BindGroup.Entry.sampler(9, state.light_output.sampler_handle),
+                gpu.BindGroup.Entry.textureView(9, state.reflection_output.view_handle),
+                gpu.BindGroup.Entry.sampler(10, state.light_output.sampler_handle),
             },
         }),
     );

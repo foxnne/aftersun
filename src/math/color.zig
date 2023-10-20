@@ -63,7 +63,6 @@ pub const Colors = struct {
     pub const green = Color.initFloats(0, 1, 0, 1);
     pub const blue = Color.initFloats(0, 0, 1, 1);
     pub const grass = Color.initBytes(110, 138, 92, 255);
-    pub const background = Color.initBytes(42, 44, 53, 255);
-    pub const background_dark = Color.initBytes(30, 31, 38, 255);
-    pub const text = Color.initBytes(222, 177, 142, 255);
+    pub const clear = Color.initBytes(0, 0, 0, 0);
+    pub const water = Color.initBytes(35, 100, 255, 255);
 };

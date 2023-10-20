@@ -26,7 +26,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
     game.state.batcher.begin(.{
         .pipeline_handle = game.state.pipeline_diffuse,
         .bind_group_handle = game.state.bind_group_diffuse,
-        .output_handle = game.state.diffuse_output.view_handle,
+        .output_handle = game.state.reflection_output.view_handle,
         .clear_color = math.Colors.clear.toGpuColor(),
     }) catch unreachable;
 
@@ -34,9 +34,10 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
         var i: usize = 0;
         while (i < it.count()) : (i += 1) {
             if (ecs.field(it, components.Position, 1)) |positions| {
-                const rotation = if (ecs.field(it, components.Rotation, 2)) |rotations| rotations[i].value else 0.0;
+                const rotation = 180;
                 var position = positions[i].toF32x4();
-                position[1] += position[2];
+                position[1] -= position[2];
+                position[1] -= game.settings.pixels_per_unit / 3;
 
                 if (ecs.field(it, components.SpriteRenderer, 3)) |renderers| {
                     renderers[i].order = i; // Set order so height passes can match time
@@ -50,7 +51,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                             .vert_mode = renderers[i].vert_mode,
                             .frag_mode = renderers[i].frag_mode,
                             .time = game.state.game_time + @as(f32, @floatFromInt(renderers[i].order)),
-                            .flip_x = renderers[i].flip_x,
+                            .flip_x = !renderers[i].flip_x,
                             .flip_y = renderers[i].flip_y,
                             .rotation = rotation,
                         },
@@ -66,7 +67,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         .{
                             .color = renderers[i].body_color,
                             .frag_mode = .palette,
-                            .flip_x = renderers[i].flip_body,
+                            .flip_x = !renderers[i].flip_body,
                             .rotation = rotation,
                         },
                     ) catch unreachable;
@@ -79,7 +80,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         .{
                             .color = renderers[i].head_color,
                             .frag_mode = .palette,
-                            .flip_x = renderers[i].flip_head,
+                            .flip_x = !renderers[i].flip_head,
                             .rotation = rotation,
                         },
                     ) catch unreachable;
@@ -92,7 +93,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         .{
                             .color = renderers[i].bottom_color,
                             .frag_mode = .palette,
-                            .flip_x = renderers[i].flip_body,
+                            .flip_x = !renderers[i].flip_body,
                             .rotation = rotation,
                         },
                     ) catch unreachable;
@@ -105,7 +106,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         .{
                             .color = renderers[i].feet_color,
                             .frag_mode = .palette,
-                            .flip_x = renderers[i].flip_body,
+                            .flip_x = !renderers[i].flip_body,
                             .rotation = rotation,
                         },
                     ) catch unreachable;
@@ -118,7 +119,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         .{
                             .color = renderers[i].top_color,
                             .frag_mode = .palette,
-                            .flip_x = renderers[i].flip_body,
+                            .flip_x = !renderers[i].flip_body,
                             .rotation = rotation,
                         },
                     ) catch unreachable;
@@ -129,7 +130,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         &game.state.diffusemap,
                         game.state.atlas.sprites[renderers[i].back_index],
                         .{
-                            .flip_x = renderers[i].flip_body,
+                            .flip_x = !renderers[i].flip_body,
                             .rotation = rotation,
                         },
                     ) catch unreachable;
@@ -142,25 +143,10 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         .{
                             .color = renderers[i].hair_color,
                             .frag_mode = .palette,
-                            .flip_x = renderers[i].flip_head,
+                            .flip_x = !renderers[i].flip_head,
                             .rotation = rotation,
                         },
                     ) catch unreachable;
-                }
-
-                if (ecs.field(it, components.ParticleRenderer, 5)) |renderers| {
-                    for (renderers[i].particles) |particle| {
-                        if (particle.alive()) {
-                            game.state.batcher.sprite(
-                                zmath.f32x4(particle.position[0], particle.position[1], particle.position[2], 0),
-                                &game.state.diffusemap,
-                                game.state.atlas.sprites[particle.index],
-                                .{
-                                    .color = particle.color,
-                                },
-                            ) catch unreachable;
-                        }
-                    }
                 }
             }
         }

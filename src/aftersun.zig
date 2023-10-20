@@ -70,6 +70,7 @@ pub const GameState = struct {
     pipeline_environment: *gpu.RenderPipeline = undefined,
     pipeline_final: *gpu.RenderPipeline = undefined,
     bind_group_default: *gpu.BindGroup = undefined,
+    bind_group_reflection: *gpu.BindGroup = undefined,
     bind_group_diffuse: *gpu.BindGroup = undefined,
     bind_group_height: *gpu.BindGroup = undefined,
     bind_group_glow: *gpu.BindGroup = undefined,
@@ -87,6 +88,7 @@ pub const GameState = struct {
     heightmap: gfx.Texture = undefined,
     lightmap: gfx.Texture = undefined,
     diffuse_output: gfx.Texture = undefined,
+    reflection_output: gfx.Texture = undefined,
     height_output: gfx.Texture = undefined,
     glow_output: gfx.Texture = undefined,
     bloom_h_output: gfx.Texture = undefined,
@@ -94,6 +96,8 @@ pub const GameState = struct {
     reverse_height_output: gfx.Texture = undefined,
     environment_output: gfx.Texture = undefined,
     light_output: gfx.Texture = undefined,
+    temp_output: gfx.Texture = undefined,
+    final_output: gfx.Texture = undefined,
     atlas: gfx.Atlas = undefined,
     light_atlas: gfx.Atlas = undefined,
     mouse: input.Mouse = undefined,
@@ -163,6 +167,8 @@ pub fn init(app: *App) !void {
 
     // Create textures to render to.
     state.diffuse_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{ .format = core.descriptor.format });
+    state.temp_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{ .format = core.descriptor.format });
+    state.reflection_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{ .format = core.descriptor.format });
     state.height_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{ .format = core.descriptor.format });
     state.glow_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{ .format = core.descriptor.format });
     state.bloom_h_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{
@@ -253,6 +259,8 @@ pub fn init(app: *App) !void {
     // - Render
     var render_culling_system = @import("ecs/systems/render_culling.zig").system();
     ecs.SYSTEM(world, "RenderCullingSystem", ecs.PostUpdate, &render_culling_system);
+    var render_reflection_system = @import("ecs/systems/render_reflection_pass.zig").system();
+    ecs.SYSTEM(world, "RenderReflectionSystem", ecs.PostUpdate, &render_reflection_system);
     var render_diffuse_system = @import("ecs/systems/render_diffuse_pass.zig").system();
     ecs.SYSTEM(world, "RenderDiffuseSystem", ecs.PostUpdate, &render_diffuse_system);
     var render_light_system = @import("ecs/systems/render_light_pass.zig").system();
@@ -271,6 +279,32 @@ pub fn init(app: *App) !void {
     ecs.SYSTEM(world, "RenderBloomSystem", ecs.PostUpdate, &render_bloom_system);
     var render_final_system = @import("ecs/systems/render_final_pass.zig").system();
     ecs.SYSTEM(world, "RenderFinalSystem", ecs.PostUpdate, &render_final_system);
+
+    // Create map
+    {
+        for (0..30) |x_i| {
+            const start: i32 = -15;
+            const x: i32 = @intCast(x_i);
+
+            const current_x = x + start;
+
+            for (0..30) |y_i| {
+                const start_y: i32 = -15;
+                const y: i32 = @intCast(y_i);
+
+                const current_y = y + start_y;
+
+                const grass = ecs.new_id(world);
+
+                const tile = components.Tile{ .x = current_x, .y = current_y, .z = 0, .counter = 0 };
+                const position = tile.toPosition();
+
+                _ = ecs.set(world, grass, components.Position, position);
+                _ = ecs.set(world, grass, components.Tile, tile);
+                _ = ecs.set(world, grass, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Grass_full_0_Layer_0 });
+            }
+        }
+    }
 
     state.entities.player = ecs.new_entity(world, "Player");
     const player = state.entities.player;
