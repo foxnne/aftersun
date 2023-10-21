@@ -296,12 +296,29 @@ pub fn init(app: *App) !void {
 
                 const grass = ecs.new_id(world);
 
+                const offset: f32 = settings.pixels_per_unit / 2.0;
+
                 const tile = components.Tile{ .x = current_x, .y = current_y, .z = 0, .counter = 0 };
-                const position = tile.toPosition();
+                var position = tile.toPosition();
+                position.x += offset;
+                position.y += offset;
 
                 _ = ecs.set(world, grass, components.Position, position);
                 _ = ecs.set(world, grass, components.Tile, tile);
-                _ = ecs.set(world, grass, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Grass_full_0_Layer_0 });
+
+                if (current_y < -3) {
+                    _ = ecs.set(world, grass, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Water_full_0_Layer_0, .color = .{ 1.0, 1.0, 1.0, 0.8 } });
+                } else if (current_y == -3) {
+                    _ = ecs.set(world, grass, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Grass_Water_S_0_Layer_0 });
+                } else {
+                    var rand = std.rand.DefaultPrng.init(y_i + x_i);
+                    var random = rand.random();
+                    const rand_int = random.int(u1);
+
+                    const index: usize = if (rand_int == 0) assets.aftersun_atlas.Grass_full_4_0_Layer_0 else assets.aftersun_atlas.Grass_full_0_Layer_0;
+
+                    _ = ecs.set(world, grass, components.SpriteRenderer, .{ .index = index });
+                }
             }
         }
     }
@@ -360,7 +377,10 @@ pub fn init(app: *App) !void {
         const campfire = ecs.new_entity(world, "campfire");
         _ = ecs.set(world, campfire, components.Position, .{ .x = 32.0, .y = -64.0 });
         _ = ecs.set(world, campfire, components.Tile, .{ .x = 1, .y = -2, .counter = state.counter.count() });
-        _ = ecs.set(world, campfire, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Campfire_0_Layer_0 });
+        _ = ecs.set(world, campfire, components.SpriteRenderer, .{
+            .index = assets.aftersun_atlas.Campfire_0_Layer_0,
+            .reflect = true,
+        });
         _ = ecs.set(world, campfire, components.SpriteAnimator, .{
             .state = .play,
             .animation = &animations.Campfire_Layer_0,
@@ -392,7 +412,10 @@ pub fn init(app: *App) !void {
         const tree = ecs.new_entity(world, "Tree01");
         _ = ecs.set(world, tree, components.Position, .{});
         _ = ecs.set(world, tree, components.Tile, .{ .counter = state.counter.count() });
-        _ = ecs.set(world, tree, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Oak_0_Trunk });
+        _ = ecs.set(world, tree, components.SpriteRenderer, .{
+            .index = assets.aftersun_atlas.Oak_0_Trunk,
+            .reflect = true,
+        });
         _ = ecs.set(world, tree, components.Collider, .{});
 
         const leaf_color = math.Color.initBytes(16, 0, 0, 255).toSlice();
@@ -405,6 +428,7 @@ pub fn init(app: *App) !void {
             .color = leaf_color,
             .frag_mode = .palette,
             .vert_mode = .top_sway,
+            .reflect = true,
         });
 
         const tree_leaves_02 = ecs.new_entity(world, "TreeLeaves02");
@@ -415,6 +439,7 @@ pub fn init(app: *App) !void {
             .color = leaf_color,
             .frag_mode = .palette,
             .vert_mode = .top_sway,
+            .reflect = true,
         });
 
         const tree_leaves_03 = ecs.new_entity(world, "TreeLeaves03");
@@ -425,6 +450,7 @@ pub fn init(app: *App) !void {
             .color = leaf_color,
             .frag_mode = .palette,
             .vert_mode = .top_sway,
+            .reflect = true,
         });
 
         const tree_leaves_04 = ecs.new_entity(world, "TreeLeaves04");
@@ -435,6 +461,7 @@ pub fn init(app: *App) !void {
             .color = leaf_color,
             .frag_mode = .palette,
             .vert_mode = .top_sway,
+            .reflect = true,
         });
     }
 
@@ -445,7 +472,10 @@ pub fn init(app: *App) !void {
         const tree = ecs.new_entity(world, "Tree02");
         _ = ecs.set(world, tree, components.Position, position);
         _ = ecs.set(world, tree, components.Tile, position.toTile(state.counter.count()));
-        _ = ecs.set(world, tree, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Oak_0_Trunk });
+        _ = ecs.set(world, tree, components.SpriteRenderer, .{
+            .index = assets.aftersun_atlas.Oak_0_Trunk,
+            .reflect = true,
+        });
         _ = ecs.set(world, tree, components.Collider, .{});
 
         const leaf_color = math.Color.initBytes(15, 0, 0, 255).toSlice();
@@ -458,6 +488,7 @@ pub fn init(app: *App) !void {
             .color = leaf_color,
             .frag_mode = .palette,
             .vert_mode = .top_sway,
+            .reflect = true,
         });
 
         const tree_leaves_02 = ecs.new_w_id(world, ecs.pair(ecs.ChildOf, tree));
@@ -468,6 +499,7 @@ pub fn init(app: *App) !void {
             .color = leaf_color,
             .frag_mode = .palette,
             .vert_mode = .top_sway,
+            .reflect = true,
         });
 
         const tree_leaves_03 = ecs.new_w_id(world, ecs.pair(ecs.ChildOf, tree));
@@ -478,6 +510,7 @@ pub fn init(app: *App) !void {
             .color = leaf_color,
             .frag_mode = .palette,
             .vert_mode = .top_sway,
+            .reflect = true,
         });
 
         const tree_leaves_04 = ecs.new_w_id(world, ecs.pair(ecs.ChildOf, tree));
@@ -488,6 +521,7 @@ pub fn init(app: *App) !void {
             .color = leaf_color,
             .frag_mode = .palette,
             .vert_mode = .top_sway,
+            .reflect = true,
         });
     }
 
@@ -499,16 +533,13 @@ pub fn init(app: *App) !void {
         const tree = ecs.new_entity(world, "Tree03");
         _ = ecs.set(world, tree, components.Position, position);
         _ = ecs.set(world, tree, components.Tile, position.toTile(state.counter.count()));
-        _ = ecs.set(world, tree, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Pine_0_Trunk, .vert_mode = .top_sway });
+        _ = ecs.set(world, tree, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Pine_0_Trunk, .vert_mode = .top_sway, .reflect = true });
         _ = ecs.set(world, tree, components.Collider, .{});
 
         const tree_leaves_01 = ecs.new_w_id(world, ecs.pair(ecs.ChildOf, tree));
         _ = ecs.set(world, tree_leaves_01, components.Position, position);
         _ = ecs.set(world, tree_leaves_01, components.Tile, position.toTile(state.counter.count()));
-        _ = ecs.set(world, tree_leaves_01, components.SpriteRenderer, .{
-            .index = assets.aftersun_atlas.Pine_0_Needles,
-            .vert_mode = .top_sway,
-        });
+        _ = ecs.set(world, tree_leaves_01, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Pine_0_Needles, .vert_mode = .top_sway, .reflect = true });
     }
 }
 

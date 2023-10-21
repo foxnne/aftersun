@@ -42,20 +42,22 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                 if (ecs.field(it, components.SpriteRenderer, 3)) |renderers| {
                     renderers[i].order = i; // Set order so height passes can match time
 
-                    game.state.batcher.sprite(
-                        position,
-                        &game.state.diffusemap,
-                        game.state.atlas.sprites[renderers[i].index],
-                        .{
-                            .color = renderers[i].color,
-                            .vert_mode = renderers[i].vert_mode,
-                            .frag_mode = renderers[i].frag_mode,
-                            .time = game.state.game_time + @as(f32, @floatFromInt(renderers[i].order)),
-                            .flip_x = !renderers[i].flip_x,
-                            .flip_y = renderers[i].flip_y,
-                            .rotation = rotation,
-                        },
-                    ) catch unreachable;
+                    if (renderers[i].reflect) {
+                        game.state.batcher.sprite(
+                            position,
+                            &game.state.diffusemap,
+                            game.state.atlas.sprites[renderers[i].index],
+                            .{
+                                .color = renderers[i].color,
+                                .vert_mode = renderers[i].vert_mode,
+                                .frag_mode = renderers[i].frag_mode,
+                                .time = game.state.game_time + @as(f32, @floatFromInt(renderers[i].order)),
+                                .flip_x = !renderers[i].flip_x,
+                                .flip_y = renderers[i].flip_y,
+                                .rotation = rotation,
+                            },
+                        ) catch unreachable;
+                    }
                 }
 
                 if (ecs.field(it, components.CharacterRenderer, 4)) |renderers| {

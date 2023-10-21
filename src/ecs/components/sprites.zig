@@ -10,6 +10,7 @@ pub const SpriteRenderer = struct {
     frag_mode: gfx.Batcher.SpriteOptions.FragRenderMode = .standard,
     vert_mode: gfx.Batcher.SpriteOptions.VertRenderMode = .standard,
     order: usize = 0,
+    reflect: bool = false,
 };
 
 pub const SpriteAnimator = struct {

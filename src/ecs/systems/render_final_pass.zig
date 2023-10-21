@@ -24,7 +24,7 @@ pub fn callback(it: *ecs.iter_t) callconv(.C) void {
     game.state.batcher.begin(.{
         .pipeline_handle = game.state.pipeline_final,
         .bind_group_handle = game.state.bind_group_final,
-        .clear_color = game.math.Colors.water.toGpuColor(),
+        .clear_color = game.math.Colors.black.toGpuColor(),
     }) catch unreachable;
 
     game.state.batcher.texture(zmath.f32x4s(0), &game.state.diffuse_output, .{}) catch unreachable;

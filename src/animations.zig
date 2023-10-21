@@ -253,6 +253,21 @@ pub var Campfire_Layer_0 = [_]usize {
     assets.aftersun_atlas.Campfire_6_Layer_0,
     assets.aftersun_atlas.Campfire_7_Layer_0,
 };
+pub var Grass_full_3_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_full_3_0_Layer_0,
+};
+pub var Grass_full_4_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_full_4_0_Layer_0,
+};
+pub var Grass_full_2_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_full_2_0_Layer_0,
+};
+pub var Grass_full_0_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_full_0_0_Layer_0,
+};
+pub var Grass_full_1_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_full_1_0_Layer_0,
+};
 pub var Walk_S_HairF01 = [_]usize {
     assets.aftersun_atlas.Walk_S_0_HairF01,
     assets.aftersun_atlas.Walk_S_1_HairF01,

@@ -56,19 +56,12 @@ struct VertexOut {
     } 
 
     var diffuse = textureSample(diffuse, diffuse_sampler, uv);
-    var reflection = textureSample(reflection, diffuse_sampler, uv);
+    var reflection = textureSample(reflection, diffuse_sampler, uv) * (1.0 - diffuse.a);
     var environment = textureSample(environment, diffuse_sampler, uv);
     var bloom_mask = 1.0 - textureSample(height, diffuse_sampler, uv).bbbb;
     var bloom = textureSample(bloom, light_sampler, uv) * bloom_mask * 0.35;
 
     const grass = vec4(110.0 / 255.0, 138.0 / 255.0, 92.0 / 255.0, 1.0);
 
-    if (diffuse.a == 0.0) {
-        if (reflection.a == 0.0) {
-            return grass * environment + bloom;
-        }
-        return reflection * environment * color + bloom;
-    } else {
-        return diffuse * environment * color + bloom;
-    }
+    return (reflection + diffuse * (1.0 - reflection.a)) * environment * color + bloom;
 }
