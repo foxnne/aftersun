@@ -78,6 +78,14 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                                                 movements[i].end = tiles[i];
                                                                 _ = ecs.set_pair(world, entity, ecs.id(components.Direction), ecs.id(components.Movement), components.Direction, .none);
                                                             }
+                                                        } else {
+                                                            // This is a collision of a non-collider object with a collider.
+                                                            // Typically, this should be disallowed, as tossing things around shouldn't ignore colliders.
+                                                            //
+                                                            // Collision. Set movement request to same tile to prevent extra frames on set/add and
+                                                            // zero movement direction.
+                                                            movements[i].end = tiles[i];
+                                                            _ = ecs.set_pair(world, entity, ecs.id(components.Direction), ecs.id(components.Movement), components.Direction, .none);
                                                         }
                                                     }
                                                 }

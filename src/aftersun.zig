@@ -300,7 +300,7 @@ pub fn init(app: *App) !void {
 
                 const tile = components.Tile{ .x = current_x, .y = current_y, .z = 0, .counter = 0 };
                 var position = tile.toPosition();
-                position.x += offset;
+                position.x -= offset;
                 position.y += offset;
 
                 _ = ecs.set(world, grass, components.Position, position);
