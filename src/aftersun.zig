@@ -307,7 +307,7 @@ pub fn init(app: *App) !void {
                 _ = ecs.set(world, grass, components.Tile, tile);
 
                 if (current_y < -3) {
-                    _ = ecs.set(world, grass, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Water_full_0_Layer_0, .color = .{ 1.0, 1.0, 1.0, 0.8 } });
+                    _ = ecs.set(world, grass, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Water_full_0_Layer_0, .color = .{ 1.0, 1.0, 1.0, 1.0 } });
                 } else if (current_y == -3) {
                     _ = ecs.set(world, grass, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Grass_Water_S_0_Layer_0 });
                 } else {
