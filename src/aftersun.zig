@@ -150,7 +150,7 @@ pub fn init(app: *App) !void {
 
     state.batcher = try gfx.Batcher.init(allocator, settings.batcher_max_sprites);
     state.cells = std.AutoArrayHashMap(components.Cell, ecs.entity_t).init(allocator);
-    state.camera = gfx.Camera.init(settings.design_size, window_size, zmath.f32x4s(0));
+    state.camera = gfx.Camera.init(zmath.f32x4s(0));
 
     state.atlas = try gfx.Atlas.initFromFile(allocator, assets.aftersun_atlas.path);
     state.light_atlas = try gfx.Atlas.initFromFile(allocator, assets.aftersun_lights_atlas.path);
@@ -282,6 +282,8 @@ pub fn init(app: *App) !void {
 
     // Create map
     {
+        var rand = std.rand.DefaultPrng.init(1293846591272);
+        var random = rand.random();
         for (0..30) |x_i| {
             const start: i32 = -15;
             const x: i32 = @intCast(x_i);
@@ -296,12 +298,8 @@ pub fn init(app: *App) !void {
 
                 const grass = ecs.new_id(world);
 
-                const offset: f32 = settings.pixels_per_unit / 2.0;
-
                 const tile = components.Tile{ .x = current_x, .y = current_y, .z = 0, .counter = 0 };
                 var position = tile.toPosition();
-                position.x -= offset;
-                position.y += offset;
 
                 _ = ecs.set(world, grass, components.Position, position);
                 _ = ecs.set(world, grass, components.Tile, tile);
@@ -311,8 +309,6 @@ pub fn init(app: *App) !void {
                 } else if (current_y == -3) {
                     _ = ecs.set(world, grass, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Grass_Water_S_0_Layer_0 });
                 } else {
-                    var rand = std.rand.DefaultPrng.init(y_i + x_i);
-                    var random = rand.random();
                     const rand_int = random.int(u1);
 
                     const index: usize = if (rand_int == 0) assets.aftersun_atlas.Grass_full_4_0_Layer_0 else assets.aftersun_atlas.Grass_full_0_Layer_0;
@@ -587,7 +583,9 @@ pub fn update(app: *App) !bool {
                 return true;
             },
             .framebuffer_resize => |size| {
-                state.camera.frameBufferResize(size);
+                framebuffer_size[0] = @floatFromInt(size.width);
+                framebuffer_size[1] = @floatFromInt(size.height);
+                state.camera.frameBufferResize();
             },
             else => {},
         }

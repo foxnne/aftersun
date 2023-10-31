@@ -15,7 +15,7 @@ pub fn callback(it: *ecs.iter_t) callconv(.C) void {
     if (it.count() > 0) return;
 
     const uniforms = gfx.UniformBufferObject{
-        .mvp = zmath.transpose(zmath.orthographicLh(game.state.camera.design_size[0], game.state.camera.design_size[1], -100, 100)),
+        .mvp = zmath.transpose(zmath.orthographicLh(game.settings.design_size[0], game.settings.design_size[1], -100, 100)),
     };
 
     game.state.batcher.begin(.{

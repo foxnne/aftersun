@@ -28,7 +28,7 @@ pub fn callback(it: *ecs.iter_t) callconv(.C) void {
 
     const shadow_color = game.state.environment.shadowColor().toSlice();
     const uniforms = EnvironmentUniforms{
-        .mvp = zmath.transpose(zmath.orthographicLh(game.state.camera.design_size[0], game.state.camera.design_size[1], -100, 100)),
+        .mvp = zmath.transpose(zmath.orthographicLh(game.settings.design_size[0], game.settings.design_size[1], -100, 100)),
         .ambient_xy_angle = game.state.environment.ambientXYAngle(),
         .ambient_z_angle = game.state.environment.ambientZAngle(),
         .shadow_color = .{ shadow_color[0], shadow_color[1], shadow_color[2] },

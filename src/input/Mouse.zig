@@ -117,7 +117,7 @@ pub fn setScrollState(self: *Self, x: f32, y: f32) void {
     self.scroll_y = y;
 
     if (y > game.settings.zoom_scroll_tolerance and game.state.camera.zoom_progress < 0.0) {
-        const max_zoom = game.state.camera.maxZoom();
+        const max_zoom = game.gfx.Camera.maxZoom();
         game.state.camera.zoom_step = @round(game.state.camera.zoom);
         if (game.state.camera.zoom_step + 1.0 <= max_zoom) {
             game.state.camera.zoom_progress = 0.0;
@@ -125,7 +125,7 @@ pub fn setScrollState(self: *Self, x: f32, y: f32) void {
         }
     }
     if (y < -game.settings.zoom_scroll_tolerance and game.state.camera.zoom_progress < 0.0) {
-        const min_zoom = game.state.camera.minZoom();
+        const min_zoom = game.gfx.Camera.minZoom();
         game.state.camera.zoom_step = @round(game.state.camera.zoom);
         if (game.state.camera.zoom_step - 1.0 >= min_zoom) {
             game.state.camera.zoom_progress = 0.0;
