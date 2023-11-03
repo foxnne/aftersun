@@ -10,8 +10,6 @@ pub const Camera = struct {
     zoom_step_next: f32 = 1.0,
     zoom_progress: f32 = -1.0,
     position: zmath.F32x4 = zmath.f32x4s(0),
-    tile: zmath.F32x4 = zmath.f32x4s(0),
-    target_tile: zmath.F32x4 = zmath.f32x4s(0),
     culling_margin: f32 = 256.0,
 
     pub fn init(position: zmath.F32x4) Camera {

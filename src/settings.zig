@@ -27,16 +27,16 @@ pub const pixels_per_unit: f32 = 32.0;
 pub const movement_cooldown: f32 = 0.38;
 
 /// The number of sprites expected per batch to the batcher.
-pub const batcher_max_sprites = 6000;
+pub const batcher_max_sprites = 5000;
 
 /// The font size used by zgui elements.
 pub const zgui_font_size = 14;
 
 /// Size of a square game cell in tiles wide/tall.
-pub const cell_size = 8;
+pub const cell_size = 12;
 
 /// Maximum number of tiles visible either in width or height
-pub const max_visible_tiles: f32 = @floatFromInt(cell_size * 4);
+pub const max_visible_tiles: f32 = @floatFromInt(cell_size * 2);
 
 /// Speed at which the camera will lerp to new velocity.
 pub const camera_follow_speed = 1.0;

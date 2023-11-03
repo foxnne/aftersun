@@ -80,12 +80,19 @@ pub const Tile = struct {
 
     pub fn toCell(self: Tile) Cell {
         return .{
-            .x = @divTrunc(self.x, game.settings.cell_size),
-            .y = @divTrunc(self.y, game.settings.cell_size),
-            .z = @divTrunc(self.z, game.settings.cell_size),
+            .x = @divFloor(self.x, game.settings.cell_size),
+            .y = @divFloor(self.y, game.settings.cell_size),
+            .z = @divFloor(self.z, game.settings.cell_size),
         };
     }
 };
+
+pub const MapTile = enum(u8) {
+    ground,
+    water,
+};
+
+pub const EmptyTile = struct {};
 
 pub const Collider = struct {
     trigger: bool = false,
@@ -95,6 +102,20 @@ pub const Cell = struct {
     x: i32 = 0,
     y: i32 = 0,
     z: i32 = 0,
+
+    pub fn getAllSurrounding(self: Cell) [9]Cell {
+        return .{
+            self,
+            .{ .x = self.x, .y = self.y + 1, .z = self.z },
+            .{ .x = self.x + 1, .y = self.y + 1, .z = self.z },
+            .{ .x = self.x + 1, .y = self.y, .z = self.z },
+            .{ .x = self.x + 1, .y = self.y - 1, .z = self.z },
+            .{ .x = self.x, .y = self.y - 1, .z = self.z },
+            .{ .x = self.x - 1, .y = self.y - 1, .z = self.z },
+            .{ .x = self.x - 1, .y = self.y, .z = self.z },
+            .{ .x = self.x - 1, .y = self.y + 1, .z = self.z },
+        };
+    }
 };
 
 /// Values ramp up from 0.0 to 1.0 when movement starts and back down when movement stops.

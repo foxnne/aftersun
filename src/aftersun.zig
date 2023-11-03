@@ -60,6 +60,7 @@ pub const GameState = struct {
     environment: environment.Environment = .{},
     counter: Counter = .{},
     cells: std.AutoArrayHashMap(components.Cell, ecs.entity_t) = undefined,
+    tiles: std.ArrayList(ecs.entity_t) = undefined,
     output_channel: Channel = .final,
     pipeline_default: *gpu.RenderPipeline = undefined,
     pipeline_diffuse: *gpu.RenderPipeline = undefined,
@@ -150,6 +151,7 @@ pub fn init(app: *App) !void {
 
     state.batcher = try gfx.Batcher.init(allocator, settings.batcher_max_sprites);
     state.cells = std.AutoArrayHashMap(components.Cell, ecs.entity_t).init(allocator);
+    state.tiles = std.ArrayList(ecs.entity_t).init(allocator);
     state.camera = gfx.Camera.init(zmath.f32x4s(0));
 
     state.atlas = try gfx.Atlas.initFromFile(allocator, assets.aftersun_atlas.path);
@@ -197,7 +199,7 @@ pub fn init(app: *App) !void {
     state.world = world;
 
     // Ensure that auto-generated IDs are well above anything we will need.
-    ecs.set_entity_range(world, 8000, 0);
+    //ecs.set_entity_range(world, 8000, std.math.maxInt(u64));
 
     // Register all components
     components.register(world);
@@ -219,7 +221,7 @@ pub fn init(app: *App) !void {
     // - Movement
     var movement_collision_system = @import("ecs/systems/movement_collision.zig").system(world);
     ecs.SYSTEM(world, "MovementCollisionSystem", ecs.OnUpdate, &movement_collision_system);
-    var movement_system = @import("ecs/systems/movement.zig").system();
+    var movement_system = @import("ecs/systems/movement.zig").system(world);
     ecs.SYSTEM(world, "MovementSystem", ecs.OnUpdate, &movement_system);
 
     // - Other
@@ -280,50 +282,18 @@ pub fn init(app: *App) !void {
     var render_final_system = @import("ecs/systems/render_final_pass.zig").system();
     ecs.SYSTEM(world, "RenderFinalSystem", ecs.PostUpdate, &render_final_system);
 
-    // Create map
-    {
-        var rand = std.rand.DefaultPrng.init(1293846591272);
-        var random = rand.random();
-        for (0..30) |x_i| {
-            const start: i32 = -15;
-            const x: i32 = @intCast(x_i);
+    const player_tile: components.Tile = .{ .x = 0, .y = -1, .counter = state.counter.count() };
+    const player_cell: components.Cell = player_tile.toCell();
 
-            const current_x = x + start;
-
-            for (0..30) |y_i| {
-                const start_y: i32 = -15;
-                const y: i32 = @intCast(y_i);
-
-                const current_y = y + start_y;
-
-                const grass = ecs.new_id(world);
-
-                const tile = components.Tile{ .x = current_x, .y = current_y, .z = 0, .counter = 0 };
-                var position = tile.toPosition();
-
-                _ = ecs.set(world, grass, components.Position, position);
-                _ = ecs.set(world, grass, components.Tile, tile);
-
-                if (current_y < -3) {
-                    _ = ecs.set(world, grass, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Water_full_0_Layer_0, .color = .{ 1.0, 1.0, 1.0, 1.0 } });
-                } else if (current_y == -3) {
-                    _ = ecs.set(world, grass, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Grass_Water_S_0_Layer_0 });
-                } else {
-                    const rand_int = random.int(u1);
-
-                    const index: usize = if (rand_int == 0) assets.aftersun_atlas.Grass_full_4_0_Layer_0 else assets.aftersun_atlas.Grass_full_0_Layer_0;
-
-                    _ = ecs.set(world, grass, components.SpriteRenderer, .{ .index = index });
-                }
-            }
-        }
+    for (player_cell.getAllSurrounding()) |cell| {
+        loadCell(cell);
     }
 
     state.entities.player = ecs.new_entity(world, "Player");
     const player = state.entities.player;
     ecs.add(world, player, components.Player);
-    _ = ecs.set(world, player, components.Position, .{ .x = 0.0, .y = -32.0 });
-    _ = ecs.set(world, player, components.Tile, .{ .x = 0, .y = -1, .counter = state.counter.count() });
+    _ = ecs.set(world, player, components.Position, player_tile.toPosition());
+    _ = ecs.set(world, player, components.Tile, player_tile);
     _ = ecs.set(world, player, components.Collider, .{});
     _ = ecs.set(world, player, components.Inertia, .{});
     _ = ecs.set(world, player, components.CharacterRenderer, .{
@@ -668,4 +638,63 @@ pub fn deinit(_: *App) void {
     core.deinit();
     // TODO: Figure out why autohashmap is leaking
     //_ = gpa.detectLeaks();
+}
+
+pub fn loadCell(cell: components.Cell) void {
+    var rand = std.rand.DefaultPrng.init(1293846591272);
+    var random = rand.random();
+
+    var cell_entity: ecs.entity_t = 0;
+    if (state.cells.get(cell)) |c| {
+        cell_entity = c;
+    } else {
+        cell_entity = ecs.new_id(state.world);
+        _ = ecs.set(state.world, cell_entity, components.Cell, cell);
+        state.cells.put(cell, cell_entity) catch unreachable;
+    }
+
+    for (0..settings.cell_size) |x_i| {
+        for (0..settings.cell_size) |y_i| {
+            var x_tile: i32 = @intCast(x_i);
+            var y_tile: i32 = @intCast(y_i);
+
+            const tile: components.Tile = .{
+                .x = x_tile + (cell.x * settings.cell_size),
+                .y = y_tile + (cell.y * settings.cell_size),
+                .z = cell.z,
+                .counter = 0,
+            };
+
+            const position = tile.toPosition();
+
+            const tile_entity = if (state.tiles.items.len > 0) state.tiles.pop() else ecs.new_id(state.world);
+
+            const water = assets.aftersun_atlas.Water_full_0_Layer_0;
+            const grass: usize = if (random.boolean()) assets.aftersun_atlas.Grass_full_0_Layer_0 else assets.aftersun_atlas.Grass_full_4_0_Layer_0;
+            const edge = assets.aftersun_atlas.Grass_Water_S_0_Layer_0;
+
+            _ = ecs.set(state.world, tile_entity, components.Tile, tile);
+            _ = ecs.set(state.world, tile_entity, components.Position, position);
+            _ = ecs.set(state.world, tile_entity, components.SpriteRenderer, .{
+                .index = if (tile.y < -3) water else if (tile.y == -3) edge else grass,
+            });
+            _ = ecs.set_pair(state.world, tile_entity, ecs.id(components.Cell), cell_entity, components.Cell, cell);
+            _ = ecs.set(state.world, tile_entity, components.MapTile, if (tile.y < -3) .water else .ground);
+        }
+    }
+}
+
+pub fn unloadCell(cell: components.Cell, query_it: *ecs.iter_t) void {
+    if (state.cells.get(cell)) |cell_entity| {
+        ecs.query_set_group(query_it, cell_entity);
+        while (ecs.iter_next(query_it)) {
+            for (query_it.entities()) |entity| {
+                //ecs.delete(state.world, entity);
+
+                ecs.clear(state.world, entity);
+                state.tiles.append(entity) catch unreachable;
+                //ecs.enable(state.world, entity, false);
+            }
+        }
+    }
 }
