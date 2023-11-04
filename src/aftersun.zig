@@ -631,6 +631,7 @@ pub fn unloadCell(cell: components.Cell, query_it: *ecs.iter_t) void {
                 //ecs.delete(state.world, entity);
 
                 ecs.clear(state.world, entity);
+
                 state.tiles.append(entity) catch unreachable;
                 //ecs.enable(state.world, entity, false);
             }
