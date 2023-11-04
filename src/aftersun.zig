@@ -372,83 +372,6 @@ pub fn init(app: *App) !void {
             .color = math.Color.initFloats(0.6, 0.4, 0.1, 1.0).toSlice(),
         });
     }
-
-    // Create first tree
-    // {
-    //     const tree = ecs.new_entity(world, "Tree01");
-    //     _ = ecs.set(world, tree, components.Position, .{});
-    //     _ = ecs.set(world, tree, components.Tile, .{ .counter = state.counter.count() });
-    //     _ = ecs.set(world, tree, components.SpriteRenderer, .{
-    //         .index = assets.aftersun_atlas.Oak_0_Trunk,
-    //         .reflect = true,
-    //     });
-    //     _ = ecs.set(world, tree, components.Collider, .{});
-
-    //     const leaf_color = math.Color.initBytes(16, 0, 0, 255).toSlice();
-
-    //     const tree_leaves_01 = ecs.new_entity(world, "TreeLeaves01");
-    //     _ = ecs.set(world, tree_leaves_01, components.Position, .{});
-    //     _ = ecs.set(world, tree_leaves_01, components.Tile, .{ .counter = state.counter.count() });
-    //     _ = ecs.set(world, tree_leaves_01, components.SpriteRenderer, .{
-    //         .index = assets.aftersun_atlas.Oak_0_Leaves04,
-    //         .color = leaf_color,
-    //         .frag_mode = .palette,
-    //         .vert_mode = .top_sway,
-    //         .reflect = true,
-    //     });
-
-    //     const tree_leaves_02 = ecs.new_entity(world, "TreeLeaves02");
-    //     ecs.add(world, tree_leaves_02, components.Position);
-    //     _ = ecs.set(world, tree_leaves_02, components.Tile, .{ .counter = state.counter.count() });
-    //     _ = ecs.set(world, tree_leaves_02, components.SpriteRenderer, .{
-    //         .index = assets.aftersun_atlas.Oak_0_Leaves03,
-    //         .color = leaf_color,
-    //         .frag_mode = .palette,
-    //         .vert_mode = .top_sway,
-    //         .reflect = true,
-    //     });
-
-    //     const tree_leaves_03 = ecs.new_entity(world, "TreeLeaves03");
-    //     ecs.add(world, tree_leaves_03, components.Position);
-    //     _ = ecs.set(world, tree_leaves_03, components.Tile, .{ .counter = state.counter.count() });
-    //     _ = ecs.set(world, tree_leaves_03, components.SpriteRenderer, .{
-    //         .index = assets.aftersun_atlas.Oak_0_Leaves02,
-    //         .color = leaf_color,
-    //         .frag_mode = .palette,
-    //         .vert_mode = .top_sway,
-    //         .reflect = true,
-    //     });
-
-    //     const tree_leaves_04 = ecs.new_entity(world, "TreeLeaves04");
-    //     ecs.add(world, tree_leaves_04, components.Position);
-    //     _ = ecs.set(world, tree_leaves_04, components.Tile, .{ .counter = state.counter.count() });
-    //     _ = ecs.set(world, tree_leaves_04, components.SpriteRenderer, .{
-    //         .index = assets.aftersun_atlas.Oak_0_Leaves01,
-    //         .color = leaf_color,
-    //         .frag_mode = .palette,
-    //         .vert_mode = .top_sway,
-    //         .reflect = true,
-    //     });
-    // }
-
-    // Create second tree
-
-    // Create third tree
-    // {
-    //     // Make sure its within another cell
-    //     const position = components.Position{ .x = @as(f32, @floatFromInt(settings.cell_size + 2)) * settings.pixels_per_unit, .y = 0.0 };
-
-    //     const tree = ecs.new_entity(world, "Tree03");
-    //     _ = ecs.set(world, tree, components.Position, position);
-    //     _ = ecs.set(world, tree, components.Tile, position.toTile(state.counter.count()));
-    //     _ = ecs.set(world, tree, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Pine_0_Trunk, .vert_mode = .top_sway, .reflect = true });
-    //     _ = ecs.set(world, tree, components.Collider, .{});
-
-    //     const tree_leaves_01 = ecs.new_w_id(world, ecs.pair(ecs.ChildOf, tree));
-    //     _ = ecs.set(world, tree_leaves_01, components.Position, position);
-    //     _ = ecs.set(world, tree_leaves_01, components.Tile, position.toTile(state.counter.count()));
-    //     _ = ecs.set(world, tree_leaves_01, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Pine_0_Needles, .vert_mode = .top_sway, .reflect = true });
-    // }
 }
 
 pub fn updateMainThread(_: *App) !bool {
@@ -583,7 +506,7 @@ pub fn deinit(_: *App) void {
 }
 
 pub fn loadCell(cell: components.Cell) void {
-    var rand = std.rand.DefaultPrng.init(1293846591272);
+    var rand = std.rand.DefaultPrng.init(@intCast(@abs(cell.x + cell.y)));
     var random = rand.random();
 
     var cell_entity: ecs.entity_t = 0;
@@ -623,15 +546,17 @@ pub fn loadCell(cell: components.Cell) void {
             _ = ecs.set_pair(state.world, tile_entity, ecs.id(components.Cell), cell_entity, components.Cell, cell);
             _ = ecs.set(state.world, tile_entity, components.MapTile, if (tile.y < -3) .water else .ground);
 
-            if (tile.y > -3) {
+            if (tile.y > -2) {
                 if (random.float(f32) > 0.9) {
                     {
+                        const reflect = true;
+
                         const tree = if (state.tiles.items.len > 0) state.tiles.pop() else ecs.new_id(state.world);
                         _ = ecs.set(state.world, tree, components.Position, position);
                         _ = ecs.set(state.world, tree, components.Tile, position.toTile(state.counter.count()));
                         _ = ecs.set(state.world, tree, components.SpriteRenderer, .{
                             .index = assets.aftersun_atlas.Oak_0_Trunk,
-                            .reflect = true,
+                            .reflect = reflect,
                         });
                         _ = ecs.set(state.world, tree, components.Collider, .{});
                         _ = ecs.set_pair(state.world, tree, ecs.id(components.Cell), cell_entity, components.Cell, cell);
@@ -647,7 +572,7 @@ pub fn loadCell(cell: components.Cell) void {
                             .color = leaf_color,
                             .frag_mode = .palette,
                             .vert_mode = .top_sway,
-                            .reflect = true,
+                            .reflect = reflect,
                         });
                         _ = ecs.set_pair(state.world, tree_leaves_01, ecs.id(components.Cell), cell_entity, components.Cell, cell);
                         _ = ecs.set(state.world, tree_leaves_01, components.MapTile, .ground);
@@ -660,7 +585,7 @@ pub fn loadCell(cell: components.Cell) void {
                             .color = leaf_color,
                             .frag_mode = .palette,
                             .vert_mode = .top_sway,
-                            .reflect = true,
+                            .reflect = reflect,
                         });
 
                         _ = ecs.set_pair(state.world, tree_leaves_02, ecs.id(components.Cell), cell_entity, components.Cell, cell);
@@ -674,7 +599,7 @@ pub fn loadCell(cell: components.Cell) void {
                             .color = leaf_color,
                             .frag_mode = .palette,
                             .vert_mode = .top_sway,
-                            .reflect = true,
+                            .reflect = reflect,
                         });
                         _ = ecs.set_pair(state.world, tree_leaves_03, ecs.id(components.Cell), cell_entity, components.Cell, cell);
                         _ = ecs.set(state.world, tree_leaves_03, components.MapTile, .ground);
@@ -687,7 +612,7 @@ pub fn loadCell(cell: components.Cell) void {
                             .color = leaf_color,
                             .frag_mode = .palette,
                             .vert_mode = .top_sway,
-                            .reflect = true,
+                            .reflect = reflect,
                         });
                         _ = ecs.set_pair(state.world, tree_leaves_04, ecs.id(components.Cell), cell_entity, components.Cell, cell);
                         _ = ecs.set(state.world, tree_leaves_04, components.MapTile, .ground);
