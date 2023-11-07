@@ -561,7 +561,8 @@ pub fn loadCell(cell: components.Cell) void {
                         _ = ecs.set_pair(state.world, tree, ecs.id(components.Cell), cell_entity, components.Cell, cell);
                         _ = ecs.set(state.world, tree, components.MapTile, .ground);
 
-                        const leaf_color = math.Color.initBytes(if (random.boolean()) 15 else 16, 0, 0, 255).toSlice();
+                        const rand_f = random.float(f32);
+                        const leaf_color = math.Color.initBytes(if (rand_f <= 0.25) 14 else if (rand_f <= 0.5) 15 else if (rand_f <= 0.75) 16 else 15, 0, 0, 255).toSlice();
 
                         const tree_leaves_01 = if (state.tiles.items.len > 0) state.tiles.pop() else ecs.new_id(state.world);
                         _ = ecs.set(state.world, tree_leaves_01, components.Position, position);
