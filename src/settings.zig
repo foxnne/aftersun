@@ -27,7 +27,7 @@ pub const pixels_per_unit: f32 = 32.0;
 pub const movement_cooldown: f32 = 0.38;
 
 /// The number of sprites expected per batch to the batcher.
-pub const batcher_max_sprites = 5000;
+pub const batcher_max_sprites = 20000;
 
 /// The font size used by zgui elements.
 pub const zgui_font_size = 15;
