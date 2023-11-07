@@ -22,7 +22,7 @@ pub fn system(world: *ecs.world_t) ecs.system_desc_t {
 
     var ctx_desc: ecs.query_desc_t = .{};
     ctx_desc.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cell), ecs.Wildcard) };
-    ctx_desc.filter.terms[1] = .{ .id = ecs.id(components.Tile) };
+    ctx_desc.filter.terms[1] = .{ .id = ecs.id(components.Tile), .inout = .In };
     ctx_desc.group_by = groupBy;
     ctx_desc.group_by_id = ecs.id(components.Cell);
     ctx_desc.order_by = orderBy;

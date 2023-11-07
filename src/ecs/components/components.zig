@@ -92,6 +92,8 @@ pub const MapTile = enum(u8) {
     water,
 };
 
+pub const Unloadable = struct {};
+
 pub const EmptyTile = struct {};
 
 pub const Collider = struct {

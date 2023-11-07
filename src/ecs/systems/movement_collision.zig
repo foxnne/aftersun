@@ -23,8 +23,8 @@ pub fn system(world: *ecs.world_t) ecs.system_desc_t {
 
     var ctx_desc: ecs.query_desc_t = .{};
     ctx_desc.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cell), ecs.Wildcard) };
-    ctx_desc.filter.terms[1] = .{ .id = ecs.id(components.Tile) };
-    ctx_desc.filter.terms[2] = .{ .id = ecs.id(components.Collider), .oper = ecs.oper_kind_t.Optional };
+    ctx_desc.filter.terms[1] = .{ .id = ecs.id(components.Tile), .inout = .In };
+    ctx_desc.filter.terms[2] = .{ .id = ecs.id(components.Collider), .oper = ecs.oper_kind_t.Optional, .inout = .In };
     ctx_desc.group_by = groupBy;
     ctx_desc.group_by_id = ecs.id(components.Cell);
     desc.ctx = ecs.query_init(world, &ctx_desc) catch unreachable;

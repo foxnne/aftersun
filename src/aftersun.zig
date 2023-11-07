@@ -517,7 +517,7 @@ pub fn loadCell(cell: components.Cell) void {
         state.cells.put(cell, cell_entity) catch unreachable;
     }
 
-    const cell_density = random.float(f32) * 0.1;
+    const cell_density = random.float(f32) * 0.15;
 
     for (0..settings.cell_size) |x_i| {
         for (0..settings.cell_size) |y_i| {
@@ -546,6 +546,7 @@ pub fn loadCell(cell: components.Cell) void {
             });
             _ = ecs.set_pair(state.world, tile_entity, ecs.id(components.Cell), cell_entity, components.Cell, cell);
             _ = ecs.set(state.world, tile_entity, components.MapTile, if (tile.y < -3) .water else .ground);
+            _ = ecs.add(state.world, tile_entity, components.Unloadable);
 
             if (tile.y > -2) {
                 if (random.float(f32) > 1.0 - cell_density) {
@@ -561,7 +562,6 @@ pub fn loadCell(cell: components.Cell) void {
                         });
                         _ = ecs.set(state.world, tree, components.Collider, .{});
                         _ = ecs.set_pair(state.world, tree, ecs.id(components.Cell), cell_entity, components.Cell, cell);
-                        _ = ecs.set(state.world, tree, components.MapTile, .ground);
 
                         const rand_f = random.float(f32);
                         const leaf_color = math.Color.initBytes(if (rand_f <= 0.25) 14 else if (rand_f <= 0.5) 15 else if (rand_f <= 0.75) 16 else 15, 0, 0, 255).toSlice();
@@ -577,7 +577,6 @@ pub fn loadCell(cell: components.Cell) void {
                             .reflect = reflect,
                         });
                         _ = ecs.set_pair(state.world, tree_leaves_01, ecs.id(components.Cell), cell_entity, components.Cell, cell);
-                        _ = ecs.set(state.world, tree_leaves_01, components.MapTile, .ground);
 
                         const tree_leaves_02 = if (state.tiles.items.len > 0) state.tiles.pop() else ecs.new_id(state.world);
                         _ = ecs.set(state.world, tree_leaves_02, components.Position, position);
@@ -591,7 +590,6 @@ pub fn loadCell(cell: components.Cell) void {
                         });
 
                         _ = ecs.set_pair(state.world, tree_leaves_02, ecs.id(components.Cell), cell_entity, components.Cell, cell);
-                        _ = ecs.set(state.world, tree_leaves_02, components.MapTile, .ground);
 
                         const tree_leaves_03 = if (state.tiles.items.len > 0) state.tiles.pop() else ecs.new_id(state.world);
                         _ = ecs.set(state.world, tree_leaves_03, components.Position, position);
@@ -604,7 +602,6 @@ pub fn loadCell(cell: components.Cell) void {
                             .reflect = reflect,
                         });
                         _ = ecs.set_pair(state.world, tree_leaves_03, ecs.id(components.Cell), cell_entity, components.Cell, cell);
-                        _ = ecs.set(state.world, tree_leaves_03, components.MapTile, .ground);
 
                         const tree_leaves_04 = if (state.tiles.items.len > 0) state.tiles.pop() else ecs.new_id(state.world);
                         _ = ecs.set(state.world, tree_leaves_04, components.Position, position);
@@ -617,7 +614,12 @@ pub fn loadCell(cell: components.Cell) void {
                             .reflect = reflect,
                         });
                         _ = ecs.set_pair(state.world, tree_leaves_04, ecs.id(components.Cell), cell_entity, components.Cell, cell);
-                        _ = ecs.set(state.world, tree_leaves_04, components.MapTile, .ground);
+
+                        _ = ecs.add(state.world, tree, components.Unloadable);
+                        _ = ecs.add(state.world, tree_leaves_01, components.Unloadable);
+                        _ = ecs.add(state.world, tree_leaves_02, components.Unloadable);
+                        _ = ecs.add(state.world, tree_leaves_03, components.Unloadable);
+                        _ = ecs.add(state.world, tree_leaves_04, components.Unloadable);
                     }
                 } else if (random.float(f32) < cell_density * 0.4) {
                     const reflect = true;
@@ -632,7 +634,6 @@ pub fn loadCell(cell: components.Cell) void {
                     });
                     _ = ecs.set(state.world, tree, components.Collider, .{});
                     _ = ecs.set_pair(state.world, tree, ecs.id(components.Cell), cell_entity, components.Cell, cell);
-                    _ = ecs.set(state.world, tree, components.MapTile, .ground);
 
                     const tree_leaves_01 = if (state.tiles.items.len > 0) state.tiles.pop() else ecs.new_id(state.world);
                     _ = ecs.set(state.world, tree_leaves_01, components.Position, position);
@@ -643,7 +644,9 @@ pub fn loadCell(cell: components.Cell) void {
                         .reflect = reflect,
                     });
                     _ = ecs.set_pair(state.world, tree_leaves_01, ecs.id(components.Cell), cell_entity, components.Cell, cell);
-                    _ = ecs.set(state.world, tree_leaves_01, components.MapTile, .ground);
+
+                    _ = ecs.add(state.world, tree, components.Unloadable);
+                    _ = ecs.add(state.world, tree_leaves_01, components.Unloadable);
                 }
             }
         }

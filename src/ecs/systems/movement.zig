@@ -24,7 +24,7 @@ pub fn system(world: *ecs.world_t) ecs.system_desc_t {
     var ctx_desc: ecs.query_desc_t = .{};
     ctx_desc.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cell), ecs.Wildcard) };
     ctx_desc.filter.terms[1] = .{ .id = ecs.id(components.Tile) };
-    ctx_desc.filter.terms[2] = .{ .id = ecs.id(components.MapTile) };
+    ctx_desc.filter.terms[2] = .{ .id = ecs.id(components.Unloadable) };
     ctx_desc.group_by = groupBy;
     ctx_desc.group_by_id = ecs.id(components.Cell);
     desc.ctx = ecs.query_init(world, &ctx_desc) catch unreachable;
