@@ -30,10 +30,10 @@ pub const movement_cooldown: f32 = 0.38;
 pub const batcher_max_sprites = 5000;
 
 /// The font size used by zgui elements.
-pub const zgui_font_size = 14;
+pub const zgui_font_size = 15;
 
 /// Size of a square game cell in tiles wide/tall.
-pub const cell_size = 12;
+pub const cell_size = 15;
 
 /// Maximum number of tiles visible either in width or height
 pub const max_visible_tiles: f32 = @floatFromInt(cell_size * 2);
