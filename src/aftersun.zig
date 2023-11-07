@@ -505,7 +505,7 @@ pub fn deinit(_: *App) void {
 }
 
 pub fn loadCell(cell: components.Cell) void {
-    var rand = std.rand.DefaultPrng.init(@intCast(@abs(cell.x + cell.y)));
+    var rand = std.rand.DefaultPrng.init(@intCast(@abs(cell.x + cell.y + 200000)));
     var random = rand.random();
 
     var cell_entity: ecs.entity_t = 0;
@@ -516,6 +516,8 @@ pub fn loadCell(cell: components.Cell) void {
         _ = ecs.set(state.world, cell_entity, components.Cell, cell);
         state.cells.put(cell, cell_entity) catch unreachable;
     }
+
+    const cell_density = random.float(f32) * 0.1;
 
     for (0..settings.cell_size) |x_i| {
         for (0..settings.cell_size) |y_i| {
@@ -546,7 +548,7 @@ pub fn loadCell(cell: components.Cell) void {
             _ = ecs.set(state.world, tile_entity, components.MapTile, if (tile.y < -3) .water else .ground);
 
             if (tile.y > -2) {
-                if (random.float(f32) > 0.9) {
+                if (random.float(f32) > 1.0 - cell_density) {
                     {
                         const reflect = true;
 
@@ -617,6 +619,31 @@ pub fn loadCell(cell: components.Cell) void {
                         _ = ecs.set_pair(state.world, tree_leaves_04, ecs.id(components.Cell), cell_entity, components.Cell, cell);
                         _ = ecs.set(state.world, tree_leaves_04, components.MapTile, .ground);
                     }
+                } else if (random.float(f32) < cell_density * 0.4) {
+                    const reflect = true;
+
+                    const tree = if (state.tiles.items.len > 0) state.tiles.pop() else ecs.new_id(state.world);
+                    _ = ecs.set(state.world, tree, components.Position, position);
+                    _ = ecs.set(state.world, tree, components.Tile, position.toTile(state.counter.count()));
+                    _ = ecs.set(state.world, tree, components.SpriteRenderer, .{
+                        .index = assets.aftersun_atlas.Pine_0_Trunk,
+                        .reflect = reflect,
+                        .vert_mode = .top_sway,
+                    });
+                    _ = ecs.set(state.world, tree, components.Collider, .{});
+                    _ = ecs.set_pair(state.world, tree, ecs.id(components.Cell), cell_entity, components.Cell, cell);
+                    _ = ecs.set(state.world, tree, components.MapTile, .ground);
+
+                    const tree_leaves_01 = if (state.tiles.items.len > 0) state.tiles.pop() else ecs.new_id(state.world);
+                    _ = ecs.set(state.world, tree_leaves_01, components.Position, position);
+                    _ = ecs.set(state.world, tree_leaves_01, components.Tile, position.toTile(state.counter.count()));
+                    _ = ecs.set(state.world, tree_leaves_01, components.SpriteRenderer, .{
+                        .index = assets.aftersun_atlas.Pine_0_Needles,
+                        .vert_mode = .top_sway,
+                        .reflect = reflect,
+                    });
+                    _ = ecs.set_pair(state.world, tree_leaves_01, ecs.id(components.Cell), cell_entity, components.Cell, cell);
+                    _ = ecs.set(state.world, tree_leaves_01, components.MapTile, .ground);
                 }
             }
         }

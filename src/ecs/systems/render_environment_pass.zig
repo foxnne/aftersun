@@ -20,7 +20,7 @@ pub const EnvironmentUniforms = extern struct {
     ambient_z_angle: f32 = 82,
     _pad0: f64 = 0,
     shadow_color: [3]f32 = [_]f32{ 0.7, 0.7, 1.0 },
-    shadow_steps: i32 = 150,
+    shadow_steps: i32 = 250,
 };
 
 pub fn callback(it: *ecs.iter_t) callconv(.C) void {
