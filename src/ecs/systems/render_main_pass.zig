@@ -47,8 +47,10 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         var position = positions[i].toF32x4();
                         position[1] += position[2];
 
+                        const order: usize = @intFromFloat(@abs(@floor(position[1] + position[0])));
+
                         if (ecs.field(&query_it, components.SpriteRenderer, 3)) |renderers| {
-                            renderers[i].order = i; // Set order so height passes can match time
+                            renderers[i].order = order; // Set order so height passes can match time
 
                             game.state.batcher.sprite(
                                 position,
@@ -197,8 +199,10 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         var position = positions[i].toF32x4();
                         position[1] += position[2];
 
+                        const order: usize = @intFromFloat(@abs(@floor(position[1] + position[0])));
+
                         if (ecs.field(&query_it, components.SpriteRenderer, 3)) |renderers| {
-                            renderers[i].order = i; // Set order so height passes can match time
+                            renderers[i].order = order; // Set order so height passes can match time
 
                             game.state.batcher.sprite(
                                 position,
@@ -332,8 +336,10 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         position[1] -= position[2];
                         position[1] -= game.settings.pixels_per_unit / 3;
 
+                        const order: usize = @intFromFloat(@abs(@floor(position[1] + position[0])));
+
                         if (ecs.field(&query_it, components.SpriteRenderer, 3)) |renderers| {
-                            renderers[i].order = i; // Set order so height passes can match time
+                            renderers[i].order = order; // Set order so height passes can match time
 
                             if (renderers[i].reflect) {
                                 game.state.batcher.sprite(
@@ -475,8 +481,10 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         var position = positions[i].toF32x4();
                         position[1] += position[2];
 
+                        const order: usize = @intFromFloat(@abs(@floor(position[1] + position[0])));
+
                         if (ecs.field(&query_it, components.SpriteRenderer, 3)) |renderers| {
-                            renderers[i].order = i; // Set order so height passes can match time
+                            renderers[i].order = order; // Set order so height passes can match time
 
                             game.state.batcher.sprite(
                                 position,
