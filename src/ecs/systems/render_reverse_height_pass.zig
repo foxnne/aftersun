@@ -158,6 +158,13 @@ fn orderBy(e1: ecs.entity_t, c1: ?*const anyopaque, e2: ecs.entity_t, c2: ?*cons
     const position_1 = ecs.cast(components.Position, c1);
     const position_2 = ecs.cast(components.Position, c2);
 
+    if (position_1.z > position_2.z) return @as(c_int, 1) else if (position_1.z < position_2.z) return @as(c_int, 0);
+
+    const maptile_1 = ecs.has_id(game.state.world, e1, ecs.id(components.MapTile));
+    const maptile_2 = ecs.has_id(game.state.world, e2, ecs.id(components.MapTile));
+
+    if (!maptile_1 and maptile_2) return @as(c_int, 1) else if (maptile_1 and !maptile_2) return @as(c_int, 0);
+
     const tile_1 = position_1.toTile(0);
     const tile_2 = position_1.toTile(0);
 
