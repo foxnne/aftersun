@@ -42,12 +42,19 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
             if (ecs.field(it, components.Position, 1)) |positions| {
                 if (ecs.field(it, components.Tile, 2)) |tiles| {
                     if (ecs.field(it, components.Movement, 3)) |movements| {
+                        var instant: bool = false;
                         if (tiles[i].x != movements[i].end.x or tiles[i].y != movements[i].end.y or tiles[i].z != movements[i].end.z) {
                             if (entity == game.state.entities.player) {
                                 const player_cell = tiles[i].toCell();
-                                const next_cell = movements[i].end.toCell();
+                                var next_cell = movements[i].end.toCell();
 
                                 if (player_cell.x != next_cell.x or player_cell.y != next_cell.y) {
+                                    if (player_cell.y > next_cell.y and tiles[i].y > game.settings.cell_size + 1) {
+                                        movements[i].end.y = game.settings.cell_size + 1;
+                                        instant = true;
+                                        next_cell = movements[i].end.toCell();
+                                    }
+
                                     if (it.ctx) |ctx| {
                                         const old_cells = player_cell.getAllSurrounding();
                                         const new_cells = next_cell.getAllSurrounding();
@@ -90,23 +97,30 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         }
 
                         if (ecs.field(it, components.Cooldown, 4)) |cooldowns| {
+                            if (!instant) {
+                                // Get progress of the lerp using cooldown duration
+                                const t = if (cooldowns[i].end > 0.0) cooldowns[i].current / cooldowns[i].end else 0.0;
 
-                            // Get progress of the lerp using cooldown duration
-                            const t = if (cooldowns[i].end > 0.0) cooldowns[i].current / cooldowns[i].end else 0.0;
+                                const start_position = movements[i].start.toPosition().toF32x4();
+                                const end_position = movements[i].end.toPosition().toF32x4();
+                                const difference = end_position - start_position;
+                                const direction = game.math.Direction.find(8, difference[0], difference[1]);
 
-                            const start_position = movements[i].start.toPosition().toF32x4();
-                            const end_position = movements[i].end.toPosition().toF32x4();
-                            const difference = end_position - start_position;
-                            const direction = game.math.Direction.find(8, difference[0], difference[1]);
+                                // Update movement direction
+                                _ = ecs.set_pair(world, entity, ecs.id(components.Direction), ecs.id(components.Movement), components.Direction, direction);
 
-                            // Update movement direction
-                            _ = ecs.set_pair(world, entity, ecs.id(components.Direction), ecs.id(components.Movement), components.Direction, direction);
-
-                            // Update position
-                            const position = zmath.lerp(start_position, end_position, t);
-                            positions[i].x = position[0];
-                            positions[i].y = position[1];
-                            positions[i].z = if (movements[i].curve == .sin) @sin(std.math.pi * t) * 10.0 else position[2];
+                                // Update position
+                                const position = zmath.lerp(start_position, end_position, t);
+                                positions[i].x = position[0];
+                                positions[i].y = position[1];
+                                positions[i].z = if (movements[i].curve == .sin) @sin(std.math.pi * t) * 10.0 else position[2];
+                            } else {
+                                cooldowns[i].current = cooldowns[i].end;
+                                const position = tiles[i].toPosition();
+                                positions[i].x = position.x;
+                                positions[i].y = position.y;
+                                positions[i].z = position.z;
+                            }
                         } else {
                             const end_position = movements[i].end.toPosition().toF32x4();
                             positions[i].x = end_position[0];

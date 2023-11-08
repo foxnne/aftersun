@@ -8,7 +8,7 @@ pub const Environment = struct {
         .{
             .name = "Sunrise",
             .xy_angle = 295.0,
-            .z_angle = 80.0,
+            .z_angle = 82.0,
             .start = 6.0,
             .end = 8.0,
             .ambient_color = game.math.Color.initBytes(130, 140, 150, 255),
@@ -17,7 +17,7 @@ pub const Environment = struct {
         .{
             .name = "Day",
             .xy_angle = 0.0,
-            .z_angle = 82.0,
+            .z_angle = 86.0,
             .start = 8.0,
             .end = 19.0,
             .ambient_color = game.math.Color.initBytes(245, 245, 255, 255),
@@ -26,7 +26,7 @@ pub const Environment = struct {
         .{
             .name = "Sunset",
             .xy_angle = 195.0,
-            .z_angle = 76.0,
+            .z_angle = 82.0,
             .start = 19.0,
             .end = 21.0,
             .ambient_color = game.math.Color.initBytes(130, 140, 150, 255),
@@ -35,7 +35,7 @@ pub const Environment = struct {
         .{
             .name = "Night",
             .xy_angle = 215.0,
-            .z_angle = 82.0,
+            .z_angle = 86.0,
             .start = 21.0,
             .end = 6.0,
             .ambient_color = game.math.Color.initBytes(50, 50, 120, 255),

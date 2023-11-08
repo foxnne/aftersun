@@ -505,7 +505,7 @@ pub fn deinit(_: *App) void {
 }
 
 pub fn loadCell(cell: components.Cell) void {
-    var rand = std.rand.DefaultPrng.init(@intCast(@abs(cell.x + cell.y + 200000)));
+    var rand = std.rand.DefaultPrng.init(@intCast(@abs(cell.x + cell.y + 300000)));
     var random = rand.random();
 
     var cell_entity: ecs.entity_t = 0;
@@ -529,6 +529,7 @@ pub fn loadCell(cell: components.Cell) void {
                 .y = y_tile + (cell.y * settings.cell_size),
                 .z = cell.z,
                 .counter = 0,
+                .kind = .ground,
             };
 
             const position = tile.toPosition();

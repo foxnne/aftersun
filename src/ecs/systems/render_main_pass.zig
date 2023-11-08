@@ -12,11 +12,12 @@ pub fn system(world: *ecs.world_t) ecs.system_desc_t {
 
     var ctx_desc: ecs.query_desc_t = .{};
     ctx_desc.filter.terms[0] = .{ .id = ecs.id(components.Position), .inout = .In };
-    ctx_desc.filter.terms[1] = .{ .id = ecs.id(components.Rotation), .oper = ecs.oper_kind_t.Optional };
-    ctx_desc.filter.terms[2] = .{ .id = ecs.id(components.SpriteRenderer), .oper = ecs.oper_kind_t.Optional };
-    ctx_desc.filter.terms[3] = .{ .id = ecs.id(components.CharacterRenderer), .oper = ecs.oper_kind_t.Optional };
-    ctx_desc.filter.terms[4] = .{ .id = ecs.id(components.ParticleRenderer), .oper = ecs.oper_kind_t.Optional };
-    ctx_desc.order_by_component = ecs.id(components.Position);
+    ctx_desc.filter.terms[1] = .{ .id = ecs.id(components.Rotation), .oper = ecs.oper_kind_t.Optional, .inout = .In };
+    ctx_desc.filter.terms[2] = .{ .id = ecs.id(components.SpriteRenderer), .oper = ecs.oper_kind_t.Optional, .inout = .In };
+    ctx_desc.filter.terms[3] = .{ .id = ecs.id(components.CharacterRenderer), .oper = ecs.oper_kind_t.Optional, .inout = .In };
+    ctx_desc.filter.terms[4] = .{ .id = ecs.id(components.ParticleRenderer), .oper = ecs.oper_kind_t.Optional, .inout = .In };
+    ctx_desc.filter.terms[5] = .{ .id = ecs.id(components.Tile), .inout = .In };
+    ctx_desc.order_by_component = ecs.id(components.Tile);
     ctx_desc.order_by = orderBy;
     desc.ctx = ecs.query_init(world, &ctx_desc) catch unreachable;
 
@@ -501,20 +502,18 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 }
 
 fn orderBy(e1: ecs.entity_t, c1: ?*const anyopaque, e2: ecs.entity_t, c2: ?*const anyopaque) callconv(.C) c_int {
-    const position_1 = ecs.cast(components.Position, c1);
-    const position_2 = ecs.cast(components.Position, c2);
+    _ = e2;
+    _ = e1;
+    const tile_1 = ecs.cast(components.Tile, c1);
+    const tile_2 = ecs.cast(components.Tile, c2);
 
-    if (position_1.z > position_2.z) return @as(c_int, 1) else if (position_1.z < position_2.z) return @as(c_int, 0);
+    if (tile_1.z > tile_2.z) return @as(c_int, 1) else if (tile_1.z < tile_2.z) return @as(c_int, 0);
 
-    const maptile_1 = ecs.has_id(game.state.world, e1, ecs.id(components.MapTile));
-    const maptile_2 = ecs.has_id(game.state.world, e2, ecs.id(components.MapTile));
-
-    if (!maptile_1 and maptile_2) return @as(c_int, 1) else if (maptile_1 and !maptile_2) return @as(c_int, 0);
-
-    if (@abs(position_1.y - position_2.y) <= 16) {
-        var counter1 = if (ecs.get(game.state.world, e1, components.Tile)) |tile| tile.counter else 0;
-        var counter2 = if (ecs.get(game.state.world, e2, components.Tile)) |tile| tile.counter else 0;
-        return @as(c_int, @intCast(@intFromBool(counter1 > counter2))) - @as(c_int, @intCast(@intFromBool(counter1 < counter2)));
+    if (tile_1.y == tile_2.y) {
+        return @as(c_int, @intCast(@intFromBool(tile_1.counter > tile_2.counter))) - @as(c_int, @intCast(@intFromBool(tile_1.counter < tile_2.counter)));
     }
-    return @as(c_int, @intCast(@intFromBool(position_1.y < position_2.y))) - @as(c_int, @intCast(@intFromBool(position_1.y > position_2.y)));
+
+    if (tile_1.kind != .none and tile_2.kind == .none) return @as(c_int, 0) else if (tile_1.kind == .none and tile_2.kind != .none) return @as(c_int, 1);
+
+    return @as(c_int, @intCast(@intFromBool(tile_1.y < tile_2.y))) - @as(c_int, @intCast(@intFromBool(tile_1.y > tile_2.y)));
 }

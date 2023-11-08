@@ -68,6 +68,7 @@ pub const Tile = struct {
     y: i32 = 0,
     z: i32 = 0,
     counter: u64 = 0,
+    kind: MapTile = .none,
 
     /// Converts the tile to pixel coordinates.
     pub fn toPosition(self: Tile) Position {
@@ -88,6 +89,7 @@ pub const Tile = struct {
 };
 
 pub const MapTile = enum(u8) {
+    none,
     ground,
     water,
 };

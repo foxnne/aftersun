@@ -2,10 +2,10 @@ const std = @import("std");
 const zmath = @import("zmath");
 
 /// The design texture width for render-textures.
-pub const design_width: u32 = 1280;
+pub const design_width: u32 = 1440;
 
 /// The design texture height for render-textures.
-pub const design_height: u32 = 720;
+pub const design_height: u32 = 1440;
 
 /// The design texture size for render-textures as an f32x4.
 pub const design_size = zmath.f32x4(@floatFromInt(design_width), @floatFromInt(design_height), 0, 0);
@@ -29,11 +29,8 @@ pub const movement_cooldown: f32 = 0.38;
 /// The number of sprites expected per batch to the batcher.
 pub const batcher_max_sprites = 20000;
 
-/// The font size used by zgui elements.
-pub const zgui_font_size = 15;
-
 /// Size of a square game cell in tiles wide/tall.
-pub const cell_size = 15;
+pub const cell_size = 20;
 
 /// Maximum number of tiles visible either in width or height
 pub const max_visible_tiles: f32 = @floatFromInt(cell_size * 2);
