@@ -33,7 +33,7 @@ pub const batcher_max_sprites = 20000;
 pub const cell_size = 20;
 
 /// Maximum number of tiles visible either in width or height
-pub const max_visible_tiles: f32 = @floatFromInt(cell_size * 2);
+pub const max_visible_tiles: f32 = 35.0;
 
 /// Speed at which the camera will lerp to new velocity.
 pub const camera_follow_speed = 1.0;

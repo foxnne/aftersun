@@ -505,9 +505,6 @@ pub fn deinit(_: *App) void {
 }
 
 pub fn loadCell(cell: components.Cell) void {
-    var rand = std.rand.DefaultPrng.init(@intCast(@abs(cell.x + cell.y + 300000)));
-    var random = rand.random();
-
     var cell_entity: ecs.entity_t = 0;
     if (state.cells.get(cell)) |c| {
         cell_entity = c;
@@ -516,6 +513,9 @@ pub fn loadCell(cell: components.Cell) void {
         _ = ecs.set(state.world, cell_entity, components.Cell, cell);
         state.cells.put(cell, cell_entity) catch unreachable;
     }
+
+    var rand = std.rand.DefaultPrng.init(cell_entity);
+    var random = rand.random();
 
     const cell_density = random.float(f32) * 0.15;
 
