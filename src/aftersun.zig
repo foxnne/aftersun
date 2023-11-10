@@ -514,7 +514,13 @@ pub fn loadCell(cell: components.Cell) void {
         state.cells.put(cell, cell_entity) catch unreachable;
     }
 
-    var rand = std.rand.DefaultPrng.init(cell_entity);
+    var hash = std.hash.Fnv1a_64.init();
+    hash.update(std.mem.asBytes(&cell.x));
+    hash.update(std.mem.asBytes(&cell.y));
+    hash.update(std.mem.asBytes(&cell.z));
+    const seed = hash.final();
+
+    var rand = std.rand.DefaultPrng.init(seed);
     var random = rand.random();
 
     const cell_density = random.float(f32) * 0.15;
