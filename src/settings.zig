@@ -29,7 +29,7 @@ pub const movement_cooldown: f32 = 0.38;
 /// The number of sprites expected per batch to the batcher.
 pub const batcher_max_sprites = 20000;
 
-/// Size of a square game cell in tiles wide/tall.
+/// Size of a square game cell in tiles wide/tall.b
 pub const cell_size = 20;
 
 /// Maximum number of tiles visible either in width or height
