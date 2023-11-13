@@ -2,272 +2,6 @@
 const std = @import("std");
 const assets = @import("assets.zig");
 
-pub var Ham_Layer = [_]usize {
-    assets.aftersun_atlas.Ham_0_Layer,
-    assets.aftersun_atlas.Ham_1_Layer,
-    assets.aftersun_atlas.Ham_2_Layer,
-    assets.aftersun_atlas.Ham_3_Layer,
-    assets.aftersun_atlas.Ham_4_Layer,
-};
-pub var Cooked_Ham_Layer = [_]usize {
-    assets.aftersun_atlas.Cooked_Ham_0_Layer,
-    assets.aftersun_atlas.Cooked_Ham_1_Layer,
-    assets.aftersun_atlas.Cooked_Ham_2_Layer,
-    assets.aftersun_atlas.Cooked_Ham_3_Layer,
-    assets.aftersun_atlas.Cooked_Ham_4_Layer,
-};
-pub var Cooked_Meat_Layer = [_]usize {
-    assets.aftersun_atlas.Cooked_Meat_0_Layer,
-    assets.aftersun_atlas.Cooked_Meat_1_Layer,
-    assets.aftersun_atlas.Cooked_Meat_2_Layer,
-    assets.aftersun_atlas.Cooked_Meat_3_Layer,
-    assets.aftersun_atlas.Cooked_Meat_4_Layer,
-};
-pub var Apple_Layer = [_]usize {
-    assets.aftersun_atlas.Apple_0_Layer,
-    assets.aftersun_atlas.Apple_1_Layer,
-    assets.aftersun_atlas.Apple_2_Layer,
-    assets.aftersun_atlas.Apple_3_Layer,
-    assets.aftersun_atlas.Apple_4_Layer,
-};
-pub var Plum_Layer = [_]usize {
-    assets.aftersun_atlas.Plum_0_Layer,
-    assets.aftersun_atlas.Plum_1_Layer,
-    assets.aftersun_atlas.Plum_2_Layer,
-    assets.aftersun_atlas.Plum_3_Layer,
-    assets.aftersun_atlas.Plum_4_Layer,
-};
-pub var Pear_Layer = [_]usize {
-    assets.aftersun_atlas.Pear_0_Layer,
-    assets.aftersun_atlas.Pear_1_Layer,
-    assets.aftersun_atlas.Pear_2_Layer,
-    assets.aftersun_atlas.Pear_3_Layer,
-    assets.aftersun_atlas.Pear_4_Layer,
-};
-pub var Blueberry_Layer = [_]usize {
-    assets.aftersun_atlas.Blueberry_0_Layer,
-    assets.aftersun_atlas.Blueberry_1_Layer,
-    assets.aftersun_atlas.Blueberry_2_Layer,
-};
-pub var Torch_Flame_Layer = [_]usize {
-    assets.aftersun_atlas.Torch_Flame_0_Layer,
-    assets.aftersun_atlas.Torch_Flame_1_Layer,
-    assets.aftersun_atlas.Torch_Flame_2_Layer,
-    assets.aftersun_atlas.Torch_Flame_3_Layer,
-    assets.aftersun_atlas.Torch_Flame_4_Layer,
-    assets.aftersun_atlas.Torch_Flame_5_Layer,
-    assets.aftersun_atlas.Torch_Flame_6_Layer,
-    assets.aftersun_atlas.Torch_Flame_7_Layer,
-};
-pub var Torch_Layer = [_]usize {
-    assets.aftersun_atlas.Torch_0_Layer,
-};
-pub var Bucket_Layer = [_]usize {
-    assets.aftersun_atlas.Bucket_0_Layer,
-    assets.aftersun_atlas.Bucket_1_Layer,
-};
-pub var Vial_Layer = [_]usize {
-    assets.aftersun_atlas.Vial_0_Layer,
-};
-pub var Smoke_Layer = [_]usize {
-    assets.aftersun_atlas.Smoke_0_Layer,
-    assets.aftersun_atlas.Smoke_1_Layer,
-    assets.aftersun_atlas.Smoke_2_Layer,
-    assets.aftersun_atlas.Smoke_3_Layer,
-    assets.aftersun_atlas.Smoke_4_Layer,
-    assets.aftersun_atlas.Smoke_5_Layer,
-    assets.aftersun_atlas.Smoke_6_Layer,
-    assets.aftersun_atlas.Smoke_7_Layer,
-};
-pub var Reeds_Layer = [_]usize {
-    assets.aftersun_atlas.Reeds_0_Layer,
-};
-pub var Gold_Layer = [_]usize {
-    assets.aftersun_atlas.Gold_0_Layer,
-    assets.aftersun_atlas.Gold_1_Layer,
-    assets.aftersun_atlas.Gold_2_Layer,
-    assets.aftersun_atlas.Gold_3_Layer,
-    assets.aftersun_atlas.Gold_4_Layer,
-};
-pub var Water_full_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Water_full_0_Layer_0,
-    assets.aftersun_atlas.Water_full_1_Layer_0,
-    assets.aftersun_atlas.Water_full_2_Layer_0,
-    assets.aftersun_atlas.Water_full_3_Layer_0,
-    assets.aftersun_atlas.Water_full_4_Layer_0,
-    assets.aftersun_atlas.Water_full_5_Layer_0,
-    assets.aftersun_atlas.Water_full_6_Layer_0,
-    assets.aftersun_atlas.Water_full_7_Layer_0,
-};
-pub var Grass_Water_SE_1_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Grass_Water_SE_1_0_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SE_1_1_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SE_1_2_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SE_1_3_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SE_1_4_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SE_1_5_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SE_1_6_Layer_0,
-};
-pub var Grass_Water_NE_1_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Grass_Water_NE_1_0_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NE_1_1_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NE_1_2_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NE_1_3_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NE_1_4_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NE_1_5_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NE_1_6_Layer_0,
-};
-pub var Grass_Water_SW_1_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Grass_Water_SW_1_0_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SW_1_1_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SW_1_2_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SW_1_3_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SW_1_4_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SW_1_5_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SW_1_6_Layer_0,
-};
-pub var Grass_Water_N_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Grass_Water_N_0_Layer_0,
-    assets.aftersun_atlas.Grass_Water_N_1_Layer_0,
-    assets.aftersun_atlas.Grass_Water_N_2_Layer_0,
-    assets.aftersun_atlas.Grass_Water_N_3_Layer_0,
-    assets.aftersun_atlas.Grass_Water_N_4_Layer_0,
-    assets.aftersun_atlas.Grass_Water_N_5_Layer_0,
-    assets.aftersun_atlas.Grass_Water_N_6_Layer_0,
-};
-pub var Grass_Water_SE_2_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Grass_Water_SE_2_0_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SE_2_1_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SE_2_2_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SE_2_3_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SE_2_4_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SE_2_5_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SE_2_6_Layer_0,
-};
-pub var Grass_Water_NW_1_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Grass_Water_NW_1_0_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NW_1_1_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NW_1_2_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NW_1_3_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NW_1_4_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NW_1_5_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NW_1_6_Layer_0,
-};
-pub var Grass_Water_SW_2_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Grass_Water_SW_2_0_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SW_2_1_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SW_2_2_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SW_2_3_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SW_2_4_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SW_2_5_Layer_0,
-    assets.aftersun_atlas.Grass_Water_SW_2_6_Layer_0,
-};
-pub var Grass_full_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Grass_full_0_Layer_0,
-};
-pub var Grass_Water_E_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Grass_Water_E_0_Layer_0,
-    assets.aftersun_atlas.Grass_Water_E_1_Layer_0,
-    assets.aftersun_atlas.Grass_Water_E_2_Layer_0,
-    assets.aftersun_atlas.Grass_Water_E_3_Layer_0,
-    assets.aftersun_atlas.Grass_Water_E_4_Layer_0,
-    assets.aftersun_atlas.Grass_Water_E_5_Layer_0,
-    assets.aftersun_atlas.Grass_Water_E_6_Layer_0,
-};
-pub var Grass_Water_S_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Grass_Water_S_0_Layer_0,
-    assets.aftersun_atlas.Grass_Water_S_1_Layer_0,
-    assets.aftersun_atlas.Grass_Water_S_2_Layer_0,
-    assets.aftersun_atlas.Grass_Water_S_3_Layer_0,
-    assets.aftersun_atlas.Grass_Water_S_4_Layer_0,
-    assets.aftersun_atlas.Grass_Water_S_5_Layer_0,
-    assets.aftersun_atlas.Grass_Water_S_6_Layer_0,
-};
-pub var Grass_Water_NE_2_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Grass_Water_NE_2_0_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NE_2_1_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NE_2_2_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NE_2_3_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NE_2_4_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NE_2_5_Layer_0,
-    assets.aftersun_atlas.Grass_Water_NE_2_6_Layer_0,
-};
-pub var Grass_Water_W_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Grass_Water_W_0_Layer_0,
-    assets.aftersun_atlas.Grass_Water_W_1_Layer_0,
-    assets.aftersun_atlas.Grass_Water_W_2_Layer_0,
-    assets.aftersun_atlas.Grass_Water_W_3_Layer_0,
-    assets.aftersun_atlas.Grass_Water_W_4_Layer_0,
-    assets.aftersun_atlas.Grass_Water_W_5_Layer_0,
-    assets.aftersun_atlas.Grass_Water_W_6_Layer_0,
-};
-pub var Oak_Needles = [_]usize {
-    assets.aftersun_atlas.Oak_0_Needles,
-};
-pub var Pine_Needles = [_]usize {
-    assets.aftersun_atlas.Pine_0_Needles,
-};
-pub var Oak_Leaves01 = [_]usize {
-    assets.aftersun_atlas.Oak_0_Leaves01,
-};
-pub var Pine_Leaves01 = [_]usize {
-    assets.aftersun_atlas.Pine_0_Leaves01,
-};
-pub var Oak_Leaves02 = [_]usize {
-    assets.aftersun_atlas.Oak_0_Leaves02,
-};
-pub var Pine_Leaves02 = [_]usize {
-    assets.aftersun_atlas.Pine_0_Leaves02,
-};
-pub var Oak_Leaves03 = [_]usize {
-    assets.aftersun_atlas.Oak_0_Leaves03,
-};
-pub var Pine_Leaves03 = [_]usize {
-    assets.aftersun_atlas.Pine_0_Leaves03,
-};
-pub var Oak_Leaves04 = [_]usize {
-    assets.aftersun_atlas.Oak_0_Leaves04,
-};
-pub var Pine_Leaves04 = [_]usize {
-    assets.aftersun_atlas.Pine_0_Leaves04,
-};
-pub var Oak_Trunk = [_]usize {
-    assets.aftersun_atlas.Oak_0_Trunk,
-};
-pub var Pine_Trunk = [_]usize {
-    assets.aftersun_atlas.Pine_0_Trunk,
-};
-pub var Oak_Ground = [_]usize {
-    assets.aftersun_atlas.Oak_0_Ground,
-};
-pub var Pine_Ground = [_]usize {
-    assets.aftersun_atlas.Pine_0_Ground,
-};
-pub var Campfire_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Campfire_0_Layer_0,
-    assets.aftersun_atlas.Campfire_1_Layer_0,
-    assets.aftersun_atlas.Campfire_2_Layer_0,
-    assets.aftersun_atlas.Campfire_3_Layer_0,
-    assets.aftersun_atlas.Campfire_4_Layer_0,
-    assets.aftersun_atlas.Campfire_5_Layer_0,
-    assets.aftersun_atlas.Campfire_6_Layer_0,
-    assets.aftersun_atlas.Campfire_7_Layer_0,
-};
-pub var Grass_full_3_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Grass_full_3_0_Layer_0,
-};
-pub var Grass_full_4_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Grass_full_4_0_Layer_0,
-};
-pub var Grass_full_2_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Grass_full_2_0_Layer_0,
-};
-pub var Grass_full_0_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Grass_full_0_0_Layer_0,
-};
-pub var Grass_full_1_Layer_0 = [_]usize {
-    assets.aftersun_atlas.Grass_full_1_0_Layer_0,
-};
 pub var Walk_S_HairF01 = [_]usize {
     assets.aftersun_atlas.Walk_S_0_HairF01,
     assets.aftersun_atlas.Walk_S_1_HairF01,
@@ -1167,4 +901,270 @@ pub var Idle_N_Body = [_]usize {
     assets.aftersun_atlas.Idle_N_5_Body,
     assets.aftersun_atlas.Idle_N_6_Body,
     assets.aftersun_atlas.Idle_N_7_Body,
+};
+pub var Ham_Layer = [_]usize {
+    assets.aftersun_atlas.Ham_0_Layer,
+    assets.aftersun_atlas.Ham_1_Layer,
+    assets.aftersun_atlas.Ham_2_Layer,
+    assets.aftersun_atlas.Ham_3_Layer,
+    assets.aftersun_atlas.Ham_4_Layer,
+};
+pub var Cooked_Ham_Layer = [_]usize {
+    assets.aftersun_atlas.Cooked_Ham_0_Layer,
+    assets.aftersun_atlas.Cooked_Ham_1_Layer,
+    assets.aftersun_atlas.Cooked_Ham_2_Layer,
+    assets.aftersun_atlas.Cooked_Ham_3_Layer,
+    assets.aftersun_atlas.Cooked_Ham_4_Layer,
+};
+pub var Cooked_Meat_Layer = [_]usize {
+    assets.aftersun_atlas.Cooked_Meat_0_Layer,
+    assets.aftersun_atlas.Cooked_Meat_1_Layer,
+    assets.aftersun_atlas.Cooked_Meat_2_Layer,
+    assets.aftersun_atlas.Cooked_Meat_3_Layer,
+    assets.aftersun_atlas.Cooked_Meat_4_Layer,
+};
+pub var Apple_Layer = [_]usize {
+    assets.aftersun_atlas.Apple_0_Layer,
+    assets.aftersun_atlas.Apple_1_Layer,
+    assets.aftersun_atlas.Apple_2_Layer,
+    assets.aftersun_atlas.Apple_3_Layer,
+    assets.aftersun_atlas.Apple_4_Layer,
+};
+pub var Plum_Layer = [_]usize {
+    assets.aftersun_atlas.Plum_0_Layer,
+    assets.aftersun_atlas.Plum_1_Layer,
+    assets.aftersun_atlas.Plum_2_Layer,
+    assets.aftersun_atlas.Plum_3_Layer,
+    assets.aftersun_atlas.Plum_4_Layer,
+};
+pub var Pear_Layer = [_]usize {
+    assets.aftersun_atlas.Pear_0_Layer,
+    assets.aftersun_atlas.Pear_1_Layer,
+    assets.aftersun_atlas.Pear_2_Layer,
+    assets.aftersun_atlas.Pear_3_Layer,
+    assets.aftersun_atlas.Pear_4_Layer,
+};
+pub var Blueberry_Layer = [_]usize {
+    assets.aftersun_atlas.Blueberry_0_Layer,
+    assets.aftersun_atlas.Blueberry_1_Layer,
+    assets.aftersun_atlas.Blueberry_2_Layer,
+};
+pub var Torch_Flame_Layer = [_]usize {
+    assets.aftersun_atlas.Torch_Flame_0_Layer,
+    assets.aftersun_atlas.Torch_Flame_1_Layer,
+    assets.aftersun_atlas.Torch_Flame_2_Layer,
+    assets.aftersun_atlas.Torch_Flame_3_Layer,
+    assets.aftersun_atlas.Torch_Flame_4_Layer,
+    assets.aftersun_atlas.Torch_Flame_5_Layer,
+    assets.aftersun_atlas.Torch_Flame_6_Layer,
+    assets.aftersun_atlas.Torch_Flame_7_Layer,
+};
+pub var Torch_Layer = [_]usize {
+    assets.aftersun_atlas.Torch_0_Layer,
+};
+pub var Bucket_Layer = [_]usize {
+    assets.aftersun_atlas.Bucket_0_Layer,
+    assets.aftersun_atlas.Bucket_1_Layer,
+};
+pub var Vial_Layer = [_]usize {
+    assets.aftersun_atlas.Vial_0_Layer,
+};
+pub var Smoke_Layer = [_]usize {
+    assets.aftersun_atlas.Smoke_0_Layer,
+    assets.aftersun_atlas.Smoke_1_Layer,
+    assets.aftersun_atlas.Smoke_2_Layer,
+    assets.aftersun_atlas.Smoke_3_Layer,
+    assets.aftersun_atlas.Smoke_4_Layer,
+    assets.aftersun_atlas.Smoke_5_Layer,
+    assets.aftersun_atlas.Smoke_6_Layer,
+    assets.aftersun_atlas.Smoke_7_Layer,
+};
+pub var Reeds_Layer = [_]usize {
+    assets.aftersun_atlas.Reeds_0_Layer,
+};
+pub var Gold_Layer = [_]usize {
+    assets.aftersun_atlas.Gold_0_Layer,
+    assets.aftersun_atlas.Gold_1_Layer,
+    assets.aftersun_atlas.Gold_2_Layer,
+    assets.aftersun_atlas.Gold_3_Layer,
+    assets.aftersun_atlas.Gold_4_Layer,
+};
+pub var Campfire_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Campfire_0_Layer_0,
+    assets.aftersun_atlas.Campfire_1_Layer_0,
+    assets.aftersun_atlas.Campfire_2_Layer_0,
+    assets.aftersun_atlas.Campfire_3_Layer_0,
+    assets.aftersun_atlas.Campfire_4_Layer_0,
+    assets.aftersun_atlas.Campfire_5_Layer_0,
+    assets.aftersun_atlas.Campfire_6_Layer_0,
+    assets.aftersun_atlas.Campfire_7_Layer_0,
+};
+pub var Grass_full_3_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_full_3_0_Layer_0,
+};
+pub var Grass_full_4_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_full_4_0_Layer_0,
+};
+pub var Grass_full_2_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_full_2_0_Layer_0,
+};
+pub var Grass_full_0_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_full_0_0_Layer_0,
+};
+pub var Grass_full_1_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_full_1_0_Layer_0,
+};
+pub var Water_full_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Water_full_0_Layer_0,
+    assets.aftersun_atlas.Water_full_1_Layer_0,
+    assets.aftersun_atlas.Water_full_2_Layer_0,
+    assets.aftersun_atlas.Water_full_3_Layer_0,
+    assets.aftersun_atlas.Water_full_4_Layer_0,
+    assets.aftersun_atlas.Water_full_5_Layer_0,
+    assets.aftersun_atlas.Water_full_6_Layer_0,
+    assets.aftersun_atlas.Water_full_7_Layer_0,
+};
+pub var Grass_Water_SE_1_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_Water_SE_1_0_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SE_1_1_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SE_1_2_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SE_1_3_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SE_1_4_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SE_1_5_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SE_1_6_Layer_0,
+};
+pub var Grass_Water_NE_1_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_Water_NE_1_0_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NE_1_1_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NE_1_2_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NE_1_3_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NE_1_4_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NE_1_5_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NE_1_6_Layer_0,
+};
+pub var Grass_Water_SW_1_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_Water_SW_1_0_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SW_1_1_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SW_1_2_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SW_1_3_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SW_1_4_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SW_1_5_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SW_1_6_Layer_0,
+};
+pub var Grass_Water_N_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_Water_N_0_Layer_0,
+    assets.aftersun_atlas.Grass_Water_N_1_Layer_0,
+    assets.aftersun_atlas.Grass_Water_N_2_Layer_0,
+    assets.aftersun_atlas.Grass_Water_N_3_Layer_0,
+    assets.aftersun_atlas.Grass_Water_N_4_Layer_0,
+    assets.aftersun_atlas.Grass_Water_N_5_Layer_0,
+    assets.aftersun_atlas.Grass_Water_N_6_Layer_0,
+};
+pub var Grass_Water_SE_2_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_Water_SE_2_0_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SE_2_1_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SE_2_2_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SE_2_3_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SE_2_4_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SE_2_5_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SE_2_6_Layer_0,
+};
+pub var Grass_Water_NW_1_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_Water_NW_1_0_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NW_1_1_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NW_1_2_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NW_1_3_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NW_1_4_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NW_1_5_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NW_1_6_Layer_0,
+};
+pub var Grass_Water_SW_2_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_Water_SW_2_0_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SW_2_1_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SW_2_2_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SW_2_3_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SW_2_4_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SW_2_5_Layer_0,
+    assets.aftersun_atlas.Grass_Water_SW_2_6_Layer_0,
+};
+pub var Grass_full_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_full_0_Layer_0,
+};
+pub var Grass_Water_E_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_Water_E_0_Layer_0,
+    assets.aftersun_atlas.Grass_Water_E_1_Layer_0,
+    assets.aftersun_atlas.Grass_Water_E_2_Layer_0,
+    assets.aftersun_atlas.Grass_Water_E_3_Layer_0,
+    assets.aftersun_atlas.Grass_Water_E_4_Layer_0,
+    assets.aftersun_atlas.Grass_Water_E_5_Layer_0,
+    assets.aftersun_atlas.Grass_Water_E_6_Layer_0,
+};
+pub var Grass_Water_S_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_Water_S_0_Layer_0,
+    assets.aftersun_atlas.Grass_Water_S_1_Layer_0,
+    assets.aftersun_atlas.Grass_Water_S_2_Layer_0,
+    assets.aftersun_atlas.Grass_Water_S_3_Layer_0,
+    assets.aftersun_atlas.Grass_Water_S_4_Layer_0,
+    assets.aftersun_atlas.Grass_Water_S_5_Layer_0,
+    assets.aftersun_atlas.Grass_Water_S_6_Layer_0,
+};
+pub var Grass_Water_NE_2_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_Water_NE_2_0_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NE_2_1_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NE_2_2_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NE_2_3_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NE_2_4_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NE_2_5_Layer_0,
+    assets.aftersun_atlas.Grass_Water_NE_2_6_Layer_0,
+};
+pub var Grass_Water_W_Layer_0 = [_]usize {
+    assets.aftersun_atlas.Grass_Water_W_0_Layer_0,
+    assets.aftersun_atlas.Grass_Water_W_1_Layer_0,
+    assets.aftersun_atlas.Grass_Water_W_2_Layer_0,
+    assets.aftersun_atlas.Grass_Water_W_3_Layer_0,
+    assets.aftersun_atlas.Grass_Water_W_4_Layer_0,
+    assets.aftersun_atlas.Grass_Water_W_5_Layer_0,
+    assets.aftersun_atlas.Grass_Water_W_6_Layer_0,
+};
+pub var Oak_Needles = [_]usize {
+    assets.aftersun_atlas.Oak_0_Needles,
+};
+pub var Pine_Needles = [_]usize {
+    assets.aftersun_atlas.Pine_0_Needles,
+};
+pub var Oak_Leaves01 = [_]usize {
+    assets.aftersun_atlas.Oak_0_Leaves01,
+};
+pub var Pine_Leaves01 = [_]usize {
+    assets.aftersun_atlas.Pine_0_Leaves01,
+};
+pub var Oak_Leaves02 = [_]usize {
+    assets.aftersun_atlas.Oak_0_Leaves02,
+};
+pub var Pine_Leaves02 = [_]usize {
+    assets.aftersun_atlas.Pine_0_Leaves02,
+};
+pub var Oak_Leaves03 = [_]usize {
+    assets.aftersun_atlas.Oak_0_Leaves03,
+};
+pub var Pine_Leaves03 = [_]usize {
+    assets.aftersun_atlas.Pine_0_Leaves03,
+};
+pub var Oak_Leaves04 = [_]usize {
+    assets.aftersun_atlas.Oak_0_Leaves04,
+};
+pub var Pine_Leaves04 = [_]usize {
+    assets.aftersun_atlas.Pine_0_Leaves04,
+};
+pub var Oak_Trunk = [_]usize {
+    assets.aftersun_atlas.Oak_0_Trunk,
+};
+pub var Pine_Trunk = [_]usize {
+    assets.aftersun_atlas.Pine_0_Trunk,
+};
+pub var Oak_Ground = [_]usize {
+    assets.aftersun_atlas.Oak_0_Ground,
+};
+pub var Pine_Ground = [_]usize {
+    assets.aftersun_atlas.Pine_0_Ground,
 };

@@ -187,7 +187,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                 .pipeline_handle = game.state.pipeline_height,
                 .bind_group_handle = game.state.bind_group_height,
                 .output_handle = game.state.height_output.view_handle,
-                .clear_color = math.Color.initBytes(1, 0, 0, 255).toGpuColor(),
+                .clear_color = math.Color.initBytes(0, 0, 0, 255).toGpuColor(),
             }) catch unreachable;
 
             while (ecs.iter_next(&query_it)) {
@@ -465,7 +465,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                 .pipeline_handle = game.state.pipeline_height,
                 .bind_group_handle = game.state.bind_group_height,
                 .output_handle = game.state.reverse_height_output.view_handle,
-                .clear_color = math.Color.initBytes(1, 0, 0, 255).toGpuColor(),
+                .clear_color = math.Color.initBytes(0, 0, 0, 255).toGpuColor(),
             }) catch unreachable;
 
             while (ecs.iter_next(&query_it)) {
