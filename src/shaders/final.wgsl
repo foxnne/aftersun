@@ -61,11 +61,6 @@ struct VertexOut {
     var bloom_mask = 1.0 - textureSample(height, diffuse_sampler, uv).bbbb;
     var bloom = textureSample(bloom, light_sampler, uv) * bloom_mask * 0.35;
 
-    return (reflection + desaturate(diffuse, 0.2) * (1.0 - reflection.a)) * environment * color + bloom;
-}
-
-fn desaturate(color: vec4<f32>, factor: f32) -> vec4<f32> {
-    var lum = vec3( 0.299, 0.587, 0.114);
-    var gray = vec3(dot(lum, color.rgb));
-    return vec4(mix(color.rgb, gray ,factor), 1.0);
+    var render = (reflection + diffuse * (1.0 - reflection.a))  * environment * color + bloom;
+    return render;
 }

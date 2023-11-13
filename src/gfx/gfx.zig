@@ -36,6 +36,7 @@ pub fn init(state: *game.GameState) !void {
     const bloom_h_shader_module = core.device.createShaderModuleWGSL("bloom_h.wgsl", game.shaders.bloom_h);
     const glow_shader_module = core.device.createShaderModuleWGSL("glow.wgsl", game.shaders.glow);
     const height_shader_module = core.device.createShaderModuleWGSL("height.wgsl", game.shaders.height);
+    const post_shader_module = core.device.createShaderModuleWGSL("default.wgsl", game.shaders.post);
 
     const vertex_attributes = [_]gpu.VertexAttribute{
         .{ .format = .float32x3, .offset = @offsetOf(Vertex, "position"), .shader_location = 0 },
@@ -140,6 +141,18 @@ pub fn init(state: *game.GameState) !void {
         .buffers = &.{vertex_buffer_layout},
     });
 
+    const post_fragment = gpu.FragmentState.init(.{
+        .module = post_shader_module,
+        .entry_point = "frag_main",
+        .targets = &.{color_target},
+    });
+
+    const post_vertex = gpu.VertexState.init(.{
+        .module = post_shader_module,
+        .entry_point = "vert_main",
+        .buffers = &.{vertex_buffer_layout},
+    });
+
     const default_pipeline_descriptor = gpu.RenderPipeline.Descriptor{
         .fragment = &default_fragment,
         .vertex = default_vertex,
@@ -180,6 +193,11 @@ pub fn init(state: *game.GameState) !void {
         .vertex = final_vertex,
     };
 
+    const post_pipeline_descriptor = gpu.RenderPipeline.Descriptor{
+        .fragment = &post_fragment,
+        .vertex = post_vertex,
+    };
+
     state.pipeline_default = core.device.createRenderPipeline(&default_pipeline_descriptor);
     state.pipeline_diffuse = core.device.createRenderPipeline(&diffuse_pipeline_descriptor);
     state.pipeline_height = core.device.createRenderPipeline(&height_pipeline_descriptor);
@@ -188,6 +206,7 @@ pub fn init(state: *game.GameState) !void {
     state.pipeline_bloom = core.device.createRenderPipeline(&bloom_pipeline_descriptor);
     state.pipeline_bloom_h = core.device.createRenderPipeline(&bloom_h_pipeline_descriptor);
     state.pipeline_final = core.device.createRenderPipeline(&final_pipeline_descriptor);
+    state.pipeline_post = core.device.createRenderPipeline(&post_pipeline_descriptor);
 
     state.uniform_buffer_default = core.device.createBuffer(&.{
         .usage = .{ .copy_dst = true, .uniform = true },
@@ -326,6 +345,17 @@ pub fn init(state: *game.GameState) !void {
                 gpu.BindGroup.Entry.textureView(8, state.bloom_output.view_handle),
                 gpu.BindGroup.Entry.textureView(9, state.reflection_output.view_handle),
                 gpu.BindGroup.Entry.sampler(10, state.light_output.sampler_handle),
+            },
+        }),
+    );
+
+    state.bind_group_post = core.device.createBindGroup(
+        &gpu.BindGroup.Descriptor.init(.{
+            .layout = state.pipeline_default.getBindGroupLayout(0),
+            .entries = &.{
+                gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
+                gpu.BindGroup.Entry.textureView(1, state.final_output.view_handle),
+                gpu.BindGroup.Entry.sampler(2, state.final_output.sampler_handle),
             },
         }),
     );

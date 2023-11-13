@@ -70,6 +70,7 @@ pub const GameState = struct {
     pipeline_bloom: *gpu.RenderPipeline = undefined,
     pipeline_environment: *gpu.RenderPipeline = undefined,
     pipeline_final: *gpu.RenderPipeline = undefined,
+    pipeline_post: *gpu.RenderPipeline = undefined,
     bind_group_default: *gpu.BindGroup = undefined,
     bind_group_reflection: *gpu.BindGroup = undefined,
     bind_group_diffuse: *gpu.BindGroup = undefined,
@@ -80,6 +81,7 @@ pub const GameState = struct {
     bind_group_environment: *gpu.BindGroup = undefined,
     bind_group_light: *gpu.BindGroup = undefined,
     bind_group_final: *gpu.BindGroup = undefined,
+    bind_group_post: *gpu.BindGroup = undefined,
     uniform_buffer_default: *gpu.Buffer = undefined,
     uniform_buffer_environment: *gpu.Buffer = undefined,
     uniform_buffer_final: *gpu.Buffer = undefined,
@@ -187,6 +189,8 @@ pub fn init(app: *App) !void {
         .filter = .linear,
         .format = core.descriptor.format,
     });
+
+    state.final_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{ .format = core.descriptor.format });
 
     app.* = .{
         .timer = try core.Timer.start(),
