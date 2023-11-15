@@ -141,7 +141,9 @@ pub const Batcher = struct {
         color: zmath.F32x4 = game.math.Colors.white.value,
         flip_y: bool = false,
         flip_x: bool = false,
-        time: f32 = 0.0,
+        data_0: f32 = 0.0,
+        data_1: f32 = 0.0,
+        data_2: f32 = 0.0,
     };
 
     /// Appends a quad at the passed position set to the size needed to render the target texture.
@@ -162,25 +164,25 @@ pub const Batcher = struct {
                     .position = [3]f32{ pos[0], pos[1] + height, pos[2] },
                     .uv = [2]f32{ if (options.flip_x) max else min, min },
                     .color = color,
-                    .data = [3]f32{ 0.0, 0.0, options.time },
+                    .data = [3]f32{ options.data_0, options.data_1, options.data_2 },
                 }, //Bl
                 .{
                     .position = [3]f32{ pos[0] + width, pos[1] + height, pos[2] },
                     .uv = [2]f32{ if (options.flip_x) min else max, min },
                     .color = color,
-                    .data = [3]f32{ 0.0, 0.0, options.time },
+                    .data = [3]f32{ options.data_0, options.data_1, options.data_2 },
                 }, //Br
                 .{
                     .position = [3]f32{ pos[0] + width, pos[1], pos[2] },
                     .uv = [2]f32{ if (options.flip_x) min else max, max },
                     .color = color,
-                    .data = [3]f32{ 0.0, 0.0, options.time },
+                    .data = [3]f32{ options.data_0, options.data_1, options.data_2 },
                 }, //Tr
                 .{
                     .position = [3]f32{ pos[0], pos[1], pos[2] },
                     .uv = [2]f32{ if (options.flip_x) max else min, max },
                     .color = color,
-                    .data = [3]f32{ 0.0, 0.0, options.time },
+                    .data = [3]f32{ options.data_0, options.data_1, options.data_2 },
                 }, //Tl
             },
         };

@@ -31,7 +31,8 @@ pub fn callback(it: *ecs.iter_t) callconv(.C) void {
 
     const position = zmath.f32x4(-@as(f32, @floatFromInt(game.state.final_output.image.width)) / 2, -@as(f32, @floatFromInt(game.state.final_output.image.height)) / 2, 0, 0);
 
-    game.state.batcher.texture(position, &game.state.diffuse_output, .{ .time = @mod(game.state.game_time / 4, 1) }) catch unreachable;
+    const scanner_time = @mod(game.state.game_time / 4, 1);
+    game.state.batcher.texture(position, &game.state.diffuse_output, .{ .data_2 = scanner_time }) catch unreachable;
 
     game.state.batcher.end(final_uniforms, game.state.uniform_buffer_final) catch unreachable;
 
