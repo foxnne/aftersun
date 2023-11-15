@@ -74,7 +74,7 @@ struct VertexOut {
     var dist = abs(distance(uv, vec2(0.5, 0.5)) - data.z);
     
     if (dist < data.z) {
-        if (bottom.r * 255.0 - middle.r * 255.0 >= 1.0) { hightlight = environment * vec4((1.0 - data.z) * distance(uv, vec2(0.5, 0.5)) * 100) * vec4(uv.y * 2.0, 0.5, uv.x * 2.0, 1.0); }  
+        if (bottom.r * 255.0 - middle.r * 255.0 >= 1.0) { hightlight = environment * vec4((1.0 - data.z) * 0.2 * distance(uv, vec2(0.5, 0.5)) * 100) * vec4(uv.y * 2.0, 0.5, uv.x * 2.0, 1.0); }  
     }
 
     var render = (reflection + diffuse * (1.0 - reflection.a))  * environment * color + bloom + hightlight;
