@@ -61,6 +61,24 @@ struct VertexOut {
     var bloom_mask = 1.0 - textureSample(height, diffuse_sampler, uv).bbbb;
     var bloom = textureSample(bloom, light_sampler, uv) * bloom_mask * 0.35;
 
-    var render = (reflection + diffuse * (1.0 - reflection.a))  * environment * color + bloom;
+    var tex_size = textureDimensions(height);
+    var tex_step_y = 1.0 / f32(tex_size.y);
+
+    var bottom_uv = vec2(uv.x, uv.y + tex_step_y);
+
+    var middle = textureSample(height, diffuse_sampler, uv);
+    var bottom = textureSample(height, diffuse_sampler, bottom_uv);
+
+    var hightlight = vec4(0.0, 0.0, 0.0, 1.0 );
+
+    var radius = data.z / 2.0;
+
+    var dist = abs(distance(uv, vec2(0.5, 0.5)) - radius);
+    
+    if (dist < 0.015 ) {
+        if (bottom.r * 255.0 - middle.r * 255.0 >= 1.0) { hightlight = vec4(dist * 50) * vec4(uv, 1.0, 1.0) * environment;}
+    }
+
+    var render = (reflection + diffuse * (1.0 - reflection.a))  * environment * color + bloom + hightlight;
     return render;
 }

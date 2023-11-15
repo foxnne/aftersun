@@ -4,6 +4,7 @@ const ecs = @import("zflecs");
 const game = @import("../../aftersun.zig");
 const gfx = game.gfx;
 const components = game.components;
+const core = @import("mach-core");
 
 pub fn system() ecs.system_desc_t {
     var desc: ecs.system_desc_t = .{};
@@ -25,12 +26,12 @@ pub fn callback(it: *ecs.iter_t) callconv(.C) void {
         .pipeline_handle = game.state.pipeline_final,
         .bind_group_handle = game.state.bind_group_final,
         .output_handle = game.state.final_output.view_handle,
-        .clear_color = game.math.Color.initBytes(50, 80, 255, 255).toGpuColor(),
+        .clear_color = game.math.Color.initBytes(50, 60, 200, 255).toGpuColor(),
     }) catch unreachable;
 
     const position = zmath.f32x4(-@as(f32, @floatFromInt(game.state.final_output.image.width)) / 2, -@as(f32, @floatFromInt(game.state.final_output.image.height)) / 2, 0, 0);
 
-    game.state.batcher.texture(position, &game.state.diffuse_output, .{}) catch unreachable;
+    game.state.batcher.texture(position, &game.state.diffuse_output, .{ .time = @mod(game.state.game_time / 4, 1) }) catch unreachable;
 
     game.state.batcher.end(final_uniforms, game.state.uniform_buffer_final) catch unreachable;
 
