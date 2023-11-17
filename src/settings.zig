@@ -27,13 +27,13 @@ pub const pixels_per_unit: f32 = 32.0;
 pub const movement_cooldown: f32 = 0.38;
 
 /// The number of sprites expected per batch to the batcher.
-pub const batcher_max_sprites = 20000;
+pub const batcher_max_sprites = 40000;
 
 /// Size of a square game cell in tiles wide/tall.b
-pub const cell_size = 20;
+pub const cell_size = 24;
 
 /// Maximum number of tiles visible either in width or height
-pub const max_visible_tiles: f32 = 40.0;
+pub const max_visible_tiles: f32 = cell_size * 2.0 - 5.0;
 
 /// Speed at which the camera will lerp to new velocity.
 pub const camera_follow_speed = 1.0;
