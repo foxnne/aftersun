@@ -14,16 +14,14 @@ pub const Camera = struct {
 
     pub fn init(position: zmath.F32x4) Camera {
         return .{
-            .zoom = minZoom(),
+            .zoom = minZoom() + 1.0,
             .position = position,
         };
     }
 
     pub fn frameBufferResize(camera: *Camera) void {
         const min_zoom = minZoom();
-        const max_zoom = maxZoom();
-        if (camera.zoom < min_zoom) camera.zoom = min_zoom;
-        if (camera.zoom > max_zoom) camera.zoom = max_zoom;
+        camera.zoom = min_zoom + 1.0;
     }
 
     /// Use this matrix when drawing to the framebuffer.

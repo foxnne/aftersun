@@ -168,6 +168,8 @@ pub fn loadCell(self: *Self, cell: components.Cell) void {
 
                     _ = ecs.add(game.state.world, tree, components.Unloadable);
                     _ = ecs.add(game.state.world, tree_leaves_01, components.Unloadable);
+                } else {
+                    _ = ecs.add(game.state.world, tile_entity, components.Walkable);
                 }
             }
         }

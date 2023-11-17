@@ -63,7 +63,8 @@ pub const GameState = struct {
     counter: Counter = .{},
     cells: std.AutoArrayHashMap(components.Cell, ecs.entity_t) = undefined,
     map: Map = undefined,
-    //tiles: std.ArrayList(ecs.entity_t) = undefined,
+    scanner_time: f32 = 0.0,
+    scanner_state: bool = false,
     output_channel: Channel = .final,
     pipeline_default: *gpu.RenderPipeline = undefined,
     pipeline_diffuse: *gpu.RenderPipeline = undefined,
@@ -240,6 +241,8 @@ pub fn init(app: *App) !void {
     ecs.SYSTEM(world, "UseSystem", ecs.OnUpdate, &use_system);
     var cook_system = @import("ecs/systems/cook.zig").system();
     ecs.SYSTEM(world, "CookSystem", ecs.OnUpdate, &cook_system);
+    var scanner_system = @import("ecs/systems/scanner.zig").system();
+    ecs.SYSTEM(world, "ScannerSystem", ecs.OnUpdate, &scanner_system);
 
     // - Observers
     var tile_observer = @import("ecs/observers/tile.zig").observer();

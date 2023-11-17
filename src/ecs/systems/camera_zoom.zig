@@ -17,7 +17,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
             game.state.camera.zoom_progress = -1.0;
             game.state.camera.zoom = game.state.camera.zoom_step_next;
         } else {
-            game.state.camera.zoom = game.math.lerp(game.state.camera.zoom_step, game.state.camera.zoom_step_next, game.state.camera.zoom_progress);
+            game.state.camera.zoom = game.math.ease(game.state.camera.zoom_step, game.state.camera.zoom_step_next, game.state.camera.zoom_progress, .ease_out);
         }
     }
 }

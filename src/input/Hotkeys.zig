@@ -22,6 +22,7 @@ pub const Action = enum(u32) {
     directional_down,
     directional_right,
     directional_left,
+    scanner,
 };
 
 hotkeys: []Hotkey,
@@ -143,6 +144,12 @@ pub fn initDefault(allocator: std.mem.Allocator) !Self {
             .shortcut = "d",
             .key = Key.d,
             .action = .directional_right,
+        });
+
+        try hotkeys.append(.{
+            .shortcut = "tab",
+            .key = Key.tab,
+            .action = .scanner,
         });
     }
 

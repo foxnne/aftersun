@@ -179,3 +179,11 @@ pub const Raw = struct { cooked_prefab: ecs.entity_t };
 pub const Cook = struct {};
 
 pub const Trigger = struct {};
+
+pub const Walkable = struct {};
+
+pub const PathfindingNode = struct {
+    f: f32 = 0.0,
+    g: f32 = 0.0,
+    h: f32 = 0.0,
+};
