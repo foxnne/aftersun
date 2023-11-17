@@ -23,6 +23,8 @@ pub const input = @import("input/input.zig");
 pub const time = @import("time/time.zig");
 pub const environment = @import("time/environment.zig");
 
+pub const Map = @import("map/map.zig");
+
 test {
     _ = zstbi;
     _ = math;
@@ -60,7 +62,8 @@ pub const GameState = struct {
     environment: environment.Environment = .{},
     counter: Counter = .{},
     cells: std.AutoArrayHashMap(components.Cell, ecs.entity_t) = undefined,
-    tiles: std.ArrayList(ecs.entity_t) = undefined,
+    map: Map = undefined,
+    //tiles: std.ArrayList(ecs.entity_t) = undefined,
     output_channel: Channel = .final,
     pipeline_default: *gpu.RenderPipeline = undefined,
     pipeline_diffuse: *gpu.RenderPipeline = undefined,
@@ -153,7 +156,7 @@ pub fn init(app: *App) !void {
 
     state.batcher = try gfx.Batcher.init(allocator, settings.batcher_max_sprites);
     state.cells = std.AutoArrayHashMap(components.Cell, ecs.entity_t).init(allocator);
-    state.tiles = std.ArrayList(ecs.entity_t).init(allocator);
+    state.map = Map.init(allocator);
     state.camera = gfx.Camera.init(zmath.f32x4s(0));
 
     state.atlas = try gfx.Atlas.initFromFile(allocator, assets.aftersun_atlas.path);
@@ -289,7 +292,7 @@ pub fn init(app: *App) !void {
     const player_cell: components.Cell = player_tile.toCell();
 
     for (player_cell.getAllSurrounding()) |cell| {
-        loadCell(cell);
+        state.map.loadCell(cell);
     }
 
     state.entities.player = ecs.new_entity(world, "Player");
@@ -506,176 +509,4 @@ pub fn deinit(_: *App) void {
     core.deinit();
     // TODO: Figure out why autohashmap is leaking
     //_ = gpa.detectLeaks();
-}
-
-pub fn loadCell(cell: components.Cell) void {
-    var cell_entity: ecs.entity_t = 0;
-    if (state.cells.get(cell)) |c| {
-        cell_entity = c;
-    } else {
-        cell_entity = ecs.new_id(state.world);
-        _ = ecs.set(state.world, cell_entity, components.Cell, cell);
-        state.cells.put(cell, cell_entity) catch unreachable;
-    }
-
-    var hash = std.hash.Fnv1a_64.init();
-    hash.update(std.mem.asBytes(&cell.x));
-    hash.update(std.mem.asBytes(&cell.y));
-    hash.update(std.mem.asBytes(&cell.z));
-    const seed = hash.final();
-
-    var rand = std.rand.DefaultPrng.init(seed);
-    var random = rand.random();
-
-    const cell_density = random.float(f32) * 0.15;
-
-    for (0..settings.cell_size) |x_i| {
-        for (0..settings.cell_size) |y_i| {
-            var x_tile: i32 = @intCast(x_i);
-            var y_tile: i32 = @intCast(y_i);
-
-            const tile: components.Tile = .{
-                .x = x_tile + (cell.x * settings.cell_size),
-                .y = y_tile + (cell.y * settings.cell_size),
-                .z = cell.z,
-                .counter = 0,
-                .kind = .ground,
-            };
-
-            const position = tile.toPosition();
-
-            const tile_entity = if (state.tiles.items.len > 0) state.tiles.pop() else ecs.new_id(state.world);
-
-            const water = assets.aftersun_atlas.Water_full_0_Layer_0;
-            const grass: usize = if (random.boolean()) assets.aftersun_atlas.Grass_full_0_Layer_0 else assets.aftersun_atlas.Grass_full_4_0_Layer_0;
-            const edge = assets.aftersun_atlas.Grass_Water_S_0_Layer_0;
-
-            _ = ecs.set(state.world, tile_entity, components.Tile, tile);
-            _ = ecs.set(state.world, tile_entity, components.Position, position);
-            _ = ecs.set(state.world, tile_entity, components.SpriteRenderer, .{
-                .index = if (tile.y < -3) water else if (tile.y == -3) edge else grass,
-            });
-            _ = ecs.set_pair(state.world, tile_entity, ecs.id(components.Cell), cell_entity, components.Cell, cell);
-            _ = ecs.set(state.world, tile_entity, components.MapTile, if (tile.y < -3) .water else .ground);
-            _ = ecs.add(state.world, tile_entity, components.Unloadable);
-
-            if (tile.y > -2) {
-                if (random.float(f32) > 1.0 - cell_density) {
-                    {
-                        const reflect = true;
-
-                        const tree = if (state.tiles.items.len > 0) state.tiles.pop() else ecs.new_id(state.world);
-                        _ = ecs.set(state.world, tree, components.Position, position);
-                        _ = ecs.set(state.world, tree, components.Tile, position.toTile(state.counter.count()));
-                        _ = ecs.set(state.world, tree, components.SpriteRenderer, .{
-                            .index = assets.aftersun_atlas.Oak_0_Trunk,
-                            .reflect = reflect,
-                        });
-                        _ = ecs.set(state.world, tree, components.Collider, .{});
-                        _ = ecs.set_pair(state.world, tree, ecs.id(components.Cell), cell_entity, components.Cell, cell);
-
-                        const rand_f = random.float(f32);
-                        const leaf_color = math.Color.initBytes(if (rand_f <= 0.25) 14 else if (rand_f <= 0.5) 15 else if (rand_f <= 0.75) 16 else 15, 0, 0, 255).toSlice();
-
-                        const tree_leaves_01 = if (state.tiles.items.len > 0) state.tiles.pop() else ecs.new_id(state.world);
-                        _ = ecs.set(state.world, tree_leaves_01, components.Position, position);
-                        _ = ecs.set(state.world, tree_leaves_01, components.Tile, position.toTile(state.counter.count()));
-                        _ = ecs.set(state.world, tree_leaves_01, components.SpriteRenderer, .{
-                            .index = assets.aftersun_atlas.Oak_0_Leaves04,
-                            .color = leaf_color,
-                            .frag_mode = .palette,
-                            .vert_mode = .top_sway,
-                            .reflect = reflect,
-                        });
-                        _ = ecs.set_pair(state.world, tree_leaves_01, ecs.id(components.Cell), cell_entity, components.Cell, cell);
-
-                        const tree_leaves_02 = if (state.tiles.items.len > 0) state.tiles.pop() else ecs.new_id(state.world);
-                        _ = ecs.set(state.world, tree_leaves_02, components.Position, position);
-                        _ = ecs.set(state.world, tree_leaves_02, components.Tile, position.toTile(state.counter.count()));
-                        _ = ecs.set(state.world, tree_leaves_02, components.SpriteRenderer, .{
-                            .index = assets.aftersun_atlas.Oak_0_Leaves03,
-                            .color = leaf_color,
-                            .frag_mode = .palette,
-                            .vert_mode = .top_sway,
-                            .reflect = reflect,
-                        });
-
-                        _ = ecs.set_pair(state.world, tree_leaves_02, ecs.id(components.Cell), cell_entity, components.Cell, cell);
-
-                        const tree_leaves_03 = if (state.tiles.items.len > 0) state.tiles.pop() else ecs.new_id(state.world);
-                        _ = ecs.set(state.world, tree_leaves_03, components.Position, position);
-                        _ = ecs.set(state.world, tree_leaves_03, components.Tile, position.toTile(state.counter.count()));
-                        _ = ecs.set(state.world, tree_leaves_03, components.SpriteRenderer, .{
-                            .index = assets.aftersun_atlas.Oak_0_Leaves02,
-                            .color = leaf_color,
-                            .frag_mode = .palette,
-                            .vert_mode = .top_sway,
-                            .reflect = reflect,
-                        });
-                        _ = ecs.set_pair(state.world, tree_leaves_03, ecs.id(components.Cell), cell_entity, components.Cell, cell);
-
-                        const tree_leaves_04 = if (state.tiles.items.len > 0) state.tiles.pop() else ecs.new_id(state.world);
-                        _ = ecs.set(state.world, tree_leaves_04, components.Position, position);
-                        _ = ecs.set(state.world, tree_leaves_04, components.Tile, position.toTile(state.counter.count()));
-                        _ = ecs.set(state.world, tree_leaves_04, components.SpriteRenderer, .{
-                            .index = assets.aftersun_atlas.Oak_0_Leaves01,
-                            .color = leaf_color,
-                            .frag_mode = .palette,
-                            .vert_mode = .top_sway,
-                            .reflect = reflect,
-                        });
-                        _ = ecs.set_pair(state.world, tree_leaves_04, ecs.id(components.Cell), cell_entity, components.Cell, cell);
-
-                        _ = ecs.add(state.world, tree, components.Unloadable);
-                        _ = ecs.add(state.world, tree_leaves_01, components.Unloadable);
-                        _ = ecs.add(state.world, tree_leaves_02, components.Unloadable);
-                        _ = ecs.add(state.world, tree_leaves_03, components.Unloadable);
-                        _ = ecs.add(state.world, tree_leaves_04, components.Unloadable);
-                    }
-                } else if (random.float(f32) < cell_density * 0.4) {
-                    const reflect = true;
-
-                    const tree = if (state.tiles.items.len > 0) state.tiles.pop() else ecs.new_id(state.world);
-                    _ = ecs.set(state.world, tree, components.Position, position);
-                    _ = ecs.set(state.world, tree, components.Tile, position.toTile(state.counter.count()));
-                    _ = ecs.set(state.world, tree, components.SpriteRenderer, .{
-                        .index = assets.aftersun_atlas.Pine_0_Trunk,
-                        .reflect = reflect,
-                        .vert_mode = .top_sway,
-                    });
-                    _ = ecs.set(state.world, tree, components.Collider, .{});
-                    _ = ecs.set_pair(state.world, tree, ecs.id(components.Cell), cell_entity, components.Cell, cell);
-
-                    const tree_leaves_01 = if (state.tiles.items.len > 0) state.tiles.pop() else ecs.new_id(state.world);
-                    _ = ecs.set(state.world, tree_leaves_01, components.Position, position);
-                    _ = ecs.set(state.world, tree_leaves_01, components.Tile, position.toTile(state.counter.count()));
-                    _ = ecs.set(state.world, tree_leaves_01, components.SpriteRenderer, .{
-                        .index = assets.aftersun_atlas.Pine_0_Needles,
-                        .vert_mode = .top_sway,
-                        .reflect = reflect,
-                    });
-                    _ = ecs.set_pair(state.world, tree_leaves_01, ecs.id(components.Cell), cell_entity, components.Cell, cell);
-
-                    _ = ecs.add(state.world, tree, components.Unloadable);
-                    _ = ecs.add(state.world, tree_leaves_01, components.Unloadable);
-                }
-            }
-        }
-    }
-}
-
-pub fn unloadCell(cell: components.Cell, query_it: *ecs.iter_t) void {
-    if (state.cells.get(cell)) |cell_entity| {
-        ecs.query_set_group(query_it, cell_entity);
-        while (ecs.iter_next(query_it)) {
-            for (query_it.entities()) |entity| {
-                //ecs.delete(state.world, entity);
-
-                ecs.clear(state.world, entity);
-
-                state.tiles.append(entity) catch unreachable;
-                //ecs.enable(state.world, entity, false);
-            }
-        }
-    }
 }

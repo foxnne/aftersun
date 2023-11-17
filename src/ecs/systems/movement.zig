@@ -70,7 +70,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                             }
                                             if (!found) {
                                                 var query_it = ecs.query_iter(world, query);
-                                                game.unloadCell(old_cell, &query_it);
+                                                game.state.map.unloadCell(old_cell, &query_it);
                                             }
                                         }
 
@@ -82,7 +82,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                                 }
                                             }
                                             if (!found)
-                                                game.loadCell(new_cell);
+                                                game.state.map.loadCell(new_cell);
                                         }
                                     }
                                 }
