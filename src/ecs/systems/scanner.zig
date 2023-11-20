@@ -11,9 +11,11 @@ pub fn system() ecs.system_desc_t {
 }
 
 pub fn run(it: *ecs.iter_t) callconv(.C) void {
+    // Always set state initially to check for camera zoom being at minimum.
+    game.state.scanner_state = game.state.camera.zoom == game.gfx.Camera.minZoom();
+
     if (game.state.hotkeys.hotkey(.scanner)) |hk| {
         if (hk.pressed()) {
-            game.state.scanner_state = game.state.camera.zoom == game.gfx.Camera.minZoom();
             game.state.scanner_state = !game.state.scanner_state;
 
             if (game.state.scanner_state) {
