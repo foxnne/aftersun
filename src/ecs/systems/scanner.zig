@@ -13,6 +13,7 @@ pub fn system() ecs.system_desc_t {
 pub fn run(it: *ecs.iter_t) callconv(.C) void {
     if (game.state.hotkeys.hotkey(.scanner)) |hk| {
         if (hk.pressed()) {
+            game.state.scanner_state = game.state.camera.zoom == game.gfx.Camera.minZoom();
             game.state.scanner_state = !game.state.scanner_state;
 
             if (game.state.scanner_state) {
@@ -27,7 +28,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
         }
     }
 
-    if (game.state.scanner_state) {
+    if (game.state.scanner_state or game.state.camera.zoom == game.gfx.Camera.minZoom()) {
         if (game.state.scanner_time < 1.0) {
             game.state.scanner_time = @min(1.0, game.state.scanner_time + (it.delta_time / 6.0));
         } else {
