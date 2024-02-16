@@ -35,14 +35,14 @@ fn main(
   @builtin(local_invocation_id) LocalInvocationID : vec3<u32>
 ) {
   // TODO - mixed vector arithmetic (vec2<u32> and vec2<i32>)
-  let filterOffset = (params.filterDim - 1) / 2;
+  let filterOffset = u32((params.filterDim - 1) / 2);
   let dims = vec2<u32>(textureDimensions(inputTex, 0));
   let baseIndex = vec2<u32>(WorkGroupID.xy * vec2(params.blockDim, 4) +
                             LocalInvocationID.xy * vec2<u32>(4, 1))
                   - vec2<u32>(filterOffset, 0);
 
-  for (var r = 0; r < 4; r++) {
-    for (var c = 0; c < 4; c++) {
+  for (var r: u32 = 0; r < 4; r++) {
+    for (var c: u32 = 0; c < 4; c++) {
       var loadIndex = baseIndex + vec2<u32>(c, r);
       if (flip.value != 0u) {
         loadIndex = loadIndex.yx;
@@ -59,8 +59,8 @@ fn main(
 
   workgroupBarrier();
 
-  for (var r = 0; r < 4; r++) {
-    for (var c = 0; c < 4; c++) {
+  for (var r: u32 = 0; r < 4; r++) {
+    for (var c: u32 = 0; c < 4; c++) {
       var writeIndex = baseIndex + vec2<u32>(c, r);
       if (flip.value != 0) {
         writeIndex = writeIndex.yx;
@@ -71,7 +71,7 @@ fn main(
           center < 128 - filterOffset &&
           all(writeIndex < dims)) {
         var acc = vec3(0.0, 0.0, 0.0);
-        for (var f = 0; f < params.filterDim; f++) {
+        for (var f: u32 = 0; f < u32(params.filterDim); f++) {
           var i = center + f - filterOffset;
           acc = acc + (1.0 / f32(params.filterDim)) * tile[r][i];
         }
