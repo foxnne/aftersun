@@ -59,7 +59,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                         const old_cells = player_cell.getAllSurrounding();
                                         const new_cells = next_cell.getAllSurrounding();
 
-                                        var query = @as(*ecs.query_t, @ptrCast(ctx));
+                                        const query = @as(*ecs.query_t, @ptrCast(ctx));
 
                                         for (old_cells) |old_cell| {
                                             var found: bool = false;

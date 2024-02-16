@@ -36,7 +36,7 @@ pub fn build(b: *std.Build) !void {
         .name = "aftersun",
         .src = src_path,
         .target = target,
-        .deps = &[_]std.build.ModuleDependency{
+        .deps = &.{
             .{ .name = "zstbi", .module = zstbi_pkg.zstbi },
             .{ .name = "zmath", .module = zmath_pkg.zmath },
             .{ .name = "zflecs", .module = zflecs_pkg.zflecs },
@@ -44,16 +44,6 @@ pub fn build(b: *std.Build) !void {
         },
         .optimize = optimize,
     });
-
-    if (use_sysgpu) {
-        const mach_sysgpu_dep = b.dependency("mach_sysgpu", .{
-            .target = target,
-            .optimize = optimize,
-        });
-
-        app.compile.linkLibrary(mach_sysgpu_dep.artifact("mach-dusk"));
-        @import("mach_sysgpu").link(mach_sysgpu_dep.builder, app.compile);
-    }
 
     const run_step = b.step("run", "Run aftersun");
     run_step.dependOn(&app.run.step);
@@ -64,17 +54,17 @@ pub fn build(b: *std.Build) !void {
         .optimize = optimize,
     });
 
-    unit_tests.addModule("zstbi", zstbi_pkg.zstbi);
-    unit_tests.addModule("zmath", zmath_pkg.zmath);
-    unit_tests.addModule("zflecs", zflecs_pkg.zflecs);
+    unit_tests.root_module.addImport("zstbi", zstbi_pkg.zstbi);
+    unit_tests.root_module.addImport("zmath", zmath_pkg.zmath);
+    unit_tests.root_module.addImport("zflecs", zflecs_pkg.zflecs);
 
     const run_unit_tests = b.addRunArtifact(unit_tests);
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_unit_tests.step);
 
-    app.compile.addModule("zstbi", zstbi_pkg.zstbi);
-    app.compile.addModule("zmath", zmath_pkg.zmath);
-    app.compile.addModule("zflecs", zflecs_pkg.zflecs);
+    app.compile.root_module.addImport("zstbi", zstbi_pkg.zstbi);
+    app.compile.root_module.addImport("zmath", zmath_pkg.zmath);
+    app.compile.root_module.addImport("zflecs", zflecs_pkg.zflecs);
 
     zstbi_pkg.link(app.compile);
     zmath_pkg.link(app.compile);

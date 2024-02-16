@@ -34,7 +34,7 @@ pub const Batcher = struct {
     };
 
     pub fn init(allocator: std.mem.Allocator, max_quads: usize) !Batcher {
-        var vertices = try allocator.alloc(gfx.Vertex, max_quads * 4);
+        const vertices = try allocator.alloc(gfx.Vertex, max_quads * 4);
         var indices = try allocator.alloc(u32, max_quads * 6);
 
         // Arrange index buffer for quads
@@ -158,7 +158,7 @@ pub const Batcher = struct {
         const max: f32 = if (!options.flip_y) 1.0 else 0.0;
         const min: f32 = if (!options.flip_y) 0.0 else 1.0;
 
-        var quad = gfx.Quad{
+        const quad = gfx.Quad{
             .vertices = [_]gfx.Vertex{
                 .{
                     .position = [3]f32{ pos[0], pos[1] + height, pos[2] },
