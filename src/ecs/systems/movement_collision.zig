@@ -46,7 +46,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                     // check for a collision when the tile hasn't yet been moved.
                     if (tiles[i].x != movements[i].end.x or tiles[i].y != movements[i].end.y or tiles[i].z != movements[i].end.z) {
                         if (it.ctx) |ctx| {
-                            var query = @as(*ecs.query_t, @ptrCast(ctx));
+                            const query = @as(*ecs.query_t, @ptrCast(ctx));
                             var query_it = ecs.query_iter(world, query);
                             if (game.state.cells.get(movements[i].end.toCell())) |cell_entity| {
                                 ecs.query_set_group(&query_it, cell_entity);

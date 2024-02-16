@@ -49,7 +49,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         var target_tile: components.Tile = .{};
                         var counter: u64 = 0;
                         if (it.ctx) |ctx| {
-                            var query = @as(*ecs.query_t, @ptrCast(ctx));
+                            const query = @as(*ecs.query_t, @ptrCast(ctx));
                             var query_it = ecs.query_iter(world, query);
                             if (game.state.cells.get(uses[i].target.toCell())) |cell_entity| {
                                 ecs.query_set_group(&query_it, cell_entity);

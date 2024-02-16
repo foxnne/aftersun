@@ -62,8 +62,8 @@ fn tiltshift(texture: texture_2d<f32>, sampl: sampler, uv: vec2<f32> ) -> vec4<f
     var alpha = textureSample(texture, sampl, uv).a;
         
     // From minimum offset to maximum offset
-    for (var offsX: i32 = i32(minOffs); offsX <= i32(maxOffs); offsX++) {
-        for (var offsY: i32 = i32(minOffs); offsY <= i32(maxOffs); offsY++) {
+    for (var offsX: i32 = i32(minOffs); offsX < i32(maxOffs) || offsX == i32(maxOffs); offsX++) {
+        for (var offsY: i32 = i32(minOffs); offsY < i32(maxOffs) || offsY == i32(maxOffs); offsY++) {
 
             // copy the coord so we can mess with it
             var temp_tcoord = uv.xy;

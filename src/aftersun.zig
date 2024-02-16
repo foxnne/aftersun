@@ -472,7 +472,7 @@ pub fn update(app: *App) !bool {
     compute_pass.end();
     compute_pass.release();
 
-    var command = encoder.finish(null);
+    const command = encoder.finish(null);
     encoder.release();
 
     core.queue.submit(&.{ batcher_commands, command });
