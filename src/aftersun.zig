@@ -47,6 +47,7 @@ pub const mach_core_options = core.ComptimeOptions{
 };
 
 timer: core.Timer,
+title_timer: core.Timer,
 
 pub var state: *GameState = undefined;
 pub var content_scale: [2]f32 = undefined;
@@ -210,6 +211,7 @@ pub fn init(app: *App) !void {
 
     app.* = .{
         .timer = try core.Timer.start(),
+        .title_timer = try core.Timer.start(),
     };
 
     try gfx.init(state);
@@ -487,6 +489,15 @@ pub fn update(app: *App) !bool {
     }
 
     state.mouse.previous_position = state.mouse.position;
+
+    // update the window title every second
+    if (app.title_timer.read() >= 1.0) {
+        app.title_timer.reset();
+        try core.printTitle("Aftersun [ {d}fps ] [ Input {d}hz ]", .{
+            core.frameRate(),
+            core.inputRate(),
+        });
+    }
 
     return false;
 }

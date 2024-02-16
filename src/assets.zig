@@ -3,26 +3,22 @@ const std = @import("std");
 
 pub const root = "assets/";
 
+pub const aftersun_lights_png = struct {
+  pub const path = "assets/images/aftersun_lights.png";
+};
+
 pub const aftersun_lights_atlas = struct {
   pub const path = "assets/images/aftersun_lights.atlas";
   pub const point128_png = 0;
   pub const point256_png = 1;
 };
 
-pub const aftersun_h_png = struct {
-  pub const path = "assets/images/aftersun_h.png";
-};
-
-pub const aftersun_palette_png = struct {
-  pub const path = "assets/images/aftersun_palette.png";
-};
-
 pub const aftersun_png = struct {
   pub const path = "assets/images/aftersun.png";
 };
 
-pub const aftersun_lights_png = struct {
-  pub const path = "assets/images/aftersun_lights.png";
+pub const aftersun_h_png = struct {
+  pub const path = "assets/images/aftersun_h.png";
 };
 
 pub const aftersun_atlas = struct {
@@ -1960,5 +1956,9 @@ pub const aftersun_atlas = struct {
   pub const Walk_Ready_N_5_Body = 1930;
   pub const Walk_Ready_N_6_Body = 1931;
   pub const Walk_Ready_N_7_Body = 1932;
+};
+
+pub const aftersun_palette_png = struct {
+  pub const path = "assets/images/aftersun_palette.png";
 };
 

@@ -32,8 +32,8 @@ pub const tile_dimension: u32 = 128;
 pub const batch: [2]u32 = .{ 4, 4 };
 
 // Currently hardcoded
-pub const filter_size: u32 = 15;
-pub const iterations: u32 = 2;
+pub const filter_size: u32 = 10;
+pub const iterations: u32 = 1;
 pub var block_dimension: u32 = tile_dimension - (filter_size - 1);
 
 /// Initializes and creates all needed buffers, shaders, bind groups and pipelines.
