@@ -275,11 +275,6 @@ pub fn init(app: *App) !void {
     ecs.SYSTEM(world, "RenderDiffuseSystem", ecs.PostUpdate, &render_main_system);
     var render_light_system = @import("ecs/systems/render_light_pass.zig").system();
     ecs.SYSTEM(world, "RenderLightSystem", ecs.PostUpdate, &render_light_system);
-
-    // TODO: For now, this system doesn't work anymore, since tiles are sorted above the height maps
-    // TODO: If we wan't to support this, we could potentially tack on to render_main_system to avoid a sort.
-    // var render_reverse_height_system = @import("ecs/systems/render_reverse_height_pass.zig").system();
-    // ecs.SYSTEM(world, "RenderReverseHeightSystem", ecs.PostUpdate, &render_reverse_height_system);
     var render_environment_system = @import("ecs/systems/render_environment_pass.zig").system();
     ecs.SYSTEM(world, "RenderEnvironmentSystem", ecs.PostUpdate, &render_environment_system);
     var render_glow_system = @import("ecs/systems/render_glow_pass.zig").system();
@@ -359,7 +354,7 @@ pub fn init(app: *App) !void {
         _ = ecs.set(world, campfire, components.SpriteAnimator, .{
             .state = .play,
             .animation = &animations.Campfire_Layer_0,
-            .fps = 16,
+            .fps = 14,
         });
         _ = ecs.set(world, campfire, components.Collider, .{ .trigger = true });
         ecs.add_pair(world, campfire, ecs.id(components.Trigger), ecs.id(components.Cook));

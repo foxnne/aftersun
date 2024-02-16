@@ -187,3 +187,8 @@ pub const PathfindingNode = struct {
     g: f32 = 0.0,
     h: f32 = 0.0,
 };
+
+pub const Stance = enum {
+    default,
+    ready,
+};
