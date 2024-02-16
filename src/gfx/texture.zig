@@ -20,6 +20,7 @@ pub const Texture = struct {
         address_mode: gpu.Sampler.AddressMode = .clamp_to_edge,
         filter: gpu.FilterMode = .nearest,
         format: gpu.Texture.Format = .rgba8_unorm,
+        storage_binding: bool = false,
     };
 
     pub fn createEmpty(width: u32, height: u32, options: Texture.TextureOptions) !Texture {
@@ -47,6 +48,7 @@ pub const Texture = struct {
                 .texture_binding = true,
                 .copy_dst = true,
                 .render_attachment = true,
+                .storage_binding = options.storage_binding,
             },
         };
 

@@ -59,7 +59,7 @@ struct VertexOut {
     var reflection = textureSample(reflection, diffuse_sampler, uv) * (1.0 - diffuse.a);
     var environment = textureSample(environment, diffuse_sampler, uv);
     var bloom_mask = 1.0 - textureSample(height, diffuse_sampler, uv).bbbb;
-    var bloom = textureSample(bloom, light_sampler, uv) * bloom_mask * 0.35;
+    var bloom = textureSample(bloom, light_sampler, uv) * bloom_mask;
 
     var tex_size = textureDimensions(height);
     var tex_step_y = 1.0 / f32(tex_size.y);

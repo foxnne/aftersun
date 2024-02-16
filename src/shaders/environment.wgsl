@@ -1,8 +1,11 @@
+struct PackedVec3 { x: f32, y: f32, z: f32 };
 struct EnvironmentUniforms {
     mvp: mat4x4<f32>,
     ambient_xy_angle: f32,
     ambient_z_angle: f32,
-    shadow_color: vec3<f32>,
+    padding1: f32,
+    padding2: f32,
+    shadow_color: PackedVec3,
     shadow_steps: i32,
 }
 @group(0) @binding(0) var<uniform> uniforms: EnvironmentUniforms;
@@ -47,7 +50,7 @@ fn findTarget(x_step: f32, y_step: f32, step: i32) -> vec2<f32> {
 // Finds the shadow color for the given uv
 fn findShadow(x_step: f32, y_step: f32, uv: vec2<f32>, ambient_color: vec4<f32>) -> vec4<f32> {
     var light_color = textureSampleLevel(light_texture, height_sampler, uv, 0.0);
-    var shadow_color = vec4(uniforms.shadow_color, 1.0) * ambient_color;
+    var shadow_color = vec4(uniforms.shadow_color.x, uniforms.shadow_color.y, uniforms.shadow_color.z, 1.0) * ambient_color;
     var height_sample = textureSampleLevel(height_texture, height_sampler, uv, 0.0);
     var height = height_sample.r + (height_sample.g * 255.0);
 

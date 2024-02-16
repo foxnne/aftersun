@@ -22,10 +22,15 @@ pub fn build(b: *std.Build) !void {
     const zmath_pkg = zmath.package(b, target, optimize, .{});
     const zflecs_pkg = zflecs.package(b, target, optimize, .{});
 
+    const use_sysgpu = b.option(bool, "use_sysgpu", "Use sysgpu") orelse false;
+
     const mach_core_dep = b.dependency("mach_core", .{
         .target = target,
         .optimize = optimize,
     });
+
+    const build_options = b.addOptions();
+    build_options.addOption(bool, "use_sysgpu", use_sysgpu);
 
     const app = try mach_core.App.init(b, mach_core_dep.builder, .{
         .name = "aftersun",
@@ -35,9 +40,20 @@ pub fn build(b: *std.Build) !void {
             .{ .name = "zstbi", .module = zstbi_pkg.zstbi },
             .{ .name = "zmath", .module = zmath_pkg.zmath },
             .{ .name = "zflecs", .module = zflecs_pkg.zflecs },
+            .{ .name = "build-options", .module = build_options.createModule() },
         },
         .optimize = optimize,
     });
+
+    if (use_sysgpu) {
+        const mach_sysgpu_dep = b.dependency("mach_sysgpu", .{
+            .target = target,
+            .optimize = optimize,
+        });
+
+        app.compile.linkLibrary(mach_sysgpu_dep.artifact("mach-dusk"));
+        @import("mach_sysgpu").link(mach_sysgpu_dep.builder, app.compile);
+    }
 
     const run_step = b.step("run", "Run aftersun");
     run_step.dependOn(&app.run.step);

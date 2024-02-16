@@ -1,4 +1,6 @@
 const std = @import("std");
+const build_options = @import("build-options");
+
 const zstbi = @import("zstbi");
 const zmath = @import("zmath");
 const ecs = @import("zflecs");
@@ -39,6 +41,11 @@ const Prefabs = @import("ecs/prefabs/prefabs.zig");
 
 pub const App = @This();
 
+pub const mach_core_options = core.ComptimeOptions{
+    .use_wgpu = !build_options.use_sysgpu,
+    .use_sysgpu = build_options.use_sysgpu,
+};
+
 timer: core.Timer,
 
 pub var state: *GameState = undefined;
@@ -70,8 +77,8 @@ pub const GameState = struct {
     pipeline_diffuse: *gpu.RenderPipeline = undefined,
     pipeline_height: *gpu.RenderPipeline = undefined,
     pipeline_glow: *gpu.RenderPipeline = undefined,
-    pipeline_bloom_h: *gpu.RenderPipeline = undefined,
-    pipeline_bloom: *gpu.RenderPipeline = undefined,
+    //pipeline_bloom_h: *gpu.RenderPipeline = undefined,
+    pipeline_bloom: *gpu.ComputePipeline = undefined,
     pipeline_environment: *gpu.RenderPipeline = undefined,
     pipeline_final: *gpu.RenderPipeline = undefined,
     pipeline_post: *gpu.RenderPipeline = undefined,
@@ -86,6 +93,11 @@ pub const GameState = struct {
     bind_group_light: *gpu.BindGroup = undefined,
     bind_group_final: *gpu.BindGroup = undefined,
     bind_group_post: *gpu.BindGroup = undefined,
+    blur_params_buffer: *gpu.Buffer = undefined,
+    compute_constants: *gpu.BindGroup = undefined,
+    bind_group_compute_0: *gpu.BindGroup = undefined,
+    bind_group_compute_1: *gpu.BindGroup = undefined,
+    bind_group_compute_2: *gpu.BindGroup = undefined,
     uniform_buffer_default: *gpu.Buffer = undefined,
     uniform_buffer_environment: *gpu.Buffer = undefined,
     uniform_buffer_final: *gpu.Buffer = undefined,
@@ -181,11 +193,11 @@ pub fn init(app: *App) !void {
     state.glow_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{ .format = core.descriptor.format });
     state.bloom_h_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{
         .filter = .linear,
-        .format = core.descriptor.format,
+        .storage_binding = true,
     });
     state.bloom_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{
         .filter = .linear,
-        .format = core.descriptor.format,
+        .storage_binding = true,
     });
     state.reverse_height_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{ .format = core.descriptor.format });
     state.environment_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{ .format = core.descriptor.format });
@@ -279,10 +291,10 @@ pub fn init(app: *App) !void {
     ecs.SYSTEM(world, "RenderEnvironmentSystem", ecs.PostUpdate, &render_environment_system);
     var render_glow_system = @import("ecs/systems/render_glow_pass.zig").system();
     ecs.SYSTEM(world, "RenderGlowSystem", ecs.PostUpdate, &render_glow_system);
-    var render_bloom_h_system = @import("ecs/systems/render_bloom_h_pass.zig").system();
-    ecs.SYSTEM(world, "RenderBloomHSystem", ecs.PostUpdate, &render_bloom_h_system);
-    var render_bloom_system = @import("ecs/systems/render_bloom_pass.zig").system();
-    ecs.SYSTEM(world, "RenderBloomSystem", ecs.PostUpdate, &render_bloom_system);
+    // var render_bloom_h_system = @import("ecs/systems/render_bloom_h_pass.zig").system();
+    // ecs.SYSTEM(world, "RenderBloomHSystem", ecs.PostUpdate, &render_bloom_h_system);
+    // var render_bloom_system = @import("ecs/systems/render_bloom_pass.zig").system();
+    // ecs.SYSTEM(world, "RenderBloomSystem", ecs.PostUpdate, &render_bloom_system);
     var render_final_system = @import("ecs/systems/render_final_pass.zig").system();
     ecs.SYSTEM(world, "RenderFinalSystem", ecs.PostUpdate, &render_final_system);
 
@@ -435,7 +447,35 @@ pub fn update(app: *App) !bool {
     const batcher_commands = try state.batcher.finish();
     defer batcher_commands.release();
 
-    core.queue.submit(&.{batcher_commands});
+    const encoder = core.device.createCommandEncoder(null);
+
+    const compute_pass = encoder.beginComputePass(null);
+    compute_pass.setPipeline(state.pipeline_bloom);
+    compute_pass.setBindGroup(0, state.compute_constants, &.{});
+
+    const width: u32 = settings.design_width;
+    const height: u32 = settings.design_height;
+    compute_pass.setBindGroup(1, state.bind_group_compute_0, &.{});
+    compute_pass.dispatchWorkgroups(try std.math.divCeil(u32, width, gfx.block_dimension), try std.math.divCeil(u32, height, gfx.batch[1]), 1);
+
+    compute_pass.setBindGroup(1, state.bind_group_compute_1, &.{});
+    compute_pass.dispatchWorkgroups(try std.math.divCeil(u32, height, gfx.block_dimension), try std.math.divCeil(u32, width, gfx.batch[1]), 1);
+
+    var i: u32 = 0;
+    while (i < gfx.iterations - 1) : (i += 1) {
+        compute_pass.setBindGroup(1, state.bind_group_compute_2, &.{});
+        compute_pass.dispatchWorkgroups(try std.math.divCeil(u32, width, gfx.block_dimension), try std.math.divCeil(u32, height, gfx.batch[1]), 1);
+
+        compute_pass.setBindGroup(1, state.bind_group_compute_1, &.{});
+        compute_pass.dispatchWorkgroups(try std.math.divCeil(u32, height, gfx.block_dimension), try std.math.divCeil(u32, width, gfx.batch[1]), 1);
+    }
+    compute_pass.end();
+    compute_pass.release();
+
+    var command = encoder.finish(null);
+    encoder.release();
+
+    core.queue.submit(&.{ batcher_commands, command });
     core.swap_chain.present();
 
     for (state.hotkeys.hotkeys) |*hotkey| {
@@ -461,7 +501,7 @@ pub fn deinit(_: *App) void {
     state.pipeline_glow.release();
     state.pipeline_environment.release();
     state.pipeline_bloom.release();
-    state.pipeline_bloom_h.release();
+    //state.pipeline_bloom_h.release();
     state.pipeline_final.release();
 
     state.bind_group_default.release();
