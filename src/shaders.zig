@@ -7,3 +7,4 @@ pub const bloom = @embedFile("shaders/bloom.wgsl");
 pub const environment = @embedFile("shaders/environment.wgsl");
 pub const final = @embedFile("shaders/final.wgsl");
 pub const post = @embedFile("shaders/post.wgsl");
+pub const blur = @embedFile("shaders/blur.wgsl");

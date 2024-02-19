@@ -22,19 +22,25 @@ pub fn build(b: *std.Build) !void {
     const zmath_pkg = zmath.package(b, target, optimize, .{});
     const zflecs_pkg = zflecs.package(b, target, optimize, .{});
 
+    const use_sysgpu = b.option(bool, "use_sysgpu", "Use sysgpu") orelse false;
+
     const mach_core_dep = b.dependency("mach_core", .{
         .target = target,
         .optimize = optimize,
     });
 
+    const build_options = b.addOptions();
+    build_options.addOption(bool, "use_sysgpu", use_sysgpu);
+
     const app = try mach_core.App.init(b, mach_core_dep.builder, .{
         .name = "aftersun",
         .src = src_path,
         .target = target,
-        .deps = &[_]std.build.ModuleDependency{
+        .deps = &.{
             .{ .name = "zstbi", .module = zstbi_pkg.zstbi },
             .{ .name = "zmath", .module = zmath_pkg.zmath },
             .{ .name = "zflecs", .module = zflecs_pkg.zflecs },
+            .{ .name = "build-options", .module = build_options.createModule() },
         },
         .optimize = optimize,
     });
@@ -48,17 +54,17 @@ pub fn build(b: *std.Build) !void {
         .optimize = optimize,
     });
 
-    unit_tests.addModule("zstbi", zstbi_pkg.zstbi);
-    unit_tests.addModule("zmath", zmath_pkg.zmath);
-    unit_tests.addModule("zflecs", zflecs_pkg.zflecs);
+    unit_tests.root_module.addImport("zstbi", zstbi_pkg.zstbi);
+    unit_tests.root_module.addImport("zmath", zmath_pkg.zmath);
+    unit_tests.root_module.addImport("zflecs", zflecs_pkg.zflecs);
 
     const run_unit_tests = b.addRunArtifact(unit_tests);
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_unit_tests.step);
 
-    app.compile.addModule("zstbi", zstbi_pkg.zstbi);
-    app.compile.addModule("zmath", zmath_pkg.zmath);
-    app.compile.addModule("zflecs", zflecs_pkg.zflecs);
+    app.compile.root_module.addImport("zstbi", zstbi_pkg.zstbi);
+    app.compile.root_module.addImport("zmath", zmath_pkg.zmath);
+    app.compile.root_module.addImport("zflecs", zflecs_pkg.zflecs);
 
     zstbi_pkg.link(app.compile);
     zmath_pkg.link(app.compile);

@@ -59,7 +59,10 @@ fn paletteCoord(base: vec3<f32>, vert: vec3<f32>) -> vec2<f32> {
 
     var index = max3(channels);
 
-    return vec2(base.brgb[index], vert.brgb[index]);
+    let b = base.brgb;
+    let v = vert.brgb;
+
+    return vec2(b[index], v[index]);
 }
 
 @fragment fn frag_main(
@@ -77,7 +80,7 @@ fn paletteCoord(base: vec3<f32>, vert: vec3<f32>) -> vec2<f32> {
 
     if (frag_mode == 1) {
         return sample;
-    } else {
-        return base_color * color;
     }
+
+    return base_color * color;
 }

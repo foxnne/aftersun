@@ -1,8 +1,13 @@
+struct PackedVec3 { x: f32, y: f32, z: f32 };
 struct EnvironmentUniforms {
     mvp: mat4x4<f32>,
     ambient_xy_angle: f32,
     ambient_z_angle: f32,
-    shadow_color: vec3<f32>,
+    padding1: f32,
+    padding2: f32,
+    shadow_color_x: f32,
+    shadow_color_y: f32,
+    shadow_color_z: f32,
     shadow_steps: i32,
 }
 @group(0) @binding(0) var<uniform> uniforms: EnvironmentUniforms;
@@ -36,10 +41,19 @@ fn approx(a: f32, b: f32) -> bool {
     return abs(b-a) < 0.01;
 }
 
+fn radians_(deg: f32) -> f32 {
+    let pi = 3.14159;
+    return deg * (pi / 180);
+}
+
+fn tan_(rad: f32) -> f32 {
+    return sin(rad) / cos(rad);
+}
+
 // Finds the findTarget uv of the given step
 fn findTarget(x_step: f32, y_step: f32, step: i32) -> vec2<f32> {
-    var x_steps = cos(radians(uniforms.ambient_xy_angle)) * f32(step) * x_step;
-    var y_steps = sin(radians(uniforms.ambient_xy_angle)) * f32(step) * y_step;
+    var x_steps = cos(radians_(uniforms.ambient_xy_angle)) * f32(step) * x_step;
+    var y_steps = sin(radians_(uniforms.ambient_xy_angle)) * f32(step) * y_step;
 
     return vec2(x_steps, y_steps);
 }
@@ -47,7 +61,7 @@ fn findTarget(x_step: f32, y_step: f32, step: i32) -> vec2<f32> {
 // Finds the shadow color for the given uv
 fn findShadow(x_step: f32, y_step: f32, uv: vec2<f32>, ambient_color: vec4<f32>) -> vec4<f32> {
     var light_color = textureSampleLevel(light_texture, height_sampler, uv, 0.0);
-    var shadow_color = vec4(uniforms.shadow_color, 1.0) * ambient_color;
+    var shadow_color = vec4(uniforms.shadow_color_x, uniforms.shadow_color_y, uniforms.shadow_color_z, 1.0) * ambient_color;
     var height_sample = textureSampleLevel(height_texture, height_sampler, uv, 0.0);
     var height = height_sample.r + (height_sample.g * 255.0);
 
@@ -64,7 +78,7 @@ fn findShadow(x_step: f32, y_step: f32, uv: vec2<f32>, ambient_color: vec4<f32>)
             var luminosity_light = dot(vec3(0.30, 0.59, 0.11), light_color.rgb);
             var luminosity_difference = abs(luminosity_ambient - luminosity_light);
             var shadow_color_adjust = shadow_color + (1.0 - luminosity_difference) * light_color;
-            var trace_height = distance * tan(radians(uniforms.ambient_z_angle)) + height * 1.5;
+            var trace_height = distance * tan_(radians_(uniforms.ambient_z_angle)) + height * 1.5;
             if (approx(trace_height, other_height)) {
                 return shadow_color_adjust;
             } else {
@@ -72,7 +86,7 @@ fn findShadow(x_step: f32, y_step: f32, uv: vec2<f32>, ambient_color: vec4<f32>)
                 other_height = other_height_sample.r + (other_height_sample.g * 255.0);
 
                 if (other_height > height) {
-                    trace_height = distance * tan(radians(uniforms.ambient_z_angle)) + height * 1.5;
+                    trace_height = distance * tan_(radians_(uniforms.ambient_z_angle)) + height * 1.5;
                     if (approx(trace_height, other_height)) {
                         return shadow_color_adjust;
                     }

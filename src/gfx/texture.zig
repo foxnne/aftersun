@@ -20,20 +20,21 @@ pub const Texture = struct {
         address_mode: gpu.Sampler.AddressMode = .clamp_to_edge,
         filter: gpu.FilterMode = .nearest,
         format: gpu.Texture.Format = .rgba8_unorm,
+        storage_binding: bool = false,
     };
 
     pub fn createEmpty(width: u32, height: u32, options: Texture.TextureOptions) !Texture {
-        var image = try zstbi.Image.createEmpty(width, height, 4, .{});
+        const image = try zstbi.Image.createEmpty(width, height, 4, .{});
         return create(image, options);
     }
 
     pub fn loadFromFile(file: [:0]const u8, options: Texture.TextureOptions) !Texture {
-        var image = try zstbi.Image.loadFromFile(file, 4);
+        const image = try zstbi.Image.loadFromFile(file, 4);
         return create(image, .{ .address_mode = options.address_mode, .filter = options.filter });
     }
 
     pub fn loadFromMemory(data: []const u8, options: Texture.TextureOptions) !Texture {
-        var image = try zstbi.Image.loadFromMemory(data, 0);
+        const image = try zstbi.Image.loadFromMemory(data, 0);
         return create(image, .{ .address_mode = options.address_mode, .filter = options.filter });
     }
 
@@ -47,6 +48,7 @@ pub const Texture = struct {
                 .texture_binding = true,
                 .copy_dst = true,
                 .render_attachment = true,
+                .storage_binding = options.storage_binding,
             },
         };
 

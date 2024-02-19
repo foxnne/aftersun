@@ -1,4 +1,5 @@
 const std = @import("std");
+const build_options = @import("build-options");
 const zmath = @import("zmath");
 const core = @import("mach-core");
 const gpu = core.gpu;
@@ -26,14 +27,24 @@ pub const UniformBufferObject = struct {
 pub const FinalUniformObject = @import("../ecs/systems/render_final_pass.zig").FinalUniforms;
 pub const EnvironmentUniformObject = @import("../ecs/systems/render_environment_pass.zig").EnvironmentUniforms;
 
+// Constants from the blur.wgsl shader
+pub const tile_dimension: u32 = 128;
+pub const batch: [2]u32 = .{ 4, 4 };
+
+// Currently hardcoded
+pub const filter_size: u32 = 10;
+pub const iterations: u32 = 1;
+pub var block_dimension: u32 = tile_dimension - (filter_size - 1);
+
 /// Initializes and creates all needed buffers, shaders, bind groups and pipelines.
 pub fn init(state: *game.GameState) !void {
     const default_shader_module = core.device.createShaderModuleWGSL("default.wgsl", game.shaders.default);
     const diffuse_shader_module = core.device.createShaderModuleWGSL("diffuse.wgsl", game.shaders.diffuse);
     const environment_shader_module = core.device.createShaderModuleWGSL("environment.wgsl", game.shaders.environment);
     const final_shader_module = core.device.createShaderModuleWGSL("final.wgsl", game.shaders.final);
-    const bloom_shader_module = core.device.createShaderModuleWGSL("bloom.wgsl", game.shaders.bloom);
-    const bloom_h_shader_module = core.device.createShaderModuleWGSL("bloom_h.wgsl", game.shaders.bloom_h);
+    // const bloom_shader_module = core.device.createShaderModuleWGSL("bloom.wgsl", game.shaders.bloom);
+    // const bloom_h_shader_module = core.device.createShaderModuleWGSL("bloom_h.wgsl", game.shaders.bloom_h);
+    const blur_shader_module = core.device.createShaderModuleWGSL("blur.wgsl", game.shaders.blur);
     const glow_shader_module = core.device.createShaderModuleWGSL("glow.wgsl", game.shaders.glow);
     const height_shader_module = core.device.createShaderModuleWGSL("height.wgsl", game.shaders.height);
     const post_shader_module = core.device.createShaderModuleWGSL("default.wgsl", game.shaders.post);
@@ -111,18 +122,6 @@ pub fn init(state: *game.GameState) !void {
         .buffers = &.{vertex_buffer_layout},
     });
 
-    const bloom_fragment = gpu.FragmentState.init(.{
-        .module = bloom_shader_module,
-        .entry_point = "frag_main",
-        .targets = &.{color_target},
-    });
-
-    const bloom_h_fragment = gpu.FragmentState.init(.{
-        .module = bloom_h_shader_module,
-        .entry_point = "frag_main",
-        .targets = &.{color_target},
-    });
-
     const glow_fragment = gpu.FragmentState.init(.{
         .module = glow_shader_module,
         .entry_point = "frag_main",
@@ -173,14 +172,11 @@ pub fn init(state: *game.GameState) !void {
         .vertex = diffuse_vertex,
     };
 
-    const bloom_pipeline_descriptor = gpu.RenderPipeline.Descriptor{
-        .fragment = &bloom_fragment,
-        .vertex = default_vertex,
-    };
-
-    const bloom_h_pipeline_descriptor = gpu.RenderPipeline.Descriptor{
-        .fragment = &bloom_h_fragment,
-        .vertex = default_vertex,
+    const bloom_pipeline_descriptor = gpu.ComputePipeline.Descriptor{
+        .compute = gpu.ProgrammableStageDescriptor{
+            .module = blur_shader_module,
+            .entry_point = "main",
+        },
     };
 
     const environment_pipeline_descriptor = gpu.RenderPipeline.Descriptor{
@@ -203,8 +199,8 @@ pub fn init(state: *game.GameState) !void {
     state.pipeline_height = core.device.createRenderPipeline(&height_pipeline_descriptor);
     state.pipeline_environment = core.device.createRenderPipeline(&environment_pipeline_descriptor);
     state.pipeline_glow = core.device.createRenderPipeline(&glow_pipeline_descriptor);
-    state.pipeline_bloom = core.device.createRenderPipeline(&bloom_pipeline_descriptor);
-    state.pipeline_bloom_h = core.device.createRenderPipeline(&bloom_h_pipeline_descriptor);
+    state.pipeline_bloom = core.device.createComputePipeline(&bloom_pipeline_descriptor);
+    //state.pipeline_bloom_h = core.device.createRenderPipeline(&bloom_h_pipeline_descriptor);
     state.pipeline_final = core.device.createRenderPipeline(&final_pipeline_descriptor);
     state.pipeline_post = core.device.createRenderPipeline(&post_pipeline_descriptor);
 
@@ -230,7 +226,10 @@ pub fn init(state: *game.GameState) !void {
         &gpu.BindGroup.Descriptor.init(.{
             .layout = state.pipeline_default.getBindGroupLayout(0),
             .entries = &.{
-                gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
+                if (build_options.use_sysgpu)
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject), 0)
+                else
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
                 gpu.BindGroup.Entry.textureView(1, state.diffusemap.view_handle),
                 gpu.BindGroup.Entry.sampler(2, state.diffusemap.sampler_handle),
             },
@@ -241,7 +240,10 @@ pub fn init(state: *game.GameState) !void {
         &gpu.BindGroup.Descriptor.init(.{
             .layout = state.pipeline_default.getBindGroupLayout(0),
             .entries = &.{
-                gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
+                if (build_options.use_sysgpu)
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject), 0)
+                else
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
                 gpu.BindGroup.Entry.textureView(1, state.reflection_output.view_handle),
                 gpu.BindGroup.Entry.sampler(2, state.reflection_output.sampler_handle),
             },
@@ -252,7 +254,10 @@ pub fn init(state: *game.GameState) !void {
         &gpu.BindGroup.Descriptor.init(.{
             .layout = state.pipeline_diffuse.getBindGroupLayout(0),
             .entries = &.{
-                gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
+                if (build_options.use_sysgpu)
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject), 0)
+                else
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
                 gpu.BindGroup.Entry.textureView(1, state.diffusemap.view_handle),
                 gpu.BindGroup.Entry.textureView(2, state.palettemap.view_handle),
                 gpu.BindGroup.Entry.sampler(3, state.diffusemap.sampler_handle),
@@ -264,7 +269,10 @@ pub fn init(state: *game.GameState) !void {
         &gpu.BindGroup.Descriptor.init(.{
             .layout = state.pipeline_height.getBindGroupLayout(0),
             .entries = &.{
-                gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
+                if (build_options.use_sysgpu)
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject), 0)
+                else
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
                 gpu.BindGroup.Entry.textureView(1, state.heightmap.view_handle),
                 gpu.BindGroup.Entry.textureView(2, state.diffusemap.view_handle),
                 gpu.BindGroup.Entry.sampler(3, state.heightmap.sampler_handle),
@@ -276,7 +284,10 @@ pub fn init(state: *game.GameState) !void {
         &gpu.BindGroup.Descriptor.init(.{
             .layout = state.pipeline_default.getBindGroupLayout(0),
             .entries = &.{
-                gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
+                if (build_options.use_sysgpu)
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject), 0)
+                else
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
                 gpu.BindGroup.Entry.textureView(1, state.lightmap.view_handle),
                 gpu.BindGroup.Entry.sampler(2, state.lightmap.sampler_handle),
             },
@@ -287,7 +298,10 @@ pub fn init(state: *game.GameState) !void {
         &gpu.BindGroup.Descriptor.init(.{
             .layout = state.pipeline_environment.getBindGroupLayout(0),
             .entries = &.{
-                gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_environment, 0, @sizeOf(EnvironmentUniformObject)),
+                if (build_options.use_sysgpu)
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_environment, 0, @sizeOf(EnvironmentUniformObject), 0)
+                else
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_environment, 0, @sizeOf(EnvironmentUniformObject)),
                 gpu.BindGroup.Entry.textureView(1, state.height_output.view_handle),
                 gpu.BindGroup.Entry.sampler(2, state.height_output.sampler_handle),
                 gpu.BindGroup.Entry.textureView(3, state.reverse_height_output.view_handle),
@@ -300,7 +314,10 @@ pub fn init(state: *game.GameState) !void {
         &gpu.BindGroup.Descriptor.init(.{
             .layout = state.pipeline_diffuse.getBindGroupLayout(0),
             .entries = &.{
-                gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
+                if (build_options.use_sysgpu)
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject), 0)
+                else
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
                 gpu.BindGroup.Entry.textureView(1, state.height_output.view_handle),
                 gpu.BindGroup.Entry.textureView(2, state.diffuse_output.view_handle),
                 gpu.BindGroup.Entry.sampler(3, state.height_output.sampler_handle),
@@ -308,33 +325,96 @@ pub fn init(state: *game.GameState) !void {
         }),
     );
 
-    state.bind_group_bloom_h = core.device.createBindGroup(
-        &gpu.BindGroup.Descriptor.init(.{
-            .layout = state.pipeline_default.getBindGroupLayout(0),
-            .entries = &.{
-                gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
-                gpu.BindGroup.Entry.textureView(1, state.glow_output.view_handle),
-                gpu.BindGroup.Entry.sampler(2, state.glow_output.sampler_handle),
-            },
-        }),
-    );
+    const sampler = core.device.createSampler(&.{
+        .mag_filter = .linear,
+        .min_filter = .linear,
+    });
 
-    state.bind_group_bloom = core.device.createBindGroup(
-        &gpu.BindGroup.Descriptor.init(.{
-            .layout = state.pipeline_default.getBindGroupLayout(0),
-            .entries = &.{
-                gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
-                gpu.BindGroup.Entry.textureView(1, state.bloom_h_output.view_handle),
-                gpu.BindGroup.Entry.sampler(2, state.bloom_h_output.sampler_handle),
-            },
-        }),
-    );
+    // the shader blurs the input texture in one direction,
+    // depending on whether flip value is 0 or 1
+    var flip: [2]*gpu.Buffer = undefined;
+    for (flip, 0..) |_, i| {
+        const buffer = core.device.createBuffer(&.{
+            .usage = .{ .uniform = true },
+            .size = @sizeOf(u32),
+            .mapped_at_creation = .true,
+        });
+
+        const buffer_mapped = buffer.getMappedRange(u32, 0, 1);
+        buffer_mapped.?[0] = @as(u32, @intCast(i));
+        buffer.unmap();
+
+        flip[i] = buffer;
+    }
+
+    const blur_params_buffer = core.device.createBuffer(&.{
+        .size = 8,
+        .usage = .{ .copy_dst = true, .uniform = true },
+    });
+
+    const blur_bind_group_layout0 = state.pipeline_bloom.getBindGroupLayout(0);
+    const blur_bind_group_layout1 = state.pipeline_bloom.getBindGroupLayout(1);
+
+    const compute_constants = core.device.createBindGroup(&gpu.BindGroup.Descriptor.init(.{
+        .layout = blur_bind_group_layout0,
+        .entries = &.{
+            gpu.BindGroup.Entry.sampler(0, sampler),
+            if (build_options.use_sysgpu) gpu.BindGroup.Entry.buffer(1, blur_params_buffer, 0, 8, 0) else gpu.BindGroup.Entry.buffer(1, blur_params_buffer, 0, 8),
+        },
+    }));
+
+    const compute_bind_group_0 = core.device.createBindGroup(&gpu.BindGroup.Descriptor.init(.{
+        .layout = blur_bind_group_layout1,
+        .entries = &.{
+            gpu.BindGroup.Entry.textureView(1, state.glow_output.view_handle),
+            gpu.BindGroup.Entry.textureView(2, state.bloom_h_output.view_handle),
+            if (build_options.use_sysgpu)
+                gpu.BindGroup.Entry.buffer(3, flip[0], 0, 4, 0)
+            else
+                gpu.BindGroup.Entry.buffer(3, flip[0], 0, 4),
+        },
+    }));
+
+    const compute_bind_group_1 = core.device.createBindGroup(&gpu.BindGroup.Descriptor.init(.{
+        .layout = blur_bind_group_layout1,
+        .entries = &.{
+            gpu.BindGroup.Entry.textureView(1, state.bloom_h_output.view_handle),
+            gpu.BindGroup.Entry.textureView(2, state.bloom_output.view_handle),
+            if (build_options.use_sysgpu) gpu.BindGroup.Entry.buffer(3, flip[1], 0, 4, 0) else gpu.BindGroup.Entry.buffer(3, flip[1], 0, 4),
+        },
+    }));
+
+    const compute_bind_group_2 = core.device.createBindGroup(&gpu.BindGroup.Descriptor.init(.{
+        .layout = blur_bind_group_layout1,
+        .entries = &.{
+            gpu.BindGroup.Entry.textureView(1, state.bloom_output.view_handle),
+            gpu.BindGroup.Entry.textureView(2, state.bloom_h_output.view_handle),
+            if (build_options.use_sysgpu) gpu.BindGroup.Entry.buffer(3, flip[0], 0, 4, 0) else gpu.BindGroup.Entry.buffer(3, flip[0], 0, 4),
+        },
+    }));
+
+    state.compute_constants = compute_constants;
+    state.bind_group_compute_0 = compute_bind_group_0;
+    state.bind_group_compute_1 = compute_bind_group_1;
+    state.bind_group_compute_2 = compute_bind_group_2;
+
+    blur_bind_group_layout0.release();
+    blur_bind_group_layout1.release();
+    sampler.release();
+    flip[0].release();
+    flip[1].release();
+
+    const blur_params_buffer_data = [_]u32{ filter_size, block_dimension };
+    core.queue.writeBuffer(blur_params_buffer, 0, &blur_params_buffer_data);
 
     state.bind_group_final = core.device.createBindGroup(
         &gpu.BindGroup.Descriptor.init(.{
             .layout = state.pipeline_final.getBindGroupLayout(0),
             .entries = &.{
-                gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_final, 0, @sizeOf(FinalUniformObject)),
+                if (build_options.use_sysgpu)
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_final, 0, @sizeOf(FinalUniformObject), 0)
+                else
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_final, 0, @sizeOf(FinalUniformObject)),
                 gpu.BindGroup.Entry.textureView(1, state.diffuse_output.view_handle),
                 gpu.BindGroup.Entry.sampler(2, state.diffuse_output.sampler_handle),
                 gpu.BindGroup.Entry.textureView(3, state.environment_output.view_handle),
@@ -353,7 +433,10 @@ pub fn init(state: *game.GameState) !void {
         &gpu.BindGroup.Descriptor.init(.{
             .layout = state.pipeline_default.getBindGroupLayout(0),
             .entries = &.{
-                gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
+                if (build_options.use_sysgpu)
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject), 0)
+                else
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
                 gpu.BindGroup.Entry.textureView(1, state.final_output.view_handle),
                 gpu.BindGroup.Entry.sampler(2, state.final_output.sampler_handle),
             },

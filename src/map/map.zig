@@ -11,7 +11,7 @@ const Self = @This();
 entity_pool: std.ArrayList(ecs.entity_t),
 
 pub fn init(allocator: std.mem.Allocator) Self {
-    var pool = std.ArrayList(ecs.entity_t).init(allocator);
+    const pool = std.ArrayList(ecs.entity_t).init(allocator);
 
     return .{
         .entity_pool = pool,
@@ -41,8 +41,8 @@ pub fn loadCell(self: *Self, cell: components.Cell) void {
 
     for (0..game.settings.cell_size) |x_i| {
         for (0..game.settings.cell_size) |y_i| {
-            var x_tile: i32 = @intCast(x_i);
-            var y_tile: i32 = @intCast(y_i);
+            const x_tile: i32 = @intCast(x_i);
+            const y_tile: i32 = @intCast(y_i);
 
             const tile: components.Tile = .{
                 .x = x_tile + (cell.x * game.settings.cell_size),

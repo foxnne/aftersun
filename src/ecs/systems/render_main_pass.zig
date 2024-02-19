@@ -28,7 +28,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
     const uniforms = gfx.UniformBufferObject{ .mvp = zmath.transpose(game.state.camera.renderTextureMatrix()) };
 
     if (it.ctx) |ctx| {
-        var query = @as(*ecs.query_t, @ptrCast(ctx));
+        const query = @as(*ecs.query_t, @ptrCast(ctx));
 
         { // Draw diffuse texture sprites using diffuse pipeline
             var query_it = ecs.query_iter(it.world, query);

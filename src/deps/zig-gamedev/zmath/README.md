@@ -14,20 +14,23 @@ An intro article can be found [here](https://zig.news/michalz/fast-multi-platfor
 
 ## Getting started
 
-Copy `zmath` folder to a `libs` subdirectory of the root of your project.
+Copy `zmath` folder to a `libs` subdirectory of the root of your project and add the following to your `build.zig.zon` .dependencies:
+```zig
+    .zmath = .{ .path = "libs/zmath" },
+```
 
 Then in your `build.zig` add:
 
 ```zig
 const std = @import("std");
-const zmath = @import("libs/zmath/build.zig");
+const zmath = @import("zmath");
 
 pub fn build(b: *std.Build) void {
     ...
     const optimize = b.standardOptimizeOption(.{});
     const target = b.standardTargetOptions(.{});
 
-    zmath_pkg = zmath.package(b, target, optimize, .{
+    const zmath_pkg = zmath.package(b, target, optimize, .{
         .options = .{ .enable_cross_platform_determinism = true },
     });
 
