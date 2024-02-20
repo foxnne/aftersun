@@ -15,8 +15,8 @@ pub fn system() ecs.system_desc_t {
 
 pub fn run(it: *ecs.iter_t) callconv(.C) void {
     const camera = game.state.camera;
-    const camera_tl = camera.screenToWorld(zmath.f32x4(-camera.culling_margin, camera.culling_margin, 0, 0));
-    const camera_br = camera.screenToWorld(zmath.f32x4(game.window_size[0] + camera.culling_margin, -game.window_size[1] - camera.culling_margin, 0, 0));
+    const camera_tl = camera.screenToWorld(zmath.f32x4(-camera.culling_margin, -camera.culling_margin, 0, 0));
+    const camera_br = camera.screenToWorld(zmath.f32x4(game.framebuffer_size[0] + camera.culling_margin, game.framebuffer_size[1] + camera.culling_margin, 0, 0));
 
     const world = it.world;
 

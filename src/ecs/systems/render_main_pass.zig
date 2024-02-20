@@ -17,6 +17,7 @@ pub fn system(world: *ecs.world_t) ecs.system_desc_t {
     ctx_desc.filter.terms[3] = .{ .id = ecs.id(components.CharacterRenderer), .oper = ecs.oper_kind_t.Optional, .inout = .In };
     ctx_desc.filter.terms[4] = .{ .id = ecs.id(components.ParticleRenderer), .oper = ecs.oper_kind_t.Optional, .inout = .In };
     ctx_desc.filter.terms[5] = .{ .id = ecs.id(components.Tile), .inout = .In };
+    ctx_desc.filter.terms[6] = .{ .id = ecs.id(components.Visible), .inout = .In };
     ctx_desc.order_by_component = ecs.id(components.Tile);
     ctx_desc.order_by = orderBy;
     desc.ctx = ecs.query_init(world, &ctx_desc) catch unreachable;

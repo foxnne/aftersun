@@ -283,8 +283,8 @@ pub fn init(app: *App) !void {
     ecs.SYSTEM(world, "ParticleSystem", ecs.OnUpdate, &particle_system);
 
     // - Render
-    // var render_culling_system = @import("ecs/systems/render_culling.zig").system();
-    // ecs.SYSTEM(world, "RenderCullingSystem", ecs.PostUpdate, &render_culling_system);
+    var render_culling_system = @import("ecs/systems/render_culling.zig").system();
+    ecs.SYSTEM(world, "RenderCullingSystem", ecs.PostUpdate, &render_culling_system);
     var render_main_system = @import("ecs/systems/render_main_pass.zig").system(world);
     ecs.SYSTEM(world, "RenderDiffuseSystem", ecs.PostUpdate, &render_main_system);
     var render_light_system = @import("ecs/systems/render_light_pass.zig").system();
@@ -293,10 +293,6 @@ pub fn init(app: *App) !void {
     ecs.SYSTEM(world, "RenderEnvironmentSystem", ecs.PostUpdate, &render_environment_system);
     var render_glow_system = @import("ecs/systems/render_glow_pass.zig").system();
     ecs.SYSTEM(world, "RenderGlowSystem", ecs.PostUpdate, &render_glow_system);
-    // var render_bloom_h_system = @import("ecs/systems/render_bloom_h_pass.zig").system();
-    // ecs.SYSTEM(world, "RenderBloomHSystem", ecs.PostUpdate, &render_bloom_h_system);
-    // var render_bloom_system = @import("ecs/systems/render_bloom_pass.zig").system();
-    // ecs.SYSTEM(world, "RenderBloomSystem", ecs.PostUpdate, &render_bloom_system);
     var render_final_system = @import("ecs/systems/render_final_pass.zig").system();
     ecs.SYSTEM(world, "RenderFinalSystem", ecs.PostUpdate, &render_final_system);
 
@@ -451,28 +447,30 @@ pub fn update(app: *App) !bool {
 
     const encoder = core.device.createCommandEncoder(null);
 
-    const compute_pass = encoder.beginComputePass(null);
-    compute_pass.setPipeline(state.pipeline_bloom);
-    compute_pass.setBindGroup(0, state.compute_constants, &.{});
+    { // Compute pass for blur shader to blur bloom texture
+        const compute_pass = encoder.beginComputePass(null);
+        compute_pass.setPipeline(state.pipeline_bloom);
+        compute_pass.setBindGroup(0, state.compute_constants, &.{});
 
-    const width: u32 = settings.design_width;
-    const height: u32 = settings.design_height;
-    compute_pass.setBindGroup(1, state.bind_group_compute_0, &.{});
-    compute_pass.dispatchWorkgroups(try std.math.divCeil(u32, width, gfx.block_dimension), try std.math.divCeil(u32, height, gfx.batch[1]), 1);
-
-    compute_pass.setBindGroup(1, state.bind_group_compute_1, &.{});
-    compute_pass.dispatchWorkgroups(try std.math.divCeil(u32, height, gfx.block_dimension), try std.math.divCeil(u32, width, gfx.batch[1]), 1);
-
-    var i: u32 = 0;
-    while (i < gfx.iterations - 1) : (i += 1) {
-        compute_pass.setBindGroup(1, state.bind_group_compute_2, &.{});
+        const width: u32 = settings.design_width;
+        const height: u32 = settings.design_height;
+        compute_pass.setBindGroup(1, state.bind_group_compute_0, &.{});
         compute_pass.dispatchWorkgroups(try std.math.divCeil(u32, width, gfx.block_dimension), try std.math.divCeil(u32, height, gfx.batch[1]), 1);
 
         compute_pass.setBindGroup(1, state.bind_group_compute_1, &.{});
         compute_pass.dispatchWorkgroups(try std.math.divCeil(u32, height, gfx.block_dimension), try std.math.divCeil(u32, width, gfx.batch[1]), 1);
+
+        var i: u32 = 0;
+        while (i < gfx.iterations - 1) : (i += 1) {
+            compute_pass.setBindGroup(1, state.bind_group_compute_2, &.{});
+            compute_pass.dispatchWorkgroups(try std.math.divCeil(u32, width, gfx.block_dimension), try std.math.divCeil(u32, height, gfx.batch[1]), 1);
+
+            compute_pass.setBindGroup(1, state.bind_group_compute_1, &.{});
+            compute_pass.dispatchWorkgroups(try std.math.divCeil(u32, height, gfx.block_dimension), try std.math.divCeil(u32, width, gfx.batch[1]), 1);
+        }
+        compute_pass.end();
+        compute_pass.release();
     }
-    compute_pass.end();
-    compute_pass.release();
 
     const command = encoder.finish(null);
     encoder.release();
