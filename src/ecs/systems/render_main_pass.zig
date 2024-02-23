@@ -470,8 +470,8 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
             }) catch unreachable;
 
             while (ecs.iter_next(&query_it)) {
-                var i: usize = 0;
-                while (i < query_it.count()) : (i += 1) {
+                var i: usize = query_it.count() - 1;
+                while (i > 0) : (i -= 1) {
                     if (ecs.field(&query_it, components.Position, 1)) |positions| {
                         const rotation = if (ecs.field(&query_it, components.Rotation, 2)) |rotations| rotations[i].value else 0.0;
                         var position = positions[i].toF32x4();

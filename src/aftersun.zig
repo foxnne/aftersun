@@ -88,8 +88,6 @@ pub const GameState = struct {
     bind_group_diffuse: *gpu.BindGroup = undefined,
     bind_group_height: *gpu.BindGroup = undefined,
     bind_group_glow: *gpu.BindGroup = undefined,
-    bind_group_bloom_h: *gpu.BindGroup = undefined,
-    bind_group_bloom: *gpu.BindGroup = undefined,
     bind_group_environment: *gpu.BindGroup = undefined,
     bind_group_light: *gpu.BindGroup = undefined,
     bind_group_final: *gpu.BindGroup = undefined,
@@ -247,8 +245,8 @@ pub fn init(app: *App) !void {
     ecs.SYSTEM(world, "MovementSystem", ecs.OnUpdate, &movement_system);
 
     // - Other
-    // var inspect_system = @import("ecs/systems/inspect.zig").system();
-    // ecs.SYSTEM(world, "InspectSystem", ecs.OnUpdate, &inspect_system);
+    var inspect_system = @import("ecs/systems/inspect.zig").system();
+    ecs.SYSTEM(world, "InspectSystem", ecs.OnUpdate, &inspect_system);
     var stack_system = @import("ecs/systems/stack.zig").system();
     ecs.SYSTEM(world, "StackSystem", ecs.OnUpdate, &stack_system);
     var use_system = @import("ecs/systems/use.zig").system(world);
@@ -342,7 +340,7 @@ pub fn init(app: *App) !void {
 
     state.entities.debug = ecs.new_entity(world, "Debug");
     const debug = state.entities.debug;
-    ecs.add_pair(world, debug, ecs.IsA, state.prefabs.ham);
+    ecs.add_pair(world, debug, ecs.IsA, state.prefabs.torch);
     _ = ecs.set(world, debug, components.Position, .{ .x = 0.0, .y = -64.0 });
     _ = ecs.set(world, debug, components.Tile, .{ .x = 0, .y = -2, .counter = state.counter.count() });
 
@@ -396,14 +394,6 @@ pub fn update(app: *App) !bool {
     state.delta_time = app.timer.lap();
     state.game_time += state.delta_time;
 
-    const descriptor = core.descriptor;
-    window_size = .{ @floatFromInt(core.size().width), @floatFromInt(core.size().height) };
-    framebuffer_size = .{ @floatFromInt(descriptor.width), @floatFromInt(descriptor.height) };
-    content_scale = .{
-        framebuffer_size[0] / window_size[0],
-        framebuffer_size[1] / window_size[1],
-    };
-
     var iter = core.pollEvents();
     while (iter.next()) |event| {
         switch (event) {
@@ -434,6 +424,12 @@ pub fn update(app: *App) !bool {
             .framebuffer_resize => |size| {
                 framebuffer_size[0] = @floatFromInt(size.width);
                 framebuffer_size[1] = @floatFromInt(size.height);
+                window_size[0] = @floatFromInt(core.size().width);
+                window_size[1] = @floatFromInt(core.size().height);
+                content_scale = .{
+                    framebuffer_size[0] / window_size[0],
+                    framebuffer_size[1] / window_size[1],
+                };
                 state.camera.frameBufferResize();
             },
             else => {},
@@ -510,7 +506,6 @@ pub fn deinit(_: *App) void {
     state.pipeline_glow.release();
     state.pipeline_environment.release();
     state.pipeline_bloom.release();
-    //state.pipeline_bloom_h.release();
     state.pipeline_final.release();
 
     state.bind_group_default.release();
@@ -518,8 +513,6 @@ pub fn deinit(_: *App) void {
     state.bind_group_height.release();
     state.bind_group_environment.release();
     state.bind_group_glow.release();
-    state.bind_group_bloom.release();
-    state.bind_group_bloom_h.release();
     state.bind_group_final.release();
 
     state.diffusemap.deinit();

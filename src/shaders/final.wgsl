@@ -81,6 +81,6 @@ struct VertexOut {
         }
     }
 
-    var render = (reflection + diffuse * (1.0 - reflection.a))  * environment * color + bloom + hightlight;
+    var render = (reflection + diffuse * (1.0 - reflection.a)) * environment * color + bloom + hightlight;
     return render;
 }
