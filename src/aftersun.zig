@@ -469,6 +469,7 @@ pub fn update(app: *App) !bool {
     }
 
     const command = encoder.finish(null);
+    defer command.release();
     encoder.release();
 
     core.queue.submit(&.{ batcher_commands, command });
@@ -506,6 +507,7 @@ pub fn deinit(_: *App) void {
     state.pipeline_glow.release();
     state.pipeline_environment.release();
     state.pipeline_bloom.release();
+    state.pipeline_post.release();
     state.pipeline_final.release();
 
     state.bind_group_default.release();
@@ -513,7 +515,18 @@ pub fn deinit(_: *App) void {
     state.bind_group_height.release();
     state.bind_group_environment.release();
     state.bind_group_glow.release();
+    state.bind_group_compute_0.release();
+    state.bind_group_compute_1.release();
+    state.bind_group_compute_2.release();
+    state.compute_constants.release();
     state.bind_group_final.release();
+    state.bind_group_post.release();
+    state.bind_group_reflection.release();
+    state.bind_group_light.release();
+
+    state.uniform_buffer_default.release();
+    state.uniform_buffer_environment.release();
+    state.uniform_buffer_final.release();
 
     state.diffusemap.deinit();
     state.palettemap.deinit();
@@ -528,6 +541,9 @@ pub fn deinit(_: *App) void {
     state.bloom_h_output.deinit();
     state.light_output.deinit();
     state.reverse_height_output.deinit();
+    state.final_output.deinit();
+    state.reflection_output.deinit();
+    state.temp_output.deinit();
 
     state.allocator.free(state.atlas.sprites);
     state.allocator.free(state.atlas.animations);

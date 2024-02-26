@@ -297,6 +297,7 @@ pub const Batcher = struct {
         pass: {
             const encoder = self.encoder orelse break :pass;
             const back_buffer_view = core.swap_chain.getCurrentTextureView() orelse break :pass;
+            defer back_buffer_view.release();
 
             const color_attachments = [_]core.gpu.RenderPassColorAttachment{.{
                 .view = if (self.context.output_handle) |out_handle| out_handle else back_buffer_view,
@@ -352,6 +353,11 @@ pub const Batcher = struct {
     }
 
     pub fn deinit(self: *Batcher) void {
+        if (self.encoder) |encoder| {
+            encoder.release();
+        }
+        self.index_buffer_handle.release();
+        self.vertex_buffer_handle.release();
         self.allocator.free(self.vertices);
         self.allocator.free(self.indices);
     }
