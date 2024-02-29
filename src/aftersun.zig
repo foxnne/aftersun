@@ -78,7 +78,6 @@ pub const GameState = struct {
     pipeline_diffuse: *gpu.RenderPipeline = undefined,
     pipeline_height: *gpu.RenderPipeline = undefined,
     pipeline_glow: *gpu.RenderPipeline = undefined,
-    //pipeline_bloom_h: *gpu.RenderPipeline = undefined,
     pipeline_bloom: *gpu.ComputePipeline = undefined,
     pipeline_environment: *gpu.RenderPipeline = undefined,
     pipeline_final: *gpu.RenderPipeline = undefined,
@@ -563,6 +562,7 @@ pub fn deinit(_: *App) void {
     state.allocator.destroy(state);
 
     core.deinit();
+
     // TODO: Figure out why autohashmap is leaking
     //_ = gpa.detectLeaks();
 }

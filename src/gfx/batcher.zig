@@ -356,6 +356,7 @@ pub const Batcher = struct {
         if (self.encoder) |encoder| {
             encoder.release();
         }
+        self.encoder = null;
         self.index_buffer_handle.release();
         self.vertex_buffer_handle.release();
         self.allocator.free(self.vertices);
