@@ -16,17 +16,17 @@ pub fn groupBy(world: *ecs.world_t, table: *ecs.table_t, id: ecs.entity_t, ctx: 
 pub fn system(world: *ecs.world_t) ecs.system_desc_t {
     var desc: ecs.system_desc_t = .{};
     desc.query.filter.terms[0] = .{ .id = ecs.id(components.Player) };
-    desc.query.filter.terms[1] = .{ .id = ecs.id(components.Tile) };
+    desc.query.filter.terms[1] = .{ .id = ecs.id(components.Position) };
     desc.query.filter.terms[2] = .{ .id = ecs.pair(ecs.id(components.Request), ecs.id(components.Use)) };
     desc.run = run;
 
     var ctx_desc: ecs.query_desc_t = .{};
     ctx_desc.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cell), ecs.Wildcard) };
-    ctx_desc.filter.terms[1] = .{ .id = ecs.id(components.Tile) };
+    ctx_desc.filter.terms[1] = .{ .id = ecs.id(components.Position) };
     ctx_desc.group_by = groupBy;
     ctx_desc.group_by_id = ecs.id(components.Cell);
     ctx_desc.order_by = orderBy;
-    ctx_desc.order_by_component = ecs.id(components.Tile);
+    ctx_desc.order_by_component = ecs.id(components.Position);
     desc.ctx = ecs.query_init(world, &ctx_desc) catch unreachable;
     return desc;
 }
@@ -39,10 +39,10 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
         while (i < it.count()) : (i += 1) {
             const entity = it.entities()[i];
 
-            if (ecs.field(it, components.Tile, 2)) |tiles| {
+            if (ecs.field(it, components.Position, 2)) |positions| {
                 if (ecs.field(it, components.Use, 3)) |uses| {
-                    const dist_x = @abs(uses[i].target.x - tiles[i].x);
-                    const dist_y = @abs(uses[i].target.y - tiles[i].y);
+                    const dist_x = @abs(uses[i].target.x - positions[i].tile.x);
+                    const dist_y = @abs(uses[i].target.y - positions[i].tile.y);
 
                     if (dist_x <= 1 and dist_y <= 1) {
                         var target_entity: ?ecs.entity_t = null;
@@ -58,15 +58,15 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                             while (ecs.iter_next(&query_it)) {
                                 var j: usize = 0;
                                 while (j < query_it.count()) : (j += 1) {
-                                    if (ecs.field(&query_it, components.Tile, 2)) |start_tiles| {
+                                    if (ecs.field(&query_it, components.Position, 2)) |start_positions| {
                                         if (query_it.entities()[j] == entity)
                                             continue;
 
-                                        if (start_tiles[j].x == uses[i].target.x and start_tiles[j].y == uses[i].target.y and start_tiles[j].z == uses[i].target.z) {
-                                            if (start_tiles[j].counter > counter) {
-                                                counter = start_tiles[j].counter;
+                                        if (start_positions[j].tile.x == uses[i].target.x and start_positions[j].tile.y == uses[i].target.y and start_positions[j].tile.z == uses[i].target.z) {
+                                            if (start_positions[j].tile.counter > counter) {
+                                                counter = start_positions[j].tile.counter;
                                                 target_entity = query_it.entities()[j];
-                                                target_tile = start_tiles[j];
+                                                target_tile = start_positions[j].tile;
                                             }
                                         }
                                     }
@@ -75,6 +75,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         }
 
                         if (target_entity) |target| {
+                            std.log.debug("called", .{});
                             if (ecs.has_id(world, target, ecs.id(components.Useable))) {
                                 if (ecs.has_id(world, target, ecs.id(components.Consumeable))) {
                                     if (ecs.get_mut(world, target, components.Stack)) |stack| {
@@ -87,8 +88,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 
                                 if (ecs.get(world, target, components.Toggleable)) |toggle| {
                                     const new = ecs.new_w_id(world, ecs.pair(ecs.IsA, if (toggle.state) toggle.off_prefab else toggle.on_prefab));
-                                    _ = ecs.set(world, new, components.Tile, target_tile);
-                                    _ = ecs.set(world, new, components.Position, target_tile.toPosition());
+                                    _ = ecs.set(world, new, components.Position, target_tile.toPosition(.tile));
                                     ecs.delete(world, target);
                                 }
                             }
@@ -103,8 +103,8 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 }
 
 fn orderBy(_: ecs.entity_t, c1: ?*const anyopaque, _: ecs.entity_t, c2: ?*const anyopaque) callconv(.C) c_int {
-    const tile_1 = ecs.cast(components.Tile, c1);
-    const tile_2 = ecs.cast(components.Tile, c2);
+    const pos_1 = ecs.cast(components.Position, c1);
+    const pos_2 = ecs.cast(components.Position, c2);
 
-    return @as(c_int, @intCast(@intFromBool(tile_1.counter > tile_2.counter))) - @as(c_int, @intCast(@intFromBool(tile_1.counter < tile_2.counter)));
+    return @as(c_int, @intCast(@intFromBool(pos_1.tile.counter > pos_2.tile.counter))) - @as(c_int, @intCast(@intFromBool(pos_1.tile.counter < pos_2.tile.counter)));
 }

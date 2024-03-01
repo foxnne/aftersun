@@ -303,8 +303,7 @@ pub fn init(app: *App) !void {
     state.entities.player = ecs.new_entity(world, "Player");
     const player = state.entities.player;
     ecs.add(world, player, components.Player);
-    _ = ecs.set(world, player, components.Position, player_tile.toPosition());
-    _ = ecs.set(world, player, components.Tile, player_tile);
+    _ = ecs.set(world, player, components.Position, player_tile.toPosition(.position));
     _ = ecs.set(world, player, components.Collider, .{});
     _ = ecs.set(world, player, components.Inertia, .{});
     _ = ecs.set(world, player, components.CharacterRenderer, .{
@@ -339,21 +338,21 @@ pub fn init(app: *App) !void {
 
     state.entities.debug = ecs.new_entity(world, "Debug");
     const debug = state.entities.debug;
+    const debug_tile: components.Tile = .{ .x = 0, .y = -2, .counter = state.counter.count() };
     ecs.add_pair(world, debug, ecs.IsA, state.prefabs.torch);
-    _ = ecs.set(world, debug, components.Position, .{ .x = 0.0, .y = -64.0 });
-    _ = ecs.set(world, debug, components.Tile, .{ .x = 0, .y = -2, .counter = state.counter.count() });
+    _ = ecs.set(world, debug, components.Position, debug_tile.toPosition(.tile));
 
     const ham = ecs.new_id(world);
+    const ham_tile: components.Tile = .{ .x = 0, .y = -3, .counter = state.counter.count() };
     ecs.add_pair(world, ham, ecs.IsA, state.prefabs.ham);
-    _ = ecs.set(world, ham, components.Position, .{ .x = 0.0, .y = -96.0 });
-    _ = ecs.set(world, ham, components.Tile, .{ .x = 0, .y = -3, .counter = state.counter.count() });
+    _ = ecs.set(world, ham, components.Position, ham_tile.toPosition(.tile));
     _ = ecs.set(world, ham, components.Stack, .{ .count = 3, .max = 5 });
 
     // Create campfire
     {
         const campfire = ecs.new_entity(world, "campfire");
-        _ = ecs.set(world, campfire, components.Position, .{ .x = 32.0, .y = -64.0 });
-        _ = ecs.set(world, campfire, components.Tile, .{ .x = 1, .y = -2, .counter = state.counter.count() });
+        const campfire_tile: components.Tile = .{ .x = 1, .y = -2, .counter = state.counter.count() };
+        _ = ecs.set(world, campfire, components.Position, campfire_tile.toPosition(.tile));
         _ = ecs.set(world, campfire, components.SpriteRenderer, .{
             .index = assets.aftersun_atlas.Campfire_0_Layer_0,
             .reflect = true,

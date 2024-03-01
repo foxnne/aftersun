@@ -7,7 +7,7 @@ const components = game.components;
 pub fn system() ecs.system_desc_t {
     var desc: ecs.system_desc_t = .{};
     desc.query.filter.terms[0] = .{ .id = ecs.id(components.Player) };
-    desc.query.filter.terms[1] = .{ .id = ecs.id(components.Tile) };
+    desc.query.filter.terms[1] = .{ .id = ecs.id(components.Position) };
     desc.query.filter.terms[2] = .{ .id = ecs.pair(ecs.id(components.Request), ecs.id(components.Movement)), .oper = ecs.oper_kind_t.Not };
     desc.query.filter.terms[3] = .{ .id = ecs.pair(ecs.id(components.Cooldown), ecs.id(components.Movement)), .oper = ecs.oper_kind_t.Not };
     desc.no_readonly = true;
@@ -31,15 +31,15 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
             const w: bool = if (game.state.hotkeys.hotkey(.directional_left)) |hk| hk.down() else false;
 
             const direction = game.math.Direction.write(n, s, e, w);
-            if (ecs.field(it, components.Tile, 2)) |tiles| {
+            if (ecs.field(it, components.Position, 2)) |positions| {
                 if (direction != .none) {
                     const end_tile = components.Tile{
-                        .x = tiles[i].x + @as(i32, @intFromFloat(direction.x())),
-                        .y = tiles[i].y + @as(i32, @intFromFloat(direction.y())),
+                        .x = positions[i].tile.x + @as(i32, @intFromFloat(direction.x())),
+                        .y = positions[i].tile.y + @as(i32, @intFromFloat(direction.y())),
                     };
 
                     // ! When setting pairs, the intended data type attached must either be matched with a tag, or first in the pair of components.
-                    _ = ecs.set_pair(world, entity, ecs.id(components.Request), ecs.id(components.Movement), components.Movement, .{ .start = tiles[i], .end = end_tile });
+                    _ = ecs.set_pair(world, entity, ecs.id(components.Request), ecs.id(components.Movement), components.Movement, .{ .start = positions[i].tile, .end = end_tile });
 
                     // Set cooldown
                     const cooldown = switch (direction) {

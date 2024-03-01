@@ -16,17 +16,17 @@ pub fn groupBy(world: *ecs.world_t, table: *ecs.table_t, id: ecs.entity_t, ctx: 
 pub fn system(world: *ecs.world_t) ecs.system_desc_t {
     var desc: ecs.system_desc_t = .{};
     desc.query.filter.terms[0] = .{ .id = ecs.id(components.Player) };
-    desc.query.filter.terms[1] = .{ .id = ecs.id(components.Tile) };
+    desc.query.filter.terms[1] = .{ .id = ecs.id(components.Position) };
     desc.query.filter.terms[2] = .{ .id = ecs.pair(ecs.id(components.Request), ecs.id(components.Drag)), .oper = ecs.oper_kind_t.Optional };
     desc.run = run;
 
     var ctx_desc: ecs.query_desc_t = .{};
     ctx_desc.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cell), ecs.Wildcard) };
-    ctx_desc.filter.terms[1] = .{ .id = ecs.id(components.Tile), .inout = .In };
+    ctx_desc.filter.terms[1] = .{ .id = ecs.id(components.Position), .inout = .In };
     ctx_desc.group_by = groupBy;
     ctx_desc.group_by_id = ecs.id(components.Cell);
     ctx_desc.order_by = orderBy;
-    ctx_desc.order_by_component = ecs.id(components.Tile);
+    ctx_desc.order_by_component = ecs.id(components.Position);
     desc.ctx = ecs.query_init(world, &ctx_desc) catch unreachable;
     return desc;
 }
@@ -39,12 +39,12 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
         while (i < it.count()) : (i += 1) {
             const entity = it.entities()[i];
 
-            if (ecs.field(it, components.Tile, 2)) |tiles| {
+            if (ecs.field(it, components.Position, 2)) |positions| {
                 if (ecs.field(it, components.Drag, 3)) |drags| {
-                    const dist_x = @abs(drags[i].start.x - tiles[i].x);
-                    const dist_y = @abs(drags[i].start.y - tiles[i].y);
+                    const dist_x = @abs(drags[i].start.x - positions[i].tile.x);
+                    const dist_y = @abs(drags[i].start.y - positions[i].tile.y);
 
-                    if (dist_x <= 1 and dist_y <= 1 and drags[i].start.z == tiles[i].z) {
+                    if (dist_x <= 1 and dist_y <= 1 and drags[i].start.z == positions[i].tile.z) {
                         var target_entity: ?ecs.entity_t = null;
                         var counter: u64 = 0;
                         if (it.ctx) |ctx| {
@@ -57,13 +57,13 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                             while (ecs.iter_next(&query_it)) {
                                 var j: usize = 0;
                                 while (j < query_it.count()) : (j += 1) {
-                                    if (ecs.field(&query_it, components.Tile, 2)) |start_tiles| {
+                                    if (ecs.field(&query_it, components.Position, 2)) |start_positions| {
                                         if (query_it.entities()[j] == entity)
                                             continue;
 
-                                        if (start_tiles[j].x == drags[i].start.x and start_tiles[j].y == drags[i].start.y and start_tiles[j].z == drags[i].start.z) {
-                                            if (start_tiles[j].counter > counter) {
-                                                counter = start_tiles[j].counter;
+                                        if (start_positions[j].tile.x == drags[i].start.x and start_positions[j].tile.y == drags[i].start.y and start_positions[j].tile.z == drags[i].start.z) {
+                                            if (start_positions[j].tile.counter > counter) {
+                                                counter = start_positions[j].tile.counter;
                                                 target_entity = query_it.entities()[j];
                                             }
                                         }
@@ -124,8 +124,8 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 }
 
 fn orderBy(_: ecs.entity_t, c1: ?*const anyopaque, _: ecs.entity_t, c2: ?*const anyopaque) callconv(.C) c_int {
-    const tile_1 = ecs.cast(components.Tile, c1);
-    const tile_2 = ecs.cast(components.Tile, c2);
+    const pos_1 = ecs.cast(components.Position, c1);
+    const pos_2 = ecs.cast(components.Position, c2);
 
-    return @as(c_int, @intCast(@intFromBool(tile_1.counter > tile_2.counter))) - @as(c_int, @intCast(@intFromBool(tile_1.counter < tile_2.counter)));
+    return @as(c_int, @intCast(@intFromBool(pos_1.tile.counter > pos_2.tile.counter))) - @as(c_int, @intCast(@intFromBool(pos_1.tile.counter < pos_2.tile.counter)));
 }

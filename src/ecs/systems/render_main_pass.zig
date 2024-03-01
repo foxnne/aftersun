@@ -16,9 +16,8 @@ pub fn system(world: *ecs.world_t) ecs.system_desc_t {
     ctx_desc.filter.terms[2] = .{ .id = ecs.id(components.SpriteRenderer), .oper = ecs.oper_kind_t.Optional, .inout = .In };
     ctx_desc.filter.terms[3] = .{ .id = ecs.id(components.CharacterRenderer), .oper = ecs.oper_kind_t.Optional, .inout = .In };
     ctx_desc.filter.terms[4] = .{ .id = ecs.id(components.ParticleRenderer), .oper = ecs.oper_kind_t.Optional, .inout = .In };
-    ctx_desc.filter.terms[5] = .{ .id = ecs.id(components.Tile), .inout = .In };
-    ctx_desc.filter.terms[6] = .{ .id = ecs.id(components.Visible), .inout = .In };
-    ctx_desc.order_by_component = ecs.id(components.Tile);
+    ctx_desc.filter.terms[5] = .{ .id = ecs.id(components.Visible), .inout = .In };
+    ctx_desc.order_by_component = ecs.id(components.Position);
     ctx_desc.order_by = orderBy;
     desc.ctx = ecs.query_init(world, &ctx_desc) catch unreachable;
 
@@ -50,7 +49,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         position[1] += position[2];
 
                         if (ecs.field(&query_it, components.SpriteRenderer, 3)) |renderers| {
-                            renderers[i].order = @as(usize, @intFromFloat(@abs(@floor(position[1] + position[0])))) + i;
+                            //renderers[i].order = @as(usize, @intFromFloat(@abs(@floor(position[1] + position[0])))) + i;
 
                             game.state.batcher.sprite(
                                 position,
@@ -200,7 +199,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         position[1] += position[2];
 
                         if (ecs.field(&query_it, components.SpriteRenderer, 3)) |renderers| {
-                            renderers[i].order = @as(usize, @intFromFloat(@abs(@floor(position[1] + position[0])))) + i;
+                            //renderers[i].order = @as(usize, @intFromFloat(@abs(@floor(position[1] + position[0])))) + i;
 
                             game.state.batcher.sprite(
                                 position,
@@ -335,7 +334,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         position[1] -= game.settings.pixels_per_unit / 3;
 
                         if (ecs.field(&query_it, components.SpriteRenderer, 3)) |renderers| {
-                            renderers[i].order = @as(usize, @intFromFloat(@abs(@floor(position[1] + position[0])))) + i;
+                            //renderers[i].order = @as(usize, @intFromFloat(@abs(@floor(position[1] + position[0])))) + i;
 
                             if (renderers[i].reflect) {
                                 game.state.batcher.sprite(
@@ -470,15 +469,15 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
             }) catch unreachable;
 
             while (ecs.iter_next(&query_it)) {
-                var i: usize = query_it.count() - 1;
-                while (i > 0) : (i -= 1) {
+                var i: usize = 0;
+                while (i > query_it.count()) : (i += 1) {
                     if (ecs.field(&query_it, components.Position, 1)) |positions| {
                         const rotation = if (ecs.field(&query_it, components.Rotation, 2)) |rotations| rotations[i].value else 0.0;
                         var position = positions[i].toF32x4();
                         position[1] += position[2];
 
                         if (ecs.field(&query_it, components.SpriteRenderer, 3)) |renderers| {
-                            renderers[i].order = @as(usize, @intFromFloat(@abs(@floor(position[1] + position[0])))) + i;
+                            //renderers[i].order = @as(usize, @intFromFloat(@abs(@floor(position[1] + position[0])))) + i;
 
                             game.state.batcher.sprite(
                                 position,
@@ -502,19 +501,25 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
     }
 }
 
-fn orderBy(e1: ecs.entity_t, c1: ?*const anyopaque, e2: ecs.entity_t, c2: ?*const anyopaque) callconv(.C) c_int {
-    _ = e2;
-    _ = e1;
-    const tile_1 = ecs.cast(components.Tile, c1);
-    const tile_2 = ecs.cast(components.Tile, c2);
+fn orderBy(_: ecs.entity_t, c1: ?*const anyopaque, _: ecs.entity_t, c2: ?*const anyopaque) callconv(.C) c_int {
+    const pos_1 = ecs.cast(components.Position, c1);
+    const pos_2 = ecs.cast(components.Position, c2);
 
-    if (tile_1.z > tile_2.z) return @as(c_int, 1) else if (tile_1.z < tile_2.z) return @as(c_int, 0);
+    if (pos_1.z > pos_2.z) return @as(c_int, 1) else if (pos_1.z < pos_2.z) return @as(c_int, 0);
 
-    if (tile_1.y == tile_2.y) {
-        return @as(c_int, @intCast(@intFromBool(tile_1.counter > tile_2.counter))) - @as(c_int, @intCast(@intFromBool(tile_1.counter < tile_2.counter)));
+    if (pos_1.sort != .position and pos_2.sort != .position) {
+        if (pos_1.tile.y == pos_2.tile.y and pos_1.tile.x == pos_2.tile.x) {
+            return @as(c_int, @intFromBool(pos_1.tile.counter > pos_2.tile.counter)) - @as(c_int, @intFromBool(pos_1.tile.counter < pos_2.tile.counter));
+        }
     }
 
-    if (tile_1.kind != .none and tile_2.kind == .none) return @as(c_int, 0) else if (tile_1.kind == .none and tile_2.kind != .none) return @as(c_int, 1);
+    if (pos_1.tile.kind != .none or pos_2.tile.kind != .none) {
+        return @as(c_int, @intFromBool(pos_1.tile.kind == .none)) - @as(c_int, @intFromBool(pos_1.tile.kind != .none));
+    }
 
-    return @as(c_int, @intCast(@intFromBool(tile_1.y < tile_2.y))) - @as(c_int, @intCast(@intFromBool(tile_1.y > tile_2.y)));
+    if (pos_1.y >= pos_2.y - 1.0 and pos_1.y <= pos_2.y + 1.0) {
+        return @as(c_int, @intFromBool(pos_1.x < pos_2.x)) - @as(c_int, @intFromBool(pos_1.x > pos_2.x));
+    }
+
+    return @as(c_int, @intFromBool(pos_1.y < pos_2.y)) - @as(c_int, @intFromBool(pos_1.y > pos_2.y));
 }

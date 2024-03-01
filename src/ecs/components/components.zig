@@ -46,6 +46,8 @@ pub const Position = struct {
     x: f32 = 0.0,
     y: f32 = 0.0,
     z: f32 = 0.0,
+    tile: Tile = .{},
+    sort: Sort = .position,
 
     /// Converts the position to a tile coordinates.
     pub fn toTile(self: Position, counter: u64) Tile {
@@ -61,6 +63,25 @@ pub const Position = struct {
     pub fn toF32x4(self: Position) zmath.F32x4 {
         return zmath.f32x4(self.x, self.y, self.z, 0.0);
     }
+
+    /// Syncs the tile position with the floating position
+    /// If the tile changes, counter is updated
+    pub fn sync(self: *Position) void {
+        const tile = self.tile;
+        var new_tile = self.toTile(self.tile.counter);
+        new_tile.kind = tile.kind;
+
+        if (tile.x != new_tile.x or tile.y != new_tile.y or tile.z != new_tile.z) {
+            new_tile.counter = game.state.counter.count();
+        }
+
+        self.tile = new_tile;
+    }
+
+    pub const Sort = enum {
+        position,
+        tile,
+    };
 };
 
 pub const Tile = struct {
@@ -71,11 +92,13 @@ pub const Tile = struct {
     kind: MapTile = .none,
 
     /// Converts the tile to pixel coordinates.
-    pub fn toPosition(self: Tile) Position {
+    pub fn toPosition(self: Tile, sort: Position.Sort) Position {
         return .{
             .x = game.math.pixel(self.x),
             .y = game.math.pixel(self.y),
             .z = game.math.pixel(self.z),
+            .tile = self,
+            .sort = sort,
         };
     }
 
@@ -85,6 +108,10 @@ pub const Tile = struct {
             .y = @divFloor(self.y, game.settings.cell_size),
             .z = @divFloor(self.z, game.settings.cell_size),
         };
+    }
+
+    pub fn count(self: *Tile) void {
+        self.counter = game.state.counter.count();
     }
 };
 

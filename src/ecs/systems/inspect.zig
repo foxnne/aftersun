@@ -17,12 +17,12 @@ pub fn groupBy(world: *ecs.world_t, table: *ecs.table_t, id: ecs.entity_t, ctx: 
 pub fn system() ecs.system_desc_t {
     var desc: ecs.system_desc_t = .{};
     desc.query.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Cell), ecs.Wildcard) };
-    desc.query.filter.terms[1] = .{ .id = ecs.id(components.Tile) };
+    desc.query.filter.terms[1] = .{ .id = ecs.id(components.Position) };
     desc.query.filter.terms[2] = .{ .id = ecs.id(components.Visible) };
     desc.query.group_by = groupBy;
     desc.query.group_by_id = ecs.id(components.Cell);
     desc.query.order_by = orderBy;
-    desc.query.order_by_component = ecs.id(components.Tile);
+    desc.query.order_by_component = ecs.id(components.Position);
     desc.run = run;
     return desc;
 }
@@ -37,8 +37,8 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                 .y = button.released_tile[1],
             };
 
-            if (ecs.get(world, game.state.entities.player, components.Tile)) |tile| {
-                mouse_tile.z = tile.z;
+            if (ecs.get(world, game.state.entities.player, components.Position)) |position| {
+                mouse_tile.z = position.tile.z;
             }
 
             if (game.state.cells.get(mouse_tile.toCell())) |cell_entity| {
@@ -51,10 +51,10 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
             while (ecs.iter_next(it)) {
                 var i: usize = 0;
                 while (i < it.count()) : (i += 1) {
-                    if (ecs.field(it, components.Tile, 2)) |tiles| {
-                        if (tiles[i].x == mouse_tile.x and tiles[i].y == mouse_tile.y and tiles[i].z == mouse_tile.z) {
-                            if (tiles[i].counter > counter) {
-                                counter = tiles[i].counter;
+                    if (ecs.field(it, components.Position, 2)) |positions| {
+                        if (positions[i].tile.x == mouse_tile.x and positions[i].tile.y == mouse_tile.y and positions[i].tile.z == mouse_tile.z) {
+                            if (positions[i].tile.counter > counter) {
+                                counter = positions[i].tile.counter;
                                 target_entity = it.entities()[i];
                             }
                         }
@@ -91,8 +91,8 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 }
 
 fn orderBy(_: ecs.entity_t, c1: ?*const anyopaque, _: ecs.entity_t, c2: ?*const anyopaque) callconv(.C) c_int {
-    const tile_1 = ecs.cast(components.Tile, c1);
-    const tile_2 = ecs.cast(components.Tile, c2);
+    const pos_1 = ecs.cast(components.Position, c1);
+    const pos_2 = ecs.cast(components.Position, c2);
 
-    return @as(c_int, @intCast(@intFromBool(tile_1.counter > tile_2.counter))) - @as(c_int, @intCast(@intFromBool(tile_1.counter < tile_2.counter)));
+    return @as(c_int, @intCast(@intFromBool(pos_1.tile.counter > pos_2.tile.counter))) - @as(c_int, @intCast(@intFromBool(pos_1.tile.counter < pos_2.tile.counter)));
 }
