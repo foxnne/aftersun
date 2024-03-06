@@ -5,7 +5,7 @@ const zstbi = @import("zstbi");
 const zmath = @import("zmath");
 const ecs = @import("zflecs");
 
-const core = @import("mach-core");
+const core = @import("mach").core;
 const gpu = core.gpu;
 
 pub const name: [:0]const u8 = "Aftersun";

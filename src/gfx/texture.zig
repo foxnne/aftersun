@@ -5,7 +5,7 @@ const zstbi = @import("zstbi");
 const wgpu = zgpu.wgpu;
 const zmath = @import("zmath");
 
-const core = @import("mach-core");
+const core = @import("mach").core;
 const gpu = core.gpu;
 
 const game = @import("../aftersun.zig");

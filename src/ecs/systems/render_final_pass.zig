@@ -4,7 +4,7 @@ const ecs = @import("zflecs");
 const game = @import("../../aftersun.zig");
 const gfx = game.gfx;
 const components = game.components;
-const core = @import("mach-core");
+const core = @import("mach").core;
 
 var scanner_time: f32 = 0.0;
 var scanner_state: bool = false;

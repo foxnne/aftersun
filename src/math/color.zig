@@ -1,7 +1,7 @@
 const std = @import("std");
 const zmath = @import("zmath");
 
-const core = @import("mach-core");
+const core = @import("mach").core;
 
 pub const Color = struct {
     value: zmath.F32x4,

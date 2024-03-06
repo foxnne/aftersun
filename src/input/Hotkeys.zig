@@ -2,7 +2,7 @@ const std = @import("std");
 const zmath = @import("zmath");
 const math = @import("../math/math.zig");
 const game = @import("../aftersun.zig");
-const core = @import("mach-core");
+const core = @import("mach").core;
 
 const Key = core.Key;
 const Mods = core.KeyMods;

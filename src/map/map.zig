@@ -1,6 +1,6 @@
 const std = @import("std");
 const ecs = @import("zflecs");
-const mach = @import("mach-core");
+const mach = @import("mach").core;
 const game = @import("../aftersun.zig");
 const components = game.components;
 const assets = game.assets;

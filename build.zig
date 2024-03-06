@@ -5,7 +5,7 @@ const zmath = @import("src/deps/zig-gamedev/zmath/build.zig");
 const zstbi = @import("src/deps/zig-gamedev/zstbi/build.zig");
 const zflecs = @import("src/deps/zig-gamedev/zflecs/build.zig");
 
-const mach_core = @import("mach_core");
+const mach = @import("mach");
 const mach_gpu_dawn = @import("mach_gpu_dawn");
 const xcode_frameworks = @import("xcode_frameworks");
 
@@ -24,7 +24,7 @@ pub fn build(b: *std.Build) !void {
 
     const use_sysgpu = b.option(bool, "use_sysgpu", "Use sysgpu") orelse false;
 
-    const mach_core_dep = b.dependency("mach_core", .{
+    const mach_dep = b.dependency("mach", .{
         .target = target,
         .optimize = optimize,
     });
@@ -32,7 +32,7 @@ pub fn build(b: *std.Build) !void {
     const build_options = b.addOptions();
     build_options.addOption(bool, "use_sysgpu", use_sysgpu);
 
-    const app = try mach_core.App.init(b, mach_core_dep.builder, .{
+    const app = try mach.CoreApp.init(b, mach_dep.builder, .{
         .name = "aftersun",
         .src = src_path,
         .target = target,

@@ -9,9 +9,9 @@
     .name = "Aftersun",
     .version = "0.1.0",
     .dependencies = .{
-        .mach_core = .{
-            .url = "https://pkg.machengine.org/mach-core/5bb2b6e631ab084d055eeae3fc43a0663d5fea4c.tar.gz",
-            .hash = "12200fcd38775e59ec4c1b81e4bb7caff8a40ca116129c2ad99250722d7c63f602f7",
+        .mach = .{
+            .url = "https://pkg.machengine.org/mach/ea6a9438aa13ee83f9239d3aada352dcb9ea8b7c.tar.gz",
+            .hash = "1220a1ac8dba2fee590af6bafce6e1d5a768b93456e8877fe3d5402f19aec3d5d696",
         },
     },
 }

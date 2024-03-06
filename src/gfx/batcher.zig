@@ -2,7 +2,7 @@ const std = @import("std");
 const game = @import("../aftersun.zig");
 const gfx = game.gfx;
 const zmath = @import("zmath");
-const core = @import("mach-core");
+const core = @import("mach").core;
 
 pub const Batcher = struct {
     allocator: std.mem.Allocator,

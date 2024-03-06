@@ -2,7 +2,7 @@ const std = @import("std");
 const zmath = @import("zmath");
 const game = @import("../aftersun.zig");
 
-const core = @import("mach-core");
+const core = @import("mach").core;
 
 pub const Camera = struct {
     zoom: f32 = 1.0,
