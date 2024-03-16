@@ -1,4 +1,6 @@
 const std = @import("std");
+const imgui = @import("zig-imgui");
+const imgui_mach = imgui.backends.mach;
 const build_options = @import("build-options");
 const zmath = @import("zmath");
 const core = @import("mach").core;
@@ -460,4 +462,106 @@ pub fn init(state: *game.GameState) !void {
             },
         }),
     );
+
+    imgui.setZigAllocator(&state.allocator);
+    _ = imgui.createContext(null);
+    try imgui_mach.init(state.allocator, core.device, .{
+        .mag_filter = .nearest,
+        .min_filter = .nearest,
+        .mipmap_filter = .nearest,
+    });
+
+    var io = imgui.getIO();
+    io.config_flags |= imgui.ConfigFlags_NavEnableKeyboard;
+    io.font_global_scale = 1.0 / io.display_framebuffer_scale.y;
+    var cozette_config: imgui.FontConfig = std.mem.zeroes(imgui.FontConfig);
+    cozette_config.font_data_owned_by_atlas = true;
+    cozette_config.oversample_h = 2;
+    cozette_config.oversample_v = 1;
+    cozette_config.glyph_max_advance_x = std.math.floatMax(f32);
+    cozette_config.rasterizer_multiply = 1.0;
+    cozette_config.rasterizer_density = 1.0;
+    cozette_config.ellipsis_char = imgui.UNICODE_CODEPOINT_MAX;
+
+    _ = io.fonts.?.addFontFromFileTTF(game.assets.root ++ "fonts/CozetteVector.ttf", game.settings.font_size * game.content_scale[1], &cozette_config, null);
+
+    var fa_config: imgui.FontConfig = std.mem.zeroes(imgui.FontConfig);
+    fa_config.merge_mode = true;
+    fa_config.font_data_owned_by_atlas = true;
+    fa_config.oversample_h = 2;
+    fa_config.oversample_v = 1;
+    fa_config.glyph_max_advance_x = std.math.floatMax(f32);
+    fa_config.rasterizer_multiply = 1.0;
+    fa_config.rasterizer_density = 1.0;
+    fa_config.ellipsis_char = imgui.UNICODE_CODEPOINT_MAX;
+    const ranges: []const u16 = &.{ 0xf000, 0xf976, 0 };
+
+    state.fonts.fa_standard_solid = io.fonts.?.addFontFromFileTTF(game.assets.root ++ "fonts/fa-solid-900.ttf", game.settings.font_size * game.content_scale[1], &fa_config, @ptrCast(ranges.ptr)).?;
+    state.fonts.fa_standard_regular = io.fonts.?.addFontFromFileTTF(game.assets.root ++ "fonts/fa-regular-400.ttf", game.settings.font_size * game.content_scale[1], &fa_config, @ptrCast(ranges.ptr)).?;
+
+    var style = imgui.getStyle();
+    style.window_border_size = 1.0;
+    style.window_rounding = 8.0;
+    style.popup_rounding = 8.0;
+    style.tab_rounding = 8.0;
+    style.frame_rounding = 8.0;
+    style.grab_rounding = 4.0;
+    style.frame_padding = .{ .x = 12.0, .y = 8.0 };
+    style.window_padding = .{ .x = 5.0, .y = 5.0 };
+    style.item_spacing = .{ .x = 4.0, .y = 4.0 };
+    style.item_inner_spacing = .{ .x = 3.0, .y = 3.0 };
+    style.window_menu_button_position = 0;
+    style.window_title_align = .{ .x = 0.5, .y = 0.5 };
+    style.grab_min_size = 6.5;
+    style.scrollbar_size = 12;
+    style.frame_padding = .{ .x = 4.0, .y = 4.0 };
+    style.frame_border_size = 1.0;
+    style.hover_stationary_delay = 0.35;
+    style.hover_delay_normal = 0.5;
+    style.hover_delay_short = 0.25;
+    style.popup_rounding = 8.0;
+    style.separator_text_align = .{ .x = 0.2, .y = 0.5 };
+    style.separator_text_border_size = 1.0;
+    style.separator_text_padding = .{ .x = 20.0, .y = 10.0 };
+    style.window_border_size = 0.0;
+    style.frame_border_size = 0.0;
+    style.tab_border_size = 0.0;
+    style.child_border_size = 0.0;
+    style.tab_bar_border_size = 0.0;
+
+    const bg = game.settings.colors.background.toImguiVec4();
+    const fg = game.settings.colors.foreground.toImguiVec4();
+    const text = game.settings.colors.text.toImguiVec4();
+    const bg_text = game.settings.colors.text_background.toImguiVec4();
+    const highlight_primary = game.settings.colors.highlight_primary.toImguiVec4();
+    const hover_primary = game.settings.colors.hover_primary.toImguiVec4();
+    const highlight_secondary = game.settings.colors.highlight_secondary.toImguiVec4();
+    const hover_secondary = game.settings.colors.hover_secondary.toImguiVec4();
+
+    style.colors[imgui.Col_WindowBg] = bg;
+    style.colors[imgui.Col_Border] = fg;
+    style.colors[imgui.Col_MenuBarBg] = fg;
+    style.colors[imgui.Col_Separator] = bg_text;
+    style.colors[imgui.Col_TitleBg] = fg;
+    style.colors[imgui.Col_TitleBgActive] = fg;
+    style.colors[imgui.Col_Tab] = fg;
+    style.colors[imgui.Col_TabUnfocused] = fg;
+    style.colors[imgui.Col_TabUnfocusedActive] = fg;
+    style.colors[imgui.Col_TabActive] = fg;
+    style.colors[imgui.Col_TabHovered] = fg;
+    style.colors[imgui.Col_PopupBg] = bg;
+    style.colors[imgui.Col_FrameBg] = bg;
+    style.colors[imgui.Col_FrameBgHovered] = bg;
+    style.colors[imgui.Col_Text] = text;
+    style.colors[imgui.Col_ResizeGrip] = highlight_primary;
+    style.colors[imgui.Col_ScrollbarGrabActive] = highlight_primary;
+    style.colors[imgui.Col_ScrollbarGrabHovered] = hover_primary;
+    style.colors[imgui.Col_ScrollbarBg] = bg;
+    style.colors[imgui.Col_ScrollbarGrab] = fg;
+    style.colors[imgui.Col_Header] = highlight_secondary;
+    style.colors[imgui.Col_HeaderHovered] = hover_secondary;
+    style.colors[imgui.Col_HeaderActive] = highlight_secondary;
+    style.colors[imgui.Col_Button] = fg;
+    style.colors[imgui.Col_ButtonHovered] = hover_secondary;
+    style.colors[imgui.Col_ButtonActive] = highlight_secondary;
 }

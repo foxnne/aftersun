@@ -122,6 +122,8 @@ pub const MapTile = enum(u8) {
 };
 
 pub const Unloadable = struct {};
+pub const Ignore = struct {};
+pub const Inspect = struct {};
 
 pub const EmptyTile = struct {};
 

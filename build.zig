@@ -29,6 +29,15 @@ pub fn build(b: *std.Build) !void {
         .optimize = optimize,
     });
 
+    const zig_imgui_dep = b.dependency("zig_imgui", .{});
+
+    const imgui_module = b.addModule("zig-imgui", .{
+        .root_source_file = zig_imgui_dep.path("src/imgui.zig"),
+        .imports = &.{
+            .{ .name = "mach", .module = mach_dep.module("mach") },
+        },
+    });
+
     const build_options = b.addOptions();
     build_options.addOption(bool, "use_sysgpu", use_sysgpu);
 
@@ -40,6 +49,7 @@ pub fn build(b: *std.Build) !void {
             .{ .name = "zstbi", .module = zstbi_pkg.zstbi },
             .{ .name = "zmath", .module = zmath_pkg.zmath },
             .{ .name = "zflecs", .module = zflecs_pkg.zflecs },
+            .{ .name = "zig-imgui", .module = imgui_module },
             .{ .name = "build-options", .module = build_options.createModule() },
         },
         .optimize = optimize,
@@ -65,6 +75,8 @@ pub fn build(b: *std.Build) !void {
     app.compile.root_module.addImport("zstbi", zstbi_pkg.zstbi);
     app.compile.root_module.addImport("zmath", zmath_pkg.zmath);
     app.compile.root_module.addImport("zflecs", zflecs_pkg.zflecs);
+    app.compile.root_module.addImport("zig-imgui", imgui_module);
+    app.compile.linkLibrary(zig_imgui_dep.artifact("imgui"));
 
     zstbi_pkg.link(app.compile);
     zmath_pkg.link(app.compile);

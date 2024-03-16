@@ -54,8 +54,7 @@ pub const Camera = struct {
     /// Transforms a position from world-space to screen-space.
     /// Remember that in screen-space positive Y is down, and positive Y is up in world-space.
     pub fn worldToScreen(camera: Camera, position: zmath.F32x4) zmath.F32x4 {
-        const cs = game.state.gctx.window.getContentScale();
-        const screen = (camera.position - position) * zmath.f32x4(camera.zoom * cs[0], camera.zoom * cs[1], 0, 0) - zmath.f32x4((game.window_size[0] / 2) * cs[0], (-game.window_size[1] / 2) * cs[1], 0, 0);
+        const screen = (camera.position - position) * zmath.f32x4(camera.zoom, camera.zoom, 0, 0) - zmath.f32x4((game.window_size[0] / 2), (-game.window_size[1] / 2), 0, 0);
 
         return zmath.f32x4(-screen[0], screen[1], 0, 0);
     }

@@ -69,6 +69,14 @@ pub fn button(self: *Self, action: Action) ?*Button {
     return null;
 }
 
+pub fn tile(self: *Self) [2]i32 {
+    const world_position = game.state.camera.screenToWorld(zmath.f32x4(self.position[0], self.position[1], 0, 0));
+    return .{
+        game.math.tile(world_position[0]),
+        game.math.tile(world_position[1]),
+    };
+}
+
 pub fn setButtonState(self: *Self, b: MouseButton, mods: Mods, state: ButtonState) void {
     for (self.buttons) |*bt| {
         if (bt.button == b) {

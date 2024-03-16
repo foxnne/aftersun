@@ -1,5 +1,7 @@
 const std = @import("std");
 const zmath = @import("zmath");
+const game = @import("aftersun.zig");
+const Color = game.math.Color;
 
 /// The design texture width for render-textures.
 pub const design_width: u32 = 1440;
@@ -37,3 +39,20 @@ pub const max_visible_tiles: f32 = cell_size * 2.0 - 5.0;
 
 /// Speed at which the camera will lerp to new velocity.
 pub const camera_follow_speed = 1.0;
+
+pub const font_size: f32 = 13.0;
+
+pub const colors = struct {
+    pub const background = Color.initBytes(34, 35, 42, 185);
+    pub const foreground = Color.initBytes(42, 44, 54, 185);
+    pub const text = Color.initBytes(230, 175, 137, 255);
+
+    pub const text_secondary = Color.initBytes(159, 159, 176, 255);
+    pub const text_background = Color.initBytes(97, 97, 106, 255);
+
+    pub const highlight_primary = Color.initBytes(47, 179, 135, 255);
+    pub const hover_primary = Color.initBytes(76, 148, 123, 255);
+
+    pub const highlight_secondary = Color.initBytes(76, 48, 67, 255);
+    pub const hover_secondary = Color.initBytes(105, 50, 68, 255);
+};

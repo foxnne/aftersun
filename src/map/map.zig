@@ -139,6 +139,10 @@ pub fn loadCell(self: *Self, cell: components.Cell) void {
                         _ = ecs.add(game.state.world, tree_leaves_02, components.Unloadable);
                         _ = ecs.add(game.state.world, tree_leaves_03, components.Unloadable);
                         _ = ecs.add(game.state.world, tree_leaves_04, components.Unloadable);
+                        _ = ecs.add_pair(game.state.world, tree_leaves_01, ecs.id(components.Ignore), ecs.id(components.Inspect));
+                        _ = ecs.add_pair(game.state.world, tree_leaves_02, ecs.id(components.Ignore), ecs.id(components.Inspect));
+                        _ = ecs.add_pair(game.state.world, tree_leaves_03, ecs.id(components.Ignore), ecs.id(components.Inspect));
+                        _ = ecs.add_pair(game.state.world, tree_leaves_04, ecs.id(components.Ignore), ecs.id(components.Inspect));
                     }
                 } else if (random.float(f32) < cell_density * 0.4) {
                     const reflect = true;
@@ -164,29 +168,33 @@ pub fn loadCell(self: *Self, cell: components.Cell) void {
                     });
                     _ = ecs.set_pair(game.state.world, tree_leaves_01, ecs.id(components.Cell), cell_entity, components.Cell, cell);
 
+                    _ = ecs.add_pair(game.state.world, tree_leaves_01, ecs.id(components.Ignore), ecs.id(components.Inspect));
+
                     _ = ecs.add(game.state.world, tree, components.Unloadable);
                     _ = ecs.add(game.state.world, tree_leaves_01, components.Unloadable);
                 } else {
                     _ = ecs.add(game.state.world, tile_entity, components.Walkable);
 
-                    for (0..4) |grass_i| {
-                        const grass_y = (@as(f32, @floatFromInt(grass_i)) / 4.0) * game.settings.pixels_per_unit - game.settings.pixels_per_unit / 2.0;
-                        var grass_position = tile.toPosition(.position);
-                        grass_position.tile.count();
-                        grass_position.tile.kind = .none;
-                        grass_position.y += grass_y;
+                    // for (0..4) |grass_i| {
+                    //     const grass_y = (@as(f32, @floatFromInt(grass_i)) / 4.0) * game.settings.pixels_per_unit - game.settings.pixels_per_unit / 2.0;
+                    //     var grass_position = tile.toPosition(.position);
+                    //     grass_position.tile.count();
+                    //     grass_position.tile.kind = .none;
+                    //     grass_position.y += grass_y;
 
-                        const grass_entity = if (self.entity_pool.items.len > 0) self.entity_pool.pop() else ecs.new_id(game.state.world);
+                    //     const grass_entity = if (self.entity_pool.items.len > 0) self.entity_pool.pop() else ecs.new_id(game.state.world);
 
-                        _ = ecs.set(game.state.world, grass_entity, components.Position, grass_position);
-                        _ = ecs.set(game.state.world, grass_entity, components.SpriteRenderer, .{
-                            .index = assets.aftersun_atlas.Grass_Tall_0_Layer,
-                            .vert_mode = .top_sway,
-                            .order = grass_i + y_i,
-                        });
-                        _ = ecs.set_pair(game.state.world, grass_entity, ecs.id(components.Cell), cell_entity, components.Cell, cell);
-                        _ = ecs.add(game.state.world, grass_entity, components.Unloadable);
-                    }
+                    //     _ = ecs.add_pair(game.state.world, grass_entity, ecs.id(components.Ignore), ecs.id(components.Inspect));
+
+                    //     _ = ecs.set(game.state.world, grass_entity, components.Position, grass_position);
+                    //     _ = ecs.set(game.state.world, grass_entity, components.SpriteRenderer, .{
+                    //         .index = assets.aftersun_atlas.Grass_Tall_0_Layer,
+                    //         .vert_mode = .top_sway,
+                    //         .order = grass_i + y_i,
+                    //     });
+                    //     _ = ecs.set_pair(game.state.world, grass_entity, ecs.id(components.Cell), cell_entity, components.Cell, cell);
+                    //     _ = ecs.add(game.state.world, grass_entity, components.Unloadable);
+                    // }
                 }
             }
         }

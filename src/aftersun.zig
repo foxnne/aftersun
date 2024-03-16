@@ -4,6 +4,8 @@ const build_options = @import("build-options");
 const zstbi = @import("zstbi");
 const zmath = @import("zmath");
 const ecs = @import("zflecs");
+const imgui = @import("zig-imgui");
+const imgui_mach = imgui.backends.mach;
 
 const core = @import("mach").core;
 const gpu = core.gpu;
@@ -19,6 +21,7 @@ pub const animation_sets = @import("animation_sets.zig");
 pub const components = @import("ecs/components/components.zig");
 
 pub const fs = @import("tools/fs.zig");
+pub const fa = @import("tools/font_awesome.zig");
 pub const math = @import("math/math.zig");
 pub const gfx = @import("gfx/gfx.zig");
 pub const input = @import("input/input.zig");
@@ -119,6 +122,12 @@ pub const GameState = struct {
     light_atlas: gfx.Atlas = undefined,
     mouse: input.Mouse = undefined,
     hotkeys: input.Hotkeys = undefined,
+    fonts: Fonts = .{},
+};
+
+pub const Fonts = struct {
+    fa_standard_regular: *imgui.Font = undefined,
+    fa_standard_solid: *imgui.Font = undefined,
 };
 
 pub const Channel = enum(i32) {
@@ -136,6 +145,7 @@ pub const Channel = enum(i32) {
 pub const Entities = struct {
     player: ecs.entity_t = 5000,
     debug: ecs.entity_t = 5001,
+    selection: ecs.entity_t = 5002,
 };
 
 pub fn init(app: *App) !void {
@@ -244,7 +254,7 @@ pub fn init(app: *App) !void {
     ecs.SYSTEM(world, "MovementSystem", ecs.OnUpdate, &movement_system);
 
     // - Other
-    var inspect_system = @import("ecs/systems/inspect.zig").system();
+    var inspect_system = @import("ecs/systems/inspect.zig").system(world);
     ecs.SYSTEM(world, "InspectSystem", ecs.OnUpdate, &inspect_system);
     var stack_system = @import("ecs/systems/stack.zig").system();
     ecs.SYSTEM(world, "StackSystem", ecs.OnUpdate, &stack_system);
@@ -348,6 +358,15 @@ pub fn init(app: *App) !void {
     _ = ecs.set(world, ham, components.Position, ham_tile.toPosition(.tile));
     _ = ecs.set(world, ham, components.Stack, .{ .count = 3, .max = 5 });
 
+    state.entities.selection = ecs.new_entity(world, "Selection");
+    const selection = state.entities.selection;
+    const selection_tile: components.Tile = .{ .x = 0, .y = 0, .counter = 0 };
+    _ = ecs.set(world, selection, components.Position, selection_tile.toPosition(.tile));
+    _ = ecs.set(world, selection, components.SpriteRenderer, .{
+        .index = assets.aftersun_atlas.Selection_0_Layer,
+        .color = math.Color.initFloats(1.0, 1.0, 1.0, 0.85).toSlice(),
+    });
+
     // Create campfire
     {
         const campfire = ecs.new_entity(world, "campfire");
@@ -389,31 +408,44 @@ pub fn updateMainThread(_: *App) !bool {
 }
 
 pub fn update(app: *App) !bool {
+    try imgui_mach.newFrame();
+    imgui.newFrame();
+
     state.delta_time = app.timer.lap();
     state.game_time += state.delta_time;
+
+    //imgui.showDemoWindow(null);
 
     var iter = core.pollEvents();
     while (iter.next()) |event| {
         switch (event) {
             .key_press => |key_press| {
+                _ = imgui_mach.processEvent(event);
                 state.hotkeys.setHotkeyState(key_press.key, key_press.mods, .press);
             },
             .key_repeat => |key_repeat| {
+                _ = imgui_mach.processEvent(event);
                 state.hotkeys.setHotkeyState(key_repeat.key, key_repeat.mods, .repeat);
             },
             .key_release => |key_release| {
+                _ = imgui_mach.processEvent(event);
                 state.hotkeys.setHotkeyState(key_release.key, key_release.mods, .release);
             },
             .mouse_scroll => |mouse_scroll| {
+                _ = imgui_mach.processEvent(event);
                 state.mouse.setScrollState(mouse_scroll.xoffset, mouse_scroll.yoffset);
             },
             .mouse_motion => |mouse_motion| {
-                state.mouse.position = .{ @floatCast(mouse_motion.pos.x), @floatCast(mouse_motion.pos.y) };
+                _ = imgui_mach.processEvent(event);
+                if (!imgui.isWindowHovered(imgui.HoveredFlags_AnyWindow))
+                    state.mouse.position = .{ @floatCast(mouse_motion.pos.x), @floatCast(mouse_motion.pos.y) };
             },
             .mouse_press => |mouse_press| {
+                _ = imgui_mach.processEvent(event);
                 state.mouse.setButtonState(mouse_press.button, mouse_press.mods, .press);
             },
             .mouse_release => |mouse_release| {
+                _ = imgui_mach.processEvent(event);
                 state.mouse.setButtonState(mouse_release.button, mouse_release.mods, .release);
             },
             .close => {
@@ -429,49 +461,85 @@ pub fn update(app: *App) !bool {
                     framebuffer_size[1] / window_size[1],
                 };
                 state.camera.frameBufferResize();
+                _ = imgui_mach.processEvent(event);
             },
-            else => {},
+            else => {
+                _ = imgui_mach.processEvent(event);
+            },
         }
     }
 
     _ = ecs.progress(state.world, 0);
 
+    imgui.render();
+
     const batcher_commands = try state.batcher.finish();
     defer batcher_commands.release();
 
-    const encoder = core.device.createCommandEncoder(null);
+    if (core.swap_chain.getCurrentTextureView()) |back_buffer_view| {
+        defer back_buffer_view.release();
 
-    { // Compute pass for blur shader to blur bloom texture
-        const compute_pass = encoder.beginComputePass(null);
-        compute_pass.setPipeline(state.pipeline_bloom);
-        compute_pass.setBindGroup(0, state.compute_constants, &.{});
+        var encoder = core.device.createCommandEncoder(null);
 
-        const width: u32 = settings.design_width;
-        const height: u32 = settings.design_height;
-        compute_pass.setBindGroup(1, state.bind_group_compute_0, &.{});
-        compute_pass.dispatchWorkgroups(try std.math.divCeil(u32, width, gfx.block_dimension), try std.math.divCeil(u32, height, gfx.batch[1]), 1);
+        { // Compute pass for blur shader to blur bloom texture
+            const compute_pass = encoder.beginComputePass(null);
+            compute_pass.setPipeline(state.pipeline_bloom);
+            compute_pass.setBindGroup(0, state.compute_constants, &.{});
 
-        compute_pass.setBindGroup(1, state.bind_group_compute_1, &.{});
-        compute_pass.dispatchWorkgroups(try std.math.divCeil(u32, height, gfx.block_dimension), try std.math.divCeil(u32, width, gfx.batch[1]), 1);
-
-        var i: u32 = 0;
-        while (i < gfx.iterations - 1) : (i += 1) {
-            compute_pass.setBindGroup(1, state.bind_group_compute_2, &.{});
+            const width: u32 = settings.design_width;
+            const height: u32 = settings.design_height;
+            compute_pass.setBindGroup(1, state.bind_group_compute_0, &.{});
             compute_pass.dispatchWorkgroups(try std.math.divCeil(u32, width, gfx.block_dimension), try std.math.divCeil(u32, height, gfx.batch[1]), 1);
 
             compute_pass.setBindGroup(1, state.bind_group_compute_1, &.{});
             compute_pass.dispatchWorkgroups(try std.math.divCeil(u32, height, gfx.block_dimension), try std.math.divCeil(u32, width, gfx.batch[1]), 1);
+
+            var i: u32 = 0;
+            while (i < gfx.iterations - 1) : (i += 1) {
+                compute_pass.setBindGroup(1, state.bind_group_compute_2, &.{});
+                compute_pass.dispatchWorkgroups(try std.math.divCeil(u32, width, gfx.block_dimension), try std.math.divCeil(u32, height, gfx.batch[1]), 1);
+
+                compute_pass.setBindGroup(1, state.bind_group_compute_1, &.{});
+                compute_pass.dispatchWorkgroups(try std.math.divCeil(u32, height, gfx.block_dimension), try std.math.divCeil(u32, width, gfx.batch[1]), 1);
+            }
+            compute_pass.end();
+            compute_pass.release();
         }
-        compute_pass.end();
-        compute_pass.release();
+
+        const compute_command = encoder.finish(null);
+        defer compute_command.release();
+
+        encoder.release();
+        encoder = core.device.createCommandEncoder(null);
+        defer encoder.release();
+
+        const imgui_commands = commands: {
+
+            // Gui pass.
+            {
+                const color_attachment = gpu.RenderPassColorAttachment{
+                    .view = back_buffer_view,
+                    .clear_value = .{ .r = 0.0, .g = 0.0, .b = 0.0, .a = 0.0 },
+                    .load_op = .load,
+                    .store_op = .store,
+                };
+
+                const render_pass_info = gpu.RenderPassDescriptor.init(.{
+                    .color_attachments = &.{color_attachment},
+                });
+                const pass = encoder.beginRenderPass(&render_pass_info);
+                imgui_mach.renderDrawData(imgui.getDrawData().?, pass) catch {};
+                pass.end();
+                pass.release();
+            }
+
+            break :commands encoder.finish(null);
+        };
+        defer imgui_commands.release();
+
+        core.queue.submit(&.{ batcher_commands, compute_command, imgui_commands });
+        core.swap_chain.present();
     }
-
-    const command = encoder.finish(null);
-    defer command.release();
-    encoder.release();
-
-    core.queue.submit(&.{ batcher_commands, command });
-    core.swap_chain.present();
 
     for (state.hotkeys.hotkeys) |*hotkey| {
         hotkey.previous_state = hotkey.state;
@@ -555,6 +623,10 @@ pub fn deinit(_: *App) void {
     state.batcher.deinit();
     state.cells.clearAndFree();
     state.cells.deinit();
+
+    imgui_mach.shutdown();
+    imgui.destroyContext(null);
+    //imgui.getIO().fonts.?.clear();
 
     state.allocator.free(state.root_path);
 

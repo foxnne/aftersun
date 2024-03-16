@@ -13,5 +13,9 @@
             .url = "https://pkg.machengine.org/mach/ea6a9438aa13ee83f9239d3aada352dcb9ea8b7c.tar.gz",
             .hash = "1220a1ac8dba2fee590af6bafce6e1d5a768b93456e8877fe3d5402f19aec3d5d696",
         },
+        .zig_imgui = .{
+            .url = "https://github.com/foxnne/zig-imgui/archive/918b941cfce9127581ab33c7da2306b036ea2d2e.tar.gz",
+            .hash = "12203ea87584e579079c6f1ccfa61ec1cfe30a8a3a62c6cf5b284039524f59c44a53",
+        },
     },
 }

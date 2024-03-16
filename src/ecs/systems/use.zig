@@ -75,7 +75,6 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         }
 
                         if (target_entity) |target| {
-                            std.log.debug("called", .{});
                             if (ecs.has_id(world, target, ecs.id(components.Useable))) {
                                 if (ecs.has_id(world, target, ecs.id(components.Consumeable))) {
                                     if (ecs.get_mut(world, target, components.Stack)) |stack| {

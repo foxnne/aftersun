@@ -92,6 +92,9 @@ pub var Gold_Layer = [_]usize {
 pub var Grass_Tall_Layer = [_]usize {
     assets.aftersun_atlas.Grass_Tall_0_Layer,
 };
+pub var Selection_Layer = [_]usize {
+    assets.aftersun_atlas.Selection_0_Layer,
+};
 pub var Water_full_Layer_0 = [_]usize {
     assets.aftersun_atlas.Water_full_0_Layer_0,
     assets.aftersun_atlas.Water_full_1_Layer_0,
