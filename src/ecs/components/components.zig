@@ -143,16 +143,10 @@ pub const Cell = struct {
             .{ .x = self.x + 1, .y = self.y + 1, .z = self.z },
             .{ .x = self.x + 1, .y = self.y, .z = self.z },
             .{ .x = self.x + 1, .y = self.y - 1, .z = self.z },
-            // .{ .x = self.x + 2, .y = self.y + 1, .z = self.z },
-            // .{ .x = self.x + 2, .y = self.y, .z = self.z },
-            // .{ .x = self.x + 2, .y = self.y - 1, .z = self.z },
             .{ .x = self.x, .y = self.y - 1, .z = self.z },
             .{ .x = self.x - 1, .y = self.y - 1, .z = self.z },
             .{ .x = self.x - 1, .y = self.y, .z = self.z },
             .{ .x = self.x - 1, .y = self.y + 1, .z = self.z },
-            // .{ .x = self.x - 2, .y = self.y - 1, .z = self.z },
-            // .{ .x = self.x - 2, .y = self.y, .z = self.z },
-            // .{ .x = self.x - 2, .y = self.y + 1, .z = self.z },
         };
     }
 };

@@ -348,12 +348,12 @@ pub fn init(app: *App) !void {
 
     state.entities.debug = ecs.new_entity(world, "Debug");
     const debug = state.entities.debug;
-    const debug_tile: components.Tile = .{ .x = 0, .y = -2, .counter = state.counter.count() };
+    const debug_tile: components.Tile = .{ .x = 0, .y = -3, .counter = state.counter.count() };
     ecs.add_pair(world, debug, ecs.IsA, state.prefabs.torch);
     _ = ecs.set(world, debug, components.Position, debug_tile.toPosition(.tile));
 
     const ham = ecs.new_id(world);
-    const ham_tile: components.Tile = .{ .x = 0, .y = -3, .counter = state.counter.count() };
+    const ham_tile: components.Tile = .{ .x = 0, .y = -2, .counter = state.counter.count() };
     ecs.add_pair(world, ham, ecs.IsA, state.prefabs.ham);
     _ = ecs.set(world, ham, components.Position, ham_tile.toPosition(.tile));
     _ = ecs.set(world, ham, components.Stack, .{ .count = 3, .max = 5 });

@@ -26,14 +26,14 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
             if (ecs.field(it, components.Raw, 1)) |raws| {
                 if (ecs.field(it, components.Position, 4)) |positions| {
                     const new = ecs.new_w_id(world, ecs.pair(ecs.IsA, raws[i].cooked_prefab));
-                    var tile = positions[i].tile;
-                    tile.z += 1;
 
-                    _ = ecs.set(world, new, components.Position, positions[i]);
-                    _ = ecs.set(world, new, components.Tile, tile);
+                    var position = positions[i];
+                    position.tile.z += 1;
+
+                    _ = ecs.set(world, new, components.Position, position);
 
                     _ = ecs.set_pair(world, new, ecs.id(components.Request), ecs.id(components.Movement), components.Movement, .{
-                        .start = tile,
+                        .start = position.tile,
                         .end = positions[i].tile,
                         .curve = .sin,
                     });
@@ -44,7 +44,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                             ecs.modified_id(world, entity, ecs.id(components.Stack));
 
                             _ = ecs.set_pair(world, entity, ecs.id(components.Request), ecs.id(components.Movement), components.Movement, .{
-                                .start = tile,
+                                .start = position.tile,
                                 .end = positions[i].tile,
                                 .curve = .sin,
                             });
