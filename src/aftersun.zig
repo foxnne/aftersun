@@ -360,7 +360,7 @@ pub fn init(app: *App) !void {
 
     state.entities.selection = ecs.new_entity(world, "Selection");
     const selection = state.entities.selection;
-    const selection_tile: components.Tile = .{ .x = 0, .y = 0, .counter = 0 };
+    const selection_tile: components.Tile = .{ .x = 0, .y = 0, .z = 1, .counter = 0 };
     _ = ecs.set(world, selection, components.Position, selection_tile.toPosition(.tile));
     _ = ecs.set(world, selection, components.SpriteRenderer, .{
         .index = assets.aftersun_atlas.Selection_0_Layer,
@@ -433,7 +433,8 @@ pub fn update(app: *App) !bool {
             },
             .mouse_scroll => |mouse_scroll| {
                 _ = imgui_mach.processEvent(event);
-                state.mouse.setScrollState(mouse_scroll.xoffset, mouse_scroll.yoffset);
+                if (!imgui.isWindowHovered(imgui.HoveredFlags_AnyWindow))
+                    state.mouse.setScrollState(mouse_scroll.xoffset, mouse_scroll.yoffset);
             },
             .mouse_motion => |mouse_motion| {
                 _ = imgui_mach.processEvent(event);
@@ -442,11 +443,13 @@ pub fn update(app: *App) !bool {
             },
             .mouse_press => |mouse_press| {
                 _ = imgui_mach.processEvent(event);
-                state.mouse.setButtonState(mouse_press.button, mouse_press.mods, .press);
+                if (!imgui.isWindowHovered(imgui.HoveredFlags_AnyWindow))
+                    state.mouse.setButtonState(mouse_press.button, mouse_press.mods, .press);
             },
             .mouse_release => |mouse_release| {
                 _ = imgui_mach.processEvent(event);
-                state.mouse.setButtonState(mouse_release.button, mouse_release.mods, .release);
+                if (!imgui.isWindowHovered(imgui.HoveredFlags_AnyWindow))
+                    state.mouse.setButtonState(mouse_release.button, mouse_release.mods, .release);
             },
             .close => {
                 return true;

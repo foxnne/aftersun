@@ -500,13 +500,11 @@ pub fn init(state: *game.GameState) !void {
     state.fonts.fa_standard_regular = io.fonts.?.addFontFromFileTTF(game.assets.root ++ "fonts/fa-regular-400.ttf", game.settings.font_size * game.content_scale[1], &fa_config, @ptrCast(ranges.ptr)).?;
 
     var style = imgui.getStyle();
-    style.window_border_size = 1.0;
-    style.window_rounding = 8.0;
-    style.popup_rounding = 8.0;
-    style.tab_rounding = 8.0;
-    style.frame_rounding = 8.0;
-    style.grab_rounding = 4.0;
-    style.frame_padding = .{ .x = 12.0, .y = 8.0 };
+    style.window_rounding = 6.0;
+    style.popup_rounding = 6.0;
+    style.tab_rounding = 6.0;
+    style.frame_rounding = 6.0;
+    style.grab_rounding = 6.0;
     style.window_padding = .{ .x = 5.0, .y = 5.0 };
     style.item_spacing = .{ .x = 4.0, .y = 4.0 };
     style.item_inner_spacing = .{ .x = 3.0, .y = 3.0 };
@@ -515,11 +513,9 @@ pub fn init(state: *game.GameState) !void {
     style.grab_min_size = 6.5;
     style.scrollbar_size = 12;
     style.frame_padding = .{ .x = 4.0, .y = 4.0 };
-    style.frame_border_size = 1.0;
     style.hover_stationary_delay = 0.35;
     style.hover_delay_normal = 0.5;
     style.hover_delay_short = 0.25;
-    style.popup_rounding = 8.0;
     style.separator_text_align = .{ .x = 0.2, .y = 0.5 };
     style.separator_text_border_size = 1.0;
     style.separator_text_padding = .{ .x = 20.0, .y = 10.0 };
@@ -539,6 +535,7 @@ pub fn init(state: *game.GameState) !void {
     const hover_secondary = game.settings.colors.hover_secondary.toImguiVec4();
 
     style.colors[imgui.Col_WindowBg] = bg;
+    style.colors[imgui.Col_Border] = bg;
     style.colors[imgui.Col_Border] = fg;
     style.colors[imgui.Col_MenuBarBg] = fg;
     style.colors[imgui.Col_Separator] = bg_text;

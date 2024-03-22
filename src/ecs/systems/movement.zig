@@ -113,7 +113,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                             const position = zmath.lerp(start_position, end_position, t);
                             positions[i].x = position[0];
                             positions[i].y = position[1];
-                            positions[i].z = if (movements[i].curve == .sin) @sin(std.math.pi * t) * 10.0 else position[2];
+                            positions[i].z = if (movements[i].curve == .sin) (@sin(std.math.pi * t) * 12.0) + position[2] else position[2];
                         } else {
                             cooldowns[i].current = cooldowns[i].end;
                             const position = positions[i].tile.toPosition(.position);

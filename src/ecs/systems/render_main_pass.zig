@@ -507,7 +507,7 @@ fn orderBy(_: ecs.entity_t, c1: ?*const anyopaque, _: ecs.entity_t, c2: ?*const 
 
     if (pos_1.z > pos_2.z) return @as(c_int, 1) else if (pos_1.z < pos_2.z) return @as(c_int, 0);
 
-    if (pos_1.sort != .position and pos_2.sort != .position) {
+    if (pos_1.sort != .position or pos_2.sort != .position) {
         if (pos_1.tile.y == pos_2.tile.y and pos_1.tile.x == pos_2.tile.x) {
             return @as(c_int, @intFromBool(pos_1.tile.counter > pos_2.tile.counter)) - @as(c_int, @intFromBool(pos_1.tile.counter < pos_2.tile.counter));
         }
