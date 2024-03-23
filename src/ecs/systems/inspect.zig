@@ -131,7 +131,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                     if (width.x < last_width)
                         width.x = last_width;
 
-                    const window_pos: imgui.Vec2 = .{ .x = @floor(player_screen_position[0] - width.x / 2.0), .y = @floor(player_screen_position[1]) };
+                    const window_pos: imgui.Vec2 = .{ .x = @trunc(player_screen_position[0] - width.x / 2.0), .y = @trunc(player_screen_position[1]) };
                     var bg_color = game.settings.colors.background;
                     bg_color.value[3] = std.math.clamp(inspect_time * game.settings.colors.background.value[3], 0.0, 1.0);
 
@@ -153,9 +153,9 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                             defer draw_list.popClipRect();
 
                             draw_list.addTriangleFilled(
-                                .{ .x = @floor(window_pos.x + imgui.getWindowWidth() / 2.0 - 5.0), .y = @floor(window_pos.y + imgui.getWindowHeight() + 0.5) },
-                                .{ .x = @floor(window_pos.x + imgui.getWindowWidth() / 2.0), .y = @floor(window_pos.y + imgui.getWindowHeight() + 8.5) },
-                                .{ .x = @floor(window_pos.x + 5.0 + imgui.getWindowWidth() / 2.0), .y = @floor(window_pos.y + imgui.getWindowHeight() + 0.5) },
+                                .{ .x = @trunc(window_pos.x + imgui.getWindowWidth() / 2.0 - 5.0), .y = @trunc(window_pos.y + imgui.getWindowHeight() + 0.5) },
+                                .{ .x = @trunc(window_pos.x + imgui.getWindowWidth() / 2.0), .y = @trunc(window_pos.y + imgui.getWindowHeight() + 8.5) },
+                                .{ .x = @trunc(window_pos.x + 5.0 + imgui.getWindowWidth() / 2.0), .y = @trunc(window_pos.y + imgui.getWindowHeight() + 0.5) },
                                 bg_color.toU32(),
                             );
                         }

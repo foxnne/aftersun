@@ -36,7 +36,7 @@ pub const Camera = struct {
     /// Use this matrix when drawing to an off-screen render texture.
     pub fn renderTextureMatrix(camera: Camera) zmath.Mat {
         const rt_ortho = zmath.orthographicLh(game.settings.design_size[0], game.settings.design_size[1], -100, 100);
-        const rt_translation = zmath.translation(-camera.position[0], -camera.position[1], 0);
+        const rt_translation = zmath.translation(-@trunc(camera.position[0]), -@trunc(camera.position[1]), 0);
 
         return zmath.mul(rt_translation, rt_ortho);
     }

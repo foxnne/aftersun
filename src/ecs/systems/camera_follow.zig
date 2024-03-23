@@ -23,7 +23,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                 var target: zmath.F32x4 = position;
                 target[0] -= game.math.ease(0, std.math.sign(inertia[0]) * game.settings.pixels_per_unit, @abs(inertia[0]), .ease_in);
                 target[1] -= game.math.ease(0, std.math.sign(inertia[1]) * game.settings.pixels_per_unit, @abs(inertia[1]), .ease_in);
-                game.state.camera.position = zmath.trunc(target);
+                game.state.camera.position = target;
             }
         }
     }

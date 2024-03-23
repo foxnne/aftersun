@@ -224,7 +224,7 @@ pub const Batcher = struct {
 
         const origin_x = if (options.flip_x) o_x - width else -o_x;
         const origin_y = if (options.flip_y) -o_y else o_y - height;
-        const pos = zmath.trunc(position);
+        const pos = @trunc(position);
 
         const vert_mode: f32 = switch (options.vert_mode) {
             .standard => 0.0,
