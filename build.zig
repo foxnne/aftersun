@@ -1,10 +1,6 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
-// const zmath = @import("src/deps/zig-gamedev/zmath/build.zig");
-// const zstbi = @import("src/deps/zig-gamedev/zstbi/build.zig");
-// const zflecs = @import("src/deps/zig-gamedev/zflecs/build.zig");
-
 const mach = @import("mach");
 const mach_gpu_dawn = @import("mach_gpu_dawn");
 const xcode_frameworks = @import("xcode_frameworks");
@@ -21,10 +17,6 @@ pub fn build(b: *std.Build) !void {
     const zstbi = b.dependency("zstbi", .{ .target = target, .optimize = optimize });
     const zflecs = b.dependency("zflecs", .{ .target = target, .optimize = optimize });
     const zmath = b.dependency("zmath", .{ .target = target, .optimize = optimize });
-
-    // const zstbi_pkg = zstbi.package(b, target, optimize, .{});
-    // const zmath_pkg = zmath.package(b, target, optimize, .{});
-    // const zflecs_pkg = zflecs.package(b, target, optimize, .{});
 
     const use_sysgpu = b.option(bool, "use_sysgpu", "Use sysgpu") orelse false;
 
