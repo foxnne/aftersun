@@ -17,5 +17,17 @@
             .url = "https://github.com/foxnne/zig-imgui/archive/918b941cfce9127581ab33c7da2306b036ea2d2e.tar.gz",
             .hash = "12203ea87584e579079c6f1ccfa61ec1cfe30a8a3a62c6cf5b284039524f59c44a53",
         },
+        .zflecs = .{
+            .url = "https://github.com/foxnne/zflecs/archive/f78f4f17527fce2867b580c88e441880b3875b32.tar.gz",
+            .hash = "1220ca6986000ebcfc2276df3b9e482a64daa7c8cb365e26a06e02259574e13eb105",
+        },
+        .zstbi = .{
+            .url = "https://github.com/foxnne/zstbi/archive/ff14a27a6652d878b4e219e334c57d5e66e98968.tar.gz",
+            .hash = "12207a905cf2e4c51619b717207b686a0bcc1f2d971faaf43beb5e0b92556aafc8cd",
+        },
+        .zmath = .{
+            .url = "https://github.com/foxnne/zmath/archive/ecfdbf57c6fd0a8ac8a9bf01dafe1e5adae869ae.tar.gz",
+            .hash = "1220a105762825631ef4dfd4730109120600bba51368f1207fc63b7536333c5748c3",
+        },
     },
 }
