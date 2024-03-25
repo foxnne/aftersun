@@ -9,7 +9,7 @@ An ongoing pet-project top-down RPG written in [zig](https://ziglang.org).
 
 ### Installation
 
-- Build with Zig 0.12.0-dev.2063+804cee3b9 (`zigup 0.12.0-dev.2063+804cee3b9`). This is required by Mach, see https://machengine.org/about/zig-version 
+- Build with Zig 0.12.0-dev.3180+83e578a18 (`zigup 0.12.0-dev.3180+83e578a18`). This is required by Mach, see https://machengine.org/about/zig-version 
 
 ```
 git clone git@github.com:foxnne/aftersun.git --recurse-submodules
