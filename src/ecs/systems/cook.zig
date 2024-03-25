@@ -27,8 +27,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                 if (ecs.field(it, components.Position, 4)) |positions| {
                     const new = ecs.new_w_id(world, ecs.pair(ecs.IsA, raws[i].cooked_prefab));
 
-                    var position = positions[i];
-                    position.tile.z += 1;
+                    const position = positions[i];
 
                     _ = ecs.set(world, new, components.Position, position);
 
