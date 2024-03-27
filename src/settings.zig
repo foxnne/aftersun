@@ -38,7 +38,7 @@ pub const cell_size = 24;
 pub const max_visible_tiles: f32 = cell_size * 2.0 - 5.0;
 
 /// Speed at which the camera will lerp to new velocity.
-pub const camera_follow_speed = 1.0;
+pub const camera_follow_speed = 0.8;
 
 pub const font_size: f32 = 13.0;
 
