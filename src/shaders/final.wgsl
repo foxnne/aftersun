@@ -1,6 +1,7 @@
 struct FinalUniforms {
     mvp: mat4x4<f32>,
     output_channel: i32,
+    mouse: vec2<f32>,
 }
 @group(0) @binding(0) var<uniform> uniforms: FinalUniforms;
 
@@ -71,15 +72,14 @@ struct VertexOut {
 
     var hightlight = vec4(0.0, 0.0, 0.0, 1.0 );
 
-    if (data.z > 0.0) {
-        var dist = abs(distance(uv, vec2(0.5, 0.5)) - data.z);
+        var dist = abs(distance(uv, uniforms.mouse));
         
-        if (dist < data.z + middle.r / 4) {
+        if (dist < 0.05) {
             if (bottom.r * 255.0 - middle.r * 255.0 >= 2.0) { 
-                hightlight = environment * vec4((1.0 - data.z) * 0.4 * distance(uv, vec2(0.5, 0.5)) * 100) * vec4(data.z + middle.r / 2.5) * vec4(uv.y * 2.0, 0.5, uv.x * 2.0, 1.0); 
+                hightlight = environment * (1.0 - dist / 0.05); 
             }  
         }
-    }
+    
 
     var render = (reflection + diffuse * (1.0 - reflection.a)) * environment * color + bloom + hightlight;
     return render;

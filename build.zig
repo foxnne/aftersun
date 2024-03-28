@@ -2,8 +2,6 @@ const std = @import("std");
 const builtin = @import("builtin");
 
 const mach = @import("mach");
-const mach_gpu_dawn = @import("mach_gpu_dawn");
-const xcode_frameworks = @import("xcode_frameworks");
 
 const content_dir = "assets/";
 const src_path = "src/aftersun.zig";

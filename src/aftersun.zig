@@ -76,6 +76,7 @@ pub const GameState = struct {
     map: Map = undefined,
     scanner_time: f32 = 0.0,
     scanner_state: bool = false,
+    scanner_position: [2]f32 = .{ 0.0, 0.0 },
     output_channel: Channel = .final,
     pipeline_default: *gpu.RenderPipeline = undefined,
     pipeline_diffuse: *gpu.RenderPipeline = undefined,
@@ -145,7 +146,6 @@ pub const Channel = enum(i32) {
 pub const Entities = struct {
     player: ecs.entity_t = 5000,
     debug: ecs.entity_t = 5001,
-    selection: ecs.entity_t = 5002,
 };
 
 pub fn init(app: *App) !void {
@@ -357,15 +357,6 @@ pub fn init(app: *App) !void {
     ecs.add_pair(world, ham, ecs.IsA, state.prefabs.ham);
     _ = ecs.set(world, ham, components.Position, ham_tile.toPosition(.tile));
     _ = ecs.set(world, ham, components.Stack, .{ .count = 3, .max = 5 });
-
-    state.entities.selection = ecs.new_entity(world, "Selection");
-    const selection = state.entities.selection;
-    const selection_tile: components.Tile = .{ .x = 0, .y = 0, .z = 1, .counter = 0 };
-    _ = ecs.set(world, selection, components.Position, selection_tile.toPosition(.tile));
-    _ = ecs.set(world, selection, components.SpriteRenderer, .{
-        .index = assets.aftersun_atlas.Selection_0_Layer,
-        .color = math.Color.initFloats(1.0, 1.0, 1.0, 0.85).toSlice(),
-    });
 
     // Create campfire
     {

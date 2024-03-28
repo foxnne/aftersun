@@ -9,6 +9,7 @@ pub fn system() ecs.system_desc_t {
     desc.query.filter.terms[0] = .{ .id = ecs.pair(ecs.id(components.Camera), ecs.id(components.Target)) };
     desc.query.filter.terms[1] = .{ .id = ecs.id(components.Position) };
     desc.query.filter.terms[2] = .{ .id = ecs.id(components.Inertia), .oper = ecs.oper_kind_t.Optional };
+    desc.query.filter.terms[3] = .{ .id = ecs.id(components.Player), .oper = ecs.oper_kind_t.Optional };
     desc.run = run;
     return desc;
 }

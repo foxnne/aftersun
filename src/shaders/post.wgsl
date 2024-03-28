@@ -34,7 +34,7 @@ struct VertexOut {
 
     var render = tiltshift(texture, texture_sampler, uv);
 
-    render = desaturate(render, 0.2);
+    render = desaturate(render, 0.0);
 
     return render;
 }

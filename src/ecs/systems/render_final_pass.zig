@@ -18,12 +18,18 @@ pub fn system() ecs.system_desc_t {
 pub const FinalUniforms = extern struct {
     mvp: zmath.Mat,
     output_channel: i32 = 0,
+    _pad: u32 = 0,
+    mouse: [2]f32 = .{ 0.0, 0.0 },
 };
 
 pub fn callback(it: *ecs.iter_t) callconv(.C) void {
     if (it.count() > 0) return;
 
-    const final_uniforms = FinalUniforms{ .mvp = zmath.transpose(zmath.orthographicLh(game.settings.design_size[0], game.settings.design_size[1], -100, 100)), .output_channel = @intFromEnum(game.state.output_channel) };
+    const final_uniforms = FinalUniforms{
+        .mvp = zmath.transpose(zmath.orthographicLh(game.settings.design_size[0], game.settings.design_size[1], -100, 100)),
+        .output_channel = @intFromEnum(game.state.output_channel),
+        .mouse = game.state.scanner_position,
+    };
 
     game.state.batcher.begin(.{
         .pipeline_handle = game.state.pipeline_final,
