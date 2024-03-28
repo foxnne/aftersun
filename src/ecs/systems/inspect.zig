@@ -45,7 +45,9 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
         if (bt.released())
             secondary = !secondary;
 
-        if (secondary) inspect = true;
+        if (secondary) {
+            inspect = true;
+        }
     }
     if (game.state.hotkeys.hotkey(.inspect)) |hk| {
         if (hk.down()) {
@@ -121,7 +123,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                     }
                 }
 
-                if (inspect_target != 0 and inspect_time > 0.0) {
+                if (inspect_target != 0) {
                     if (ecs.get(world, inspect_target, components.Position)) |target_tile_position| {
                         //const target_tile_position = mouse_tile.toPosition(.position).toF32x4();
                         const target_screen_position = game.state.camera.worldToScreen(target_tile_position.toF32x4());
@@ -139,7 +141,8 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         if (width.x < last_width)
                             width.x = last_width;
 
-                        const height_offset: f32 = if (inspect_target == game.state.entities.player) game.settings.pixels_per_unit * 4.0 else game.settings.pixels_per_unit * 2.0;
+                        var height_offset: f32 = if (inspect_target == game.state.entities.player) game.settings.pixels_per_unit * 2.0 else game.settings.pixels_per_unit * 1.0;
+                        height_offset *= game.state.camera.zoom;
 
                         const window_pos: imgui.Vec2 = .{ .x = @trunc(target_screen_position[0] - width.x / 2.0), .y = @trunc(target_screen_position[1] - height_offset) };
                         var bg_color = game.settings.colors.background;
@@ -174,47 +177,49 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 
                         imgui.popStyleColorEx(2);
 
-                        const useable = ecs.has_id(world, inspect_target, ecs.id(components.Useable));
+                        if (inspect_time > 0.0) {
+                            const useable = ecs.has_id(world, inspect_target, ecs.id(components.Useable));
 
-                        const show_choice_dialog = useable or inspect_target == game.state.entities.player;
+                            const show_choice_dialog = useable or inspect_target == game.state.entities.player;
 
-                        if (show_choice_dialog) {
-                            imgui.pushStyleColorImVec4(imgui.Col_WindowBg, .{ .x = 0.0, .y = 0.0, .z = 0.0, .w = 0.0 });
-                            defer imgui.popStyleColor();
+                            if (show_choice_dialog) {
+                                imgui.pushStyleColorImVec4(imgui.Col_WindowBg, .{ .x = 0.0, .y = 0.0, .z = 0.0, .w = 0.0 });
+                                defer imgui.popStyleColor();
 
-                            imgui.setNextWindowSize(.{ .x = 100, .y = 0.0 }, imgui.Cond_None);
-                            imgui.setNextWindowPos(.{ .x = target_screen_position[0] + game.settings.pixels_per_unit / 2.0 * game.state.camera.zoom / 2.0, .y = target_screen_position[1] }, imgui.Cond_Always);
-                            if (imgui.begin("ChoiceDialog", null, flags)) {
-                                defer imgui.end();
+                                imgui.setNextWindowSize(.{ .x = 100, .y = 0.0 }, imgui.Cond_None);
+                                imgui.setNextWindowPos(.{ .x = target_screen_position[0] + game.settings.pixels_per_unit / 2.0 * game.state.camera.zoom / 2.0, .y = target_screen_position[1] }, imgui.Cond_Always);
+                                if (imgui.begin("ChoiceDialog", null, flags)) {
+                                    defer imgui.end();
 
-                                if (useable) {
-                                    if (imgui.buttonEx(if (ecs.has_id(world, inspect_target, ecs.id(components.Consumeable))) "Consume" else "Use", .{ .x = -1.0, .y = 0.0 })) {
-                                        _ = ecs.set_pair(world, game.state.entities.player, ecs.id(components.Request), ecs.id(components.Use), components.Use, .{ .target = mouse_tile });
-                                        inspect = false;
-                                    }
-                                    if (imgui.buttonEx("Use with", .{ .x = -1.0, .y = 0.0 })) {
-                                        inspect = false;
-                                    }
-                                }
-
-                                if (inspect_target == game.state.entities.player) {
-                                    if (imgui.buttonEx("Change", .{ .x = -1.0, .y = 0.0 })) {
-                                        var prng = std.rand.DefaultPrng.init(@as(u64, @intFromFloat(game.state.game_time * 10000)));
-                                        const rand = prng.random();
-
-                                        if (ecs.get_mut(world, game.state.entities.player, components.CharacterAnimator)) |animator| {
-                                            animator.top_set = if (rand.boolean()) game.animation_sets.top_f_01 else game.animation_sets.top_f_02;
-                                            animator.bottom_set = if (rand.boolean()) game.animation_sets.bottom_f_02 else game.animation_sets.bottom_f_01;
+                                    if (useable) {
+                                        if (imgui.buttonEx(if (ecs.has_id(world, inspect_target, ecs.id(components.Consumeable))) "Consume" else "Use", .{ .x = -1.0, .y = 0.0 })) {
+                                            _ = ecs.set_pair(world, game.state.entities.player, ecs.id(components.Request), ecs.id(components.Use), components.Use, .{ .target = mouse_tile });
+                                            inspect = false;
                                         }
+                                        if (imgui.buttonEx("Use with", .{ .x = -1.0, .y = 0.0 })) {
+                                            inspect = false;
+                                        }
+                                    }
 
-                                        if (ecs.get_mut(world, game.state.entities.player, components.CharacterRenderer)) |renderer| {
-                                            const top = rand.intRangeAtMost(u8, 1, 12);
-                                            const bottom = rand.intRangeAtMost(u8, 1, 12);
-                                            const hair = rand.intRangeAtMost(u8, 1, 12);
+                                    if (inspect_target == game.state.entities.player) {
+                                        if (imgui.buttonEx("Change", .{ .x = -1.0, .y = 0.0 })) {
+                                            var prng = std.rand.DefaultPrng.init(@as(u64, @intFromFloat(game.state.game_time * 10000)));
+                                            const rand = prng.random();
 
-                                            renderer.top_color = game.math.Color.initBytes(top, 0, 0, 255).toSlice();
-                                            renderer.bottom_color = game.math.Color.initBytes(bottom, 0, 0, 255).toSlice();
-                                            renderer.hair_color = game.math.Color.initBytes(hair, 0, 0, 255).toSlice();
+                                            if (ecs.get_mut(world, game.state.entities.player, components.CharacterAnimator)) |animator| {
+                                                animator.top_set = if (rand.boolean()) game.animation_sets.top_f_01 else game.animation_sets.top_f_02;
+                                                animator.bottom_set = if (rand.boolean()) game.animation_sets.bottom_f_02 else game.animation_sets.bottom_f_01;
+                                            }
+
+                                            if (ecs.get_mut(world, game.state.entities.player, components.CharacterRenderer)) |renderer| {
+                                                const top = rand.intRangeAtMost(u8, 1, 12);
+                                                const bottom = rand.intRangeAtMost(u8, 1, 12);
+                                                const hair = rand.intRangeAtMost(u8, 1, 12);
+
+                                                renderer.top_color = game.math.Color.initBytes(top, 0, 0, 255).toSlice();
+                                                renderer.bottom_color = game.math.Color.initBytes(bottom, 0, 0, 255).toSlice();
+                                                renderer.hair_color = game.math.Color.initBytes(hair, 0, 0, 255).toSlice();
+                                            }
                                         }
                                     }
                                 }
