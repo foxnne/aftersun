@@ -141,8 +141,8 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         if (width.x < last_width)
                             width.x = last_width;
 
-                        var height_offset: f32 = if (inspect_target == game.state.entities.player) game.settings.pixels_per_unit * 2.0 else game.settings.pixels_per_unit * 1.0;
-                        height_offset *= game.state.camera.zoom;
+                        var height_offset: f32 = if (inspect_target == game.state.entities.player) game.settings.pixels_per_unit * 1.75 else game.settings.pixels_per_unit * 1.0;
+                        height_offset *= game.state.camera.zoom * game.content_scale[1];
 
                         const window_pos: imgui.Vec2 = .{ .x = @trunc(target_screen_position[0] - width.x / 2.0), .y = @trunc(target_screen_position[1] - height_offset) };
                         var bg_color = game.settings.colors.background;

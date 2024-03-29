@@ -17,6 +17,7 @@ pub fn system() ecs.system_desc_t {
 
 pub const FinalUniforms = extern struct {
     mvp: zmath.Mat,
+    inverse_mvp: zmath.Mat,
     output_channel: i32 = 0,
     _pad: u32 = 0,
     mouse: [2]f32 = .{ 0.0, 0.0 },
@@ -25,8 +26,11 @@ pub const FinalUniforms = extern struct {
 pub fn callback(it: *ecs.iter_t) callconv(.C) void {
     if (it.count() > 0) return;
 
+    const mvp = zmath.transpose(zmath.orthographicLh(game.settings.design_size[0], game.settings.design_size[1], -100, 100));
+
     const final_uniforms = FinalUniforms{
-        .mvp = zmath.transpose(zmath.orthographicLh(game.settings.design_size[0], game.settings.design_size[1], -100, 100)),
+        .mvp = mvp,
+        .inverse_mvp = zmath.inverse(mvp),
         .output_channel = @intFromEnum(game.state.output_channel),
         .mouse = game.state.scanner_position,
     };

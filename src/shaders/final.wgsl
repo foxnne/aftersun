@@ -1,5 +1,6 @@
 struct FinalUniforms {
     mvp: mat4x4<f32>,
+    inverse_mvp: mat4x4<f32>,
     output_channel: i32,
     mouse: vec2<f32>,
 }
@@ -63,6 +64,7 @@ struct VertexOut {
     var bloom = textureSample(bloom, light_sampler, uv) * bloom_mask;
 
     var tex_size = textureDimensions(height);
+    var tex_size_f32 = vec2(f32(tex_size.x), f32(tex_size.y));
     var tex_step_y = 1.0 / f32(tex_size.y);
 
     var bottom_uv = vec2(uv.x, uv.y + tex_step_y);
@@ -70,14 +72,19 @@ struct VertexOut {
     var middle = textureSample(height, diffuse_sampler, uv);
     var bottom = textureSample(height, diffuse_sampler, bottom_uv);
 
-    var hightlight = vec4(0.0, 0.0, 0.0, 1.0 );
-
+    var hightlight = vec4(0.0, 0.0, 0.0, 1.0 ); 
         var dist = abs(distance(uv, uniforms.mouse));
         
         if (dist < 0.05) {
             if (bottom.r * 255.0 - middle.r * 255.0 >= 2.0) { 
-                hightlight = environment * (1.0 - dist / 0.05); 
-            }  
+                hightlight = environment * (1.0 - dist / 0.05 ) * data.z; 
+            } 
+            // if (bottom.r * 255.0 == 0) {
+            //     var world_position = vec4(uv * tex_size_f32, 0.0, 1.0) * uniforms.mvp;
+            //     if (world_position.x % 32.0 == 0.0) {
+            //         hightlight = environment * (1.0 - dist / 0.05 ) * data.z; 
+            //     }
+            // }
         }
     
 

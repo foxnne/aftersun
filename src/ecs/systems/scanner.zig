@@ -13,37 +13,25 @@ pub fn system() ecs.system_desc_t {
 }
 
 pub fn run(it: *ecs.iter_t) callconv(.C) void {
-    // Always set state initially to check for camera zoom being at minimum.
-    game.state.scanner_state = game.state.camera.zoom == game.gfx.Camera.minZoom();
+    const scaled_size: [2]f32 = .{ game.settings.design_width * game.state.camera.zoom, game.settings.design_height * game.state.camera.zoom };
+    const size_diff: [2]f32 = .{ @abs(scaled_size[0] - game.window_size[0]), @abs(scaled_size[1] - game.window_size[1]) };
+    const offset: [2]f32 = .{ size_diff[0] / scaled_size[0] / 2.0, size_diff[1] / scaled_size[1] / 2.0 };
 
-    game.state.scanner_position[0] = game.state.mouse.position[0] / game.window_size[0];
-    game.state.scanner_position[1] = game.state.mouse.position[1] / game.window_size[1];
+    const remaining: [2]f32 = .{ 1.0 - offset[0] * 2.0, 1.0 - offset[1] * 2.0 };
 
-    if (imgui.begin("test", null, imgui.WindowFlags_AlwaysAutoResize)) {
-        defer imgui.end();
+    const mouse_x: f32 = game.math.lerp(offset[0], offset[0] + remaining[0], game.state.mouse.position[0] / game.window_size[0]);
+    const mouse_y: f32 = game.math.lerp(offset[1], offset[1] + remaining[1], game.state.mouse.position[1] / game.window_size[1]);
 
-        _ = imgui.inputFloat2("mouse", &game.state.scanner_position);
-    }
+    game.state.scanner_position[0] = mouse_x;
+    game.state.scanner_position[1] = mouse_y;
 
-    if (game.state.hotkeys.hotkey(.scanner)) |hk| {
-        if (hk.pressed()) {
-            game.state.scanner_state = !game.state.scanner_state;
-
-            // if (game.state.scanner_state) {
-            //     game.state.camera.zoom_progress = 0.0;
-            //     game.state.camera.zoom_step = @round(game.state.camera.zoom);
-            //     game.state.camera.zoom_step_next = game.gfx.Camera.minZoom();
-            // } else {
-            //     game.state.camera.zoom_step_next = game.gfx.Camera.maxZoom() - 1.0;
-            //     game.state.camera.zoom_step = @round(game.state.camera.zoom);
-            //     game.state.camera.zoom_progress = 0.0;
-            // }
-        }
+    if (game.state.hotkeys.hotkey(.inspect)) |hk| {
+        game.state.scanner_state = hk.state;
     }
 
     if (game.state.scanner_state or game.state.camera.zoom == game.gfx.Camera.minZoom()) {
         if (game.state.scanner_time < 1.0) {
-            game.state.scanner_time = @min(1.0, game.state.scanner_time + (it.delta_time / 6.0));
+            game.state.scanner_time = @min(1.0, game.state.scanner_time + it.delta_time);
         } else {
             //game.state.scanner_time = 0.0;
         }
