@@ -55,6 +55,8 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
         }
     }
 
+    game.state.scanner_state = inspect;
+
     while (ecs.iter_next(it)) {
         var i: usize = 0;
         while (i < it.count()) : (i += 1) {
@@ -142,7 +144,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                             width.x = last_width;
 
                         var height_offset: f32 = if (inspect_target == game.state.entities.player) game.settings.pixels_per_unit * 1.75 else game.settings.pixels_per_unit * 1.0;
-                        height_offset *= game.state.camera.zoom * game.content_scale[1];
+                        height_offset *= game.state.camera.zoom;
 
                         const window_pos: imgui.Vec2 = .{ .x = @trunc(target_screen_position[0] - width.x / 2.0), .y = @trunc(target_screen_position[1] - height_offset) };
                         var bg_color = game.settings.colors.background;

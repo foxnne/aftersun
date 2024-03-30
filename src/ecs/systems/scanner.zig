@@ -25,10 +25,6 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
     game.state.scanner_position[0] = mouse_x;
     game.state.scanner_position[1] = mouse_y;
 
-    if (game.state.hotkeys.hotkey(.inspect)) |hk| {
-        game.state.scanner_state = hk.state;
-    }
-
     if (game.state.scanner_state) {
         if (game.state.scanner_time < 1.0) {
             game.state.scanner_time = @min(1.0, game.state.scanner_time + it.delta_time);
