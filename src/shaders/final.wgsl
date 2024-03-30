@@ -65,28 +65,33 @@ struct VertexOut {
 
     var tex_size = textureDimensions(height);
     var tex_size_f32 = vec2(f32(tex_size.x), f32(tex_size.y));
+    var tex_step_x = 1.0 / f32(tex_size.x);
     var tex_step_y = 1.0 / f32(tex_size.y);
 
     var bottom_uv = vec2(uv.x, uv.y + tex_step_y);
+    var right_uv = vec2(uv.x + tex_step_x, uv.y);
+    var left_uv = vec2(uv.x - tex_step_x, uv.y);
 
     var middle = textureSample(height, diffuse_sampler, uv);
     var bottom = textureSample(height, diffuse_sampler, bottom_uv);
+    var right = textureSample(height, diffuse_sampler, right_uv);
+    var left = textureSample(height, diffuse_sampler, left_uv);
 
     var hightlight = vec4(0.0, 0.0, 0.0, 1.0 ); 
         var dist = abs(distance(uv, uniforms.mouse));
+
+        var radius = 0.03;
         
-        if (dist < 0.05) {
-            if (bottom.r * 255.0 - middle.r * 255.0 >= 2.0) { 
-                hightlight = environment * (1.0 - dist / 0.05 ) * data.z; 
+        if (dist < radius) {
+
+            var bottom_check = bottom.r * 255.0 - middle.r * 255.0 >= 2.0;
+            var left_check = left.r * 255.0 - middle.r * 255.0 >= 2.0;
+            var right_check = right.r * 255.0 - middle.r * 255.0 >= 2.0;
+        
+            if (bottom_check || right_check || left_check) { 
+                hightlight = environment * (1.0 - dist / radius ) * data.z; 
             } 
-            // if (bottom.r * 255.0 == 0) {
-            //     var world_position = vec4(uv * tex_size_f32, 0.0, 1.0) * uniforms.mvp;
-            //     if (world_position.x % 32.0 == 0.0) {
-            //         hightlight = environment * (1.0 - dist / 0.05 ) * data.z; 
-            //     }
-            // }
         }
-    
 
     var render = (reflection + diffuse * (1.0 - reflection.a)) * environment * color + bloom + hightlight;
     return render;

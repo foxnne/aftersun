@@ -29,7 +29,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
         game.state.scanner_state = hk.state;
     }
 
-    if (game.state.scanner_state or game.state.camera.zoom == game.gfx.Camera.minZoom()) {
+    if (game.state.scanner_state) {
         if (game.state.scanner_time < 1.0) {
             game.state.scanner_time = @min(1.0, game.state.scanner_time + it.delta_time);
         } else {

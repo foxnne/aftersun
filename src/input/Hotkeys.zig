@@ -72,7 +72,7 @@ pub fn hotkey(self: *Self, action: Action) ?*Hotkey {
 pub fn setHotkeyState(self: *Self, k: Key, mods: Mods, state: KeyState) void {
     for (self.hotkeys) |*hk| {
         if (hk.key == k) {
-            if (state == .release or (hk.mods == null and @as(u8, @bitCast(mods)) == 0)) {
+            if (state == .release or hk.mods == null) {
                 hk.previous_state = hk.state;
                 hk.state = switch (state) {
                     .release => false,

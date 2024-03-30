@@ -123,7 +123,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                     }
                 }
 
-                if (inspect_target != 0) {
+                if (inspect_target != 0 and ecs.is_alive(world, inspect_target)) {
                     if (ecs.get(world, inspect_target, components.Position)) |target_tile_position| {
                         //const target_tile_position = mouse_tile.toPosition(.position).toF32x4();
                         const target_screen_position = game.state.camera.worldToScreen(target_tile_position.toF32x4());
@@ -194,11 +194,8 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                     if (useable) {
                                         if (imgui.buttonEx(if (ecs.has_id(world, inspect_target, ecs.id(components.Consumeable))) "Consume" else "Use", .{ .x = -1.0, .y = 0.0 })) {
                                             _ = ecs.set_pair(world, game.state.entities.player, ecs.id(components.Request), ecs.id(components.Use), components.Use, .{ .target = mouse_tile });
-                                            inspect = false;
                                         }
-                                        if (imgui.buttonEx("Use with", .{ .x = -1.0, .y = 0.0 })) {
-                                            inspect = false;
-                                        }
+                                        if (imgui.buttonEx("Use with", .{ .x = -1.0, .y = 0.0 })) {}
                                     }
 
                                     if (inspect_target == game.state.entities.player) {
