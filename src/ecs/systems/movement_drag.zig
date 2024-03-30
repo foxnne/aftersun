@@ -89,7 +89,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                     };
                                     if (count < stack.count) {
                                         const clone = ecs.new_id(world);
-                                        _ = ecs.clone(world, clone, target, false);
+                                        _ = ecs.clone(world, clone, target, true);
                                         _ = ecs.set(world, clone, components.Stack, .{ .count = count, .max = stack.max });
                                         _ = ecs.set(world, target, components.Stack, .{ .count = stack.count - count, .max = stack.max });
                                         _ = ecs.set_pair(world, clone, ecs.id(components.Request), ecs.id(components.Movement), components.Movement, .{ .start = drags[i].start, .end = drags[i].end, .curve = .sin });

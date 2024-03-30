@@ -143,10 +143,9 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                         if (width.x < last_width)
                             width.x = last_width;
 
-                        var height_offset: f32 = if (inspect_target == game.state.entities.player) game.settings.pixels_per_unit * 1.75 else game.settings.pixels_per_unit * 1.0;
-                        height_offset *= game.state.camera.zoom;
+                        const height_offset: f32 = if (inspect_target == game.state.entities.player) 24.0 else 24.0;
 
-                        const window_pos: imgui.Vec2 = .{ .x = @trunc(target_screen_position[0] - width.x / 2.0), .y = @trunc(target_screen_position[1] - height_offset) };
+                        const window_pos: imgui.Vec2 = .{ .x = @trunc(target_screen_position[0] - width.x / 2.0), .y = @trunc(target_screen_position[1] - height_offset - imgui.getTextLineHeightWithSpacing()) };
                         var bg_color = game.settings.colors.background;
                         bg_color.value[3] = std.math.clamp(inspect_time * game.settings.colors.background.value[3], 0.0, 1.0);
 
