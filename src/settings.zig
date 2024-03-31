@@ -43,8 +43,8 @@ pub const camera_follow_speed = 0.8;
 pub const font_size: f32 = 13.0;
 
 pub const colors = struct {
-    pub const background = Color.initBytes(34, 35, 42, 185);
-    pub const foreground = Color.initBytes(42, 44, 54, 185);
+    pub const background = Color.initBytes(34, 35, 54, 150);
+    pub const foreground = Color.initBytes(42, 44, 54, 150);
     pub const text = Color.initBytes(230, 175, 137, 255);
 
     pub const text_secondary = Color.initBytes(159, 159, 176, 255);

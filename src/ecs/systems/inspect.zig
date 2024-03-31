@@ -147,13 +147,17 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 
                         const window_pos: imgui.Vec2 = .{ .x = @trunc(target_screen_position[0] - width.x / 2.0), .y = @trunc(target_screen_position[1] - height_offset - imgui.getTextLineHeightWithSpacing()) };
                         var bg_color = game.settings.colors.background;
+                        bg_color.value *= game.state.environment.ambientColor().value;
                         bg_color.value[3] = std.math.clamp(inspect_time * game.settings.colors.background.value[3], 0.0, 1.0);
 
                         var text_color = game.settings.colors.text;
                         text_color.value[3] = std.math.clamp(inspect_time * game.settings.colors.text.value[3], 0.0, 1.0);
 
+                        imgui.pushStyleColorImVec4(imgui.Col_Button, bg_color.toImguiVec4());
                         imgui.pushStyleColorImVec4(imgui.Col_WindowBg, bg_color.toImguiVec4());
                         imgui.pushStyleColorImVec4(imgui.Col_Text, text_color.toImguiVec4());
+
+                        defer imgui.popStyleColor();
 
                         imgui.setNextWindowPos(window_pos, imgui.Cond_Always);
                         const flags: imgui.WindowFlags = imgui.WindowFlags_AlwaysAutoResize | imgui.WindowFlags_NoDecoration;
