@@ -64,7 +64,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
             var counter: u64 = 0;
             var target_entity: ?ecs.entity_t = null;
 
-            if (!imgui.isWindowHovered(imgui.HoveredFlags_AnyWindow)) {
+            if (!imgui.isWindowHovered(imgui.HoveredFlags_AnyWindow) and !imgui.isAnyItemHovered()) {
                 const mouse = game.state.mouse.tile();
                 inspect_tile = .{
                     .x = mouse[0],
@@ -185,8 +185,6 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                 imgui.text(indexed_text);
                             }
 
-                            //imgui.popStyleColorEx(2);
-
                             if (inspect_time > 0.0) {
                                 const useable = ecs.has_id(world, inspect_target, ecs.id(components.Useable));
 
@@ -196,7 +194,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                     imgui.pushStyleColorImVec4(imgui.Col_WindowBg, .{ .x = 0.0, .y = 0.0, .z = 0.0, .w = 0.0 });
                                     defer imgui.popStyleColor();
 
-                                    imgui.pushStyleVarImVec2(imgui.StyleVar_WindowPadding, .{ .x = 15.0, .y = 15.0 });
+                                    imgui.pushStyleVarImVec2(imgui.StyleVar_WindowPadding, .{ .x = 20.0, .y = 20.0 });
                                     defer imgui.popStyleVar();
 
                                     imgui.setNextWindowSize(.{ .x = 120, .y = 0.0 }, imgui.Cond_None);
@@ -208,7 +206,9 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                             if (imgui.buttonEx(if (ecs.has_id(world, inspect_target, ecs.id(components.Consumeable))) "Consume" else "Use", .{ .x = -1.0, .y = 0.0 })) {
                                                 _ = ecs.set_pair(world, game.state.entities.player, ecs.id(components.Request), ecs.id(components.Use), components.Use, .{ .target = mouse_tile.* });
                                             }
-                                            if (imgui.buttonEx("Use with", .{ .x = -1.0, .y = 0.0 })) {}
+                                            if (imgui.buttonEx("Use with", .{ .x = -1.0, .y = 0.0 })) {
+                                                std.log.debug("test", .{});
+                                            }
                                         }
 
                                         if (inspect_target == game.state.entities.player) {
