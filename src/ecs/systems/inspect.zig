@@ -198,7 +198,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                     defer imgui.popStyleVar();
 
                                     imgui.setNextWindowSize(.{ .x = 120, .y = 0.0 }, imgui.Cond_None);
-                                    imgui.setNextWindowPos(.{ .x = target_screen_position[0] + game.settings.pixels_per_unit / 2.0 * game.state.camera.zoom / 2.0, .y = target_screen_position[1] }, imgui.Cond_Always);
+                                    imgui.setNextWindowPos(.{ .x = @trunc(target_screen_position[0] + game.settings.pixels_per_unit / 2.0 * game.state.camera.zoom / 2.0), .y = @trunc(target_screen_position[1]) }, imgui.Cond_Always);
                                     if (imgui.begin("ChoiceDialog", null, flags)) {
                                         defer imgui.end();
 
@@ -206,9 +206,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                                             if (imgui.buttonEx(if (ecs.has_id(world, inspect_target, ecs.id(components.Consumeable))) "Consume" else "Use", .{ .x = -1.0, .y = 0.0 })) {
                                                 _ = ecs.set_pair(world, game.state.entities.player, ecs.id(components.Request), ecs.id(components.Use), components.Use, .{ .target = mouse_tile.* });
                                             }
-                                            if (imgui.buttonEx("Use with", .{ .x = -1.0, .y = 0.0 })) {
-                                                std.log.debug("test", .{});
-                                            }
+                                            if (imgui.buttonEx("Use with", .{ .x = -1.0, .y = 0.0 })) {}
                                         }
 
                                         if (inspect_target == game.state.entities.player) {
