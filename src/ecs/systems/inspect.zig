@@ -272,9 +272,9 @@ fn createExamineText(allocator: std.mem.Allocator, target: ecs.entity_t) [:0]u8 
                 else => "a",
             };
 
-            return std.fmt.allocPrintZ(game.state.allocator, "{s} {s} {s}.", .{ prefix, quantifier, fixed_name }) catch unreachable;
+            return std.fmt.allocPrintZ(allocator, "{s} {s} {s}.", .{ prefix, quantifier, fixed_name }) catch unreachable;
         } else {
-            return std.fmt.allocPrintZ(game.state.allocator, "{s} {s}.", .{ prefix, fixed_name }) catch unreachable;
+            return std.fmt.allocPrintZ(allocator, "{s} {s}.", .{ prefix, fixed_name }) catch unreachable;
         }
     }
 }

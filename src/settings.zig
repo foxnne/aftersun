@@ -16,7 +16,7 @@ pub const design_size = zmath.f32x4(@floatFromInt(design_width), @floatFromInt(d
 pub const max_zoom_offset: f32 = 2.0;
 
 /// How quickly the camera will zoom to the next step.
-pub const zoom_speed: f32 = 2.0;
+pub const zoom_speed: f32 = 1.5;
 
 /// The scroll offset required to trigger a zoom step.
 pub const zoom_scroll_tolerance: f32 = 0.2;
@@ -35,16 +35,16 @@ pub const batcher_max_sprites = 40000;
 pub const cell_size = 24;
 
 /// Maximum number of tiles visible either in width or height.
-pub const max_visible_tiles: f32 = cell_size * 2.0 - 5.0;
+pub const max_visible_tiles: f32 = cell_size * 1.2;
 
 /// Speed at which the camera will lerp to new velocity.
-pub const camera_follow_speed = 0.8;
+pub const camera_follow_speed = 0.5;
 
 pub const font_size: f32 = 13.0;
 
 pub const colors = struct {
-    pub const background = Color.initBytes(34, 35, 54, 150);
-    pub const foreground = Color.initBytes(42, 44, 54, 150);
+    pub const background = Color.initBytes(34, 35, 54, 175);
+    pub const foreground = Color.initBytes(42, 44, 54, 175);
     pub const text = Color.initBytes(230, 175, 137, 255);
 
     pub const text_secondary = Color.initBytes(159, 159, 176, 255);
