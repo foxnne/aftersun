@@ -42,9 +42,9 @@ struct VertexOut {
 
 fn vignette(color: vec4<f32>, uv: vec2<f32>) -> vec4<f32> {
     // Inner radius
-    var inner = 0.4;
+    var inner = 0.7;
     // Outer radius
-    var outer = 1.3;
+    var outer = 1.2;
     // Vignette strength/intensity
     var strength = 0.5;
     // Vignette roundness, higher = smoother, lower = sharper
