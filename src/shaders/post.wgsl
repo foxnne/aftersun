@@ -1,7 +1,7 @@
-struct Uniforms {
+struct PostUniforms {
     mvp: mat4x4<f32>,
 }
-@group(0) @binding(0) var<uniform> uniforms: Uniforms;
+@group(0) @binding(0) var<uniform> uniforms: PostUniforms;
 
 struct VertexOut {
     @builtin(position) position_clip: vec4<f32>,
@@ -35,8 +35,29 @@ struct VertexOut {
     var render = tiltshift(texture, texture_sampler, uv);
 
     render = desaturate(render, 0.0);
+    render = vignette(render, uv);
 
     return render;
+}
+
+fn vignette(color: vec4<f32>, uv: vec2<f32>) -> vec4<f32> {
+    // Inner radius
+    var inner = 0.4;
+    // Outer radius
+    var outer = 1.3;
+    // Vignette strength/intensity
+    var strength = 0.5;
+    // Vignette roundness, higher = smoother, lower = sharper
+    var curvature = 0.3;
+    
+    // Calculate edge curvature
+    var curve = pow(abs(uv * 2.0 - 1.0), vec2(1.0 / curvature));
+    // Compute distance to edge
+    var edge = pow(length(curve), curvature);
+    // Compute vignette gradient and intensity
+    var vignette = 1.0 - strength * smoothstep(inner,outer,edge);
+
+    return color * vignette;
 }
 
 fn desaturate(color: vec4<f32>, factor: f32) -> vec4<f32> {
@@ -46,9 +67,9 @@ fn desaturate(color: vec4<f32>, factor: f32) -> vec4<f32> {
 }
 
 fn tiltshift(texture: texture_2d<f32>, sampl: sampler, uv: vec2<f32> ) -> vec4<f32> {
-    var bluramount  = 1.0;
+    var bluramount  = 0.5;
     var center      = 1.0;
-    var stepSize    = 0.004;
+    var stepSize    = 0.002;
     var steps       = 6.0;
 
     var minOffs     = (steps-1.0) / -2.0;

@@ -449,7 +449,7 @@ pub fn init(state: *game.GameState) !void {
         }),
     );
 
-    state.bind_group_post = core.device.createBindGroup(
+    state.bind_group_framebuffer = core.device.createBindGroup(
         &gpu.BindGroup.Descriptor.init(.{
             .layout = pipeline_layout_default,
             .entries = &.{
@@ -459,6 +459,20 @@ pub fn init(state: *game.GameState) !void {
                     gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
                 gpu.BindGroup.Entry.textureView(1, state.final_output.view_handle),
                 gpu.BindGroup.Entry.sampler(2, state.final_output.sampler_handle),
+            },
+        }),
+    );
+
+    state.bind_group_post = core.device.createBindGroup(
+        &gpu.BindGroup.Descriptor.init(.{
+            .layout = pipeline_layout_default,
+            .entries = &.{
+                if (build_options.use_sysgpu)
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject), 0)
+                else
+                    gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(UniformBufferObject)),
+                gpu.BindGroup.Entry.textureView(1, state.framebuffer_output.view_handle),
+                gpu.BindGroup.Entry.sampler(2, state.framebuffer_output.sampler_handle),
             },
         }),
     );

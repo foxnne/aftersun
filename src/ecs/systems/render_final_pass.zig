@@ -23,6 +23,10 @@ pub const FinalUniforms = extern struct {
     mouse: [2]f32 = .{ 0.0, 0.0 },
 };
 
+pub const PostUniforms = extern struct {
+    mvp: zmath.Mat,
+};
+
 pub fn callback(it: *ecs.iter_t) callconv(.C) void {
     if (it.count() > 0) return;
 
@@ -48,7 +52,23 @@ pub fn callback(it: *ecs.iter_t) callconv(.C) void {
 
     game.state.batcher.end(final_uniforms, game.state.uniform_buffer_final) catch unreachable;
 
-    const post_uniforms = game.gfx.UniformBufferObject{ .mvp = zmath.transpose(game.state.camera.frameBufferMatrix()) };
+    const post_uniforms: PostUniforms = .{ .mvp = zmath.transpose(game.state.camera.frameBufferMatrix()) };
+
+    game.state.batcher.begin(.{
+        .pipeline_handle = game.state.pipeline_default,
+        .bind_group_handle = game.state.bind_group_framebuffer,
+        .clear_color = game.math.Color.initBytes(0, 0, 0, 255).toGpuColor(),
+        .output_handle = game.state.framebuffer_output.view_handle,
+    }) catch unreachable;
+
+    game.state.batcher.texture(zmath.f32x4s(0), &game.state.final_output, .{}) catch unreachable;
+
+    game.state.batcher.end(post_uniforms, game.state.uniform_buffer_default) catch unreachable;
+
+    const fb_ortho: zmath.Mat = zmath.orthographicLh(game.framebuffer_size[0], game.framebuffer_size[1], -100, 100);
+    const fb_translation = zmath.translation(-game.framebuffer_size[0] / 2, -game.framebuffer_size[1] / 2, 1);
+
+    const framebuffer_uniforms: PostUniforms = .{ .mvp = zmath.transpose(zmath.mul(fb_translation, fb_ortho)) };
 
     game.state.batcher.begin(.{
         .pipeline_handle = game.state.pipeline_post,
@@ -56,7 +76,7 @@ pub fn callback(it: *ecs.iter_t) callconv(.C) void {
         .clear_color = game.math.Color.initBytes(0, 0, 0, 255).toGpuColor(),
     }) catch unreachable;
 
-    game.state.batcher.texture(zmath.f32x4s(0), &game.state.final_output, .{}) catch unreachable;
+    game.state.batcher.texture(zmath.f32x4s(0), &game.state.framebuffer_output, .{}) catch unreachable;
 
-    game.state.batcher.end(post_uniforms, game.state.uniform_buffer_default) catch unreachable;
+    game.state.batcher.end(framebuffer_uniforms, game.state.uniform_buffer_default) catch unreachable;
 }

@@ -95,6 +95,7 @@ pub const GameState = struct {
     bind_group_light: *gpu.BindGroup = undefined,
     bind_group_final: *gpu.BindGroup = undefined,
     bind_group_post: *gpu.BindGroup = undefined,
+    bind_group_framebuffer: *gpu.BindGroup = undefined,
     blur_params_buffer: *gpu.Buffer = undefined,
     compute_constants: *gpu.BindGroup = undefined,
     bind_group_compute_0: *gpu.BindGroup = undefined,
@@ -114,6 +115,7 @@ pub const GameState = struct {
     glow_output: gfx.Texture = undefined,
     bloom_h_output: gfx.Texture = undefined,
     bloom_output: gfx.Texture = undefined,
+    framebuffer_output: gfx.Texture = undefined,
     reverse_height_output: gfx.Texture = undefined,
     environment_output: gfx.Texture = undefined,
     light_output: gfx.Texture = undefined,
@@ -213,6 +215,8 @@ pub fn init(app: *App) !void {
         .filter = .linear,
         .format = core.descriptor.format,
     });
+
+    state.framebuffer_output = try gfx.Texture.createEmpty(descriptor.width, descriptor.height, .{ .format = core.descriptor.format });
 
     state.final_output = try gfx.Texture.createEmpty(settings.design_width, settings.design_height, .{ .format = core.descriptor.format });
 
@@ -448,6 +452,25 @@ pub fn update(app: *App) !bool {
             .framebuffer_resize => |size| {
                 framebuffer_size[0] = @floatFromInt(size.width);
                 framebuffer_size[1] = @floatFromInt(size.height);
+
+                state.framebuffer_output.deinit();
+                state.framebuffer_output = gfx.Texture.createEmpty(size.width, size.height, .{ .format = core.descriptor.format }) catch unreachable;
+
+                state.bind_group_post.release();
+                state.bind_group_post = core.device.createBindGroup(
+                    &gpu.BindGroup.Descriptor.init(.{
+                        .layout = state.pipeline_default.getBindGroupLayout(0),
+                        .entries = &.{
+                            if (build_options.use_sysgpu)
+                                gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(gfx.UniformBufferObject), 0)
+                            else
+                                gpu.BindGroup.Entry.buffer(0, state.uniform_buffer_default, 0, @sizeOf(gfx.UniformBufferObject)),
+                            gpu.BindGroup.Entry.textureView(1, state.framebuffer_output.view_handle),
+                            gpu.BindGroup.Entry.sampler(2, state.framebuffer_output.sampler_handle),
+                        },
+                    }),
+                );
+
                 window_size[0] = @floatFromInt(core.size().width);
                 window_size[1] = @floatFromInt(core.size().height);
                 content_scale = .{
@@ -583,6 +606,7 @@ pub fn deinit(_: *App) void {
     state.bind_group_post.release();
     state.bind_group_reflection.release();
     state.bind_group_light.release();
+    state.bind_group_framebuffer.release();
 
     state.uniform_buffer_default.release();
     state.uniform_buffer_environment.release();
@@ -604,6 +628,7 @@ pub fn deinit(_: *App) void {
     state.final_output.deinit();
     state.reflection_output.deinit();
     state.temp_output.deinit();
+    state.framebuffer_output.deinit();
 
     state.allocator.free(state.atlas.sprites);
     state.allocator.free(state.atlas.animations);

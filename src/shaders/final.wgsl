@@ -90,8 +90,10 @@ struct VertexOut {
     
         if (bottom_check || right_check || left_check) { 
             var fade = (1.0 - dist / radius ) * data.z;
+
+
             //highlight = environment * (1.0 - dist / radius ) * data.z;
-            highlight = (vec4(255, 82, 83, 255) / vec4(255.0, 255.0, 255.0, 255.0)) * (environment + vec4(0.2, 0.2, 0.2, 1.0));
+            highlight = (vec4(1.0, 0.32, 0.33, 1.0)) * (environment + vec4(0.2, 0.2, 0.2, 1.0));
             return (highlight * fade) + ((reflection + diffuse * (1.0 - reflection.a)) * environment * color + bloom) * (1.0 - fade);
         } 
     }
