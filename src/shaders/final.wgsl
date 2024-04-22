@@ -77,22 +77,25 @@ struct VertexOut {
     var right = textureSample(height, diffuse_sampler, right_uv);
     var left = textureSample(height, diffuse_sampler, left_uv);
 
-    var hightlight = vec4(0.0, 0.0, 0.0, 1.0 ); 
-        var dist = abs(distance(uv, uniforms.mouse));
+    var highlight = vec4(0.0, 0.0, 0.0, 1.0 ); 
+    var dist = abs(distance(uv, uniforms.mouse));
 
-        var radius = 0.03;
-        
-        if (dist < radius) {
+    var radius = 0.05 * data.z;
+    
+    if (dist < radius) {
 
-            var bottom_check = bottom.r * 255.0 - middle.r * 255.0 >= 2.0;
-            var left_check = left.r * 255.0 - middle.r * 255.0 >= 2.0;
-            var right_check = right.r * 255.0 - middle.r * 255.0 >= 2.0;
-        
-            if (bottom_check || right_check || left_check) { 
-                hightlight = environment * (1.0 - dist / radius ) * data.z; 
-            } 
-        }
+        var bottom_check = bottom.r * 255.0 - middle.r * 255.0 >= 2.0;
+        var left_check = left.r * 255.0 - middle.r * 255.0 >= 2.0;
+        var right_check = right.r * 255.0 - middle.r * 255.0 >= 2.0;
+    
+        if (bottom_check || right_check || left_check) { 
+            var fade = (1.0 - dist / radius ) * data.z;
+            //highlight = environment * (1.0 - dist / radius ) * data.z;
+            highlight = (vec4(255, 82, 83, 255) / vec4(255.0, 255.0, 255.0, 255.0)) * (environment + vec4(0.2, 0.2, 0.2, 1.0));
+            return (highlight * fade) + ((reflection + diffuse * (1.0 - reflection.a)) * environment * color + bloom) * (1.0 - fade);
+        } 
+    }
 
-    var render = (reflection + diffuse * (1.0 - reflection.a)) * environment * color + bloom + hightlight;
+    var render = (reflection + diffuse * (1.0 - reflection.a)) * environment * color + bloom;
     return render;
 }

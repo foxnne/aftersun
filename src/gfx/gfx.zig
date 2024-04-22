@@ -500,19 +500,19 @@ pub fn init(state: *game.GameState) !void {
     state.fonts.fa_standard_regular = io.fonts.?.addFontFromFileTTF(game.assets.root ++ "fonts/fa-regular-400.ttf", game.settings.font_size * game.content_scale[1], &fa_config, @ptrCast(ranges.ptr)).?;
 
     var style = imgui.getStyle();
-    style.window_rounding = 6.0;
-    style.popup_rounding = 6.0;
-    style.tab_rounding = 6.0;
-    style.frame_rounding = 6.0;
-    style.grab_rounding = 6.0;
+    style.window_rounding = 2.0;
+    style.popup_rounding = 2.0;
+    style.tab_rounding = 2.0;
+    style.frame_rounding = 2.0;
+    style.grab_rounding = 4.0;
     style.window_padding = .{ .x = 5.0, .y = 5.0 };
     style.item_spacing = .{ .x = 4.0, .y = 4.0 };
     style.item_inner_spacing = .{ .x = 3.0, .y = 3.0 };
     style.window_menu_button_position = 0;
-    style.window_title_align = .{ .x = 0.5, .y = 0.5 };
+    style.window_title_align = .{ .x = 0.0, .y = 0.5 };
     style.grab_min_size = 6.5;
     style.scrollbar_size = 12;
-    style.frame_padding = .{ .x = 4.0, .y = 4.0 };
+    style.frame_padding = .{ .x = 2.0, .y = 2.0 };
     style.hover_stationary_delay = 0.35;
     style.hover_delay_normal = 0.5;
     style.hover_delay_short = 0.25;
@@ -532,15 +532,16 @@ pub fn init(state: *game.GameState) !void {
     const highlight_primary = game.settings.colors.highlight_primary.toImguiVec4();
     const hover_primary = game.settings.colors.hover_primary.toImguiVec4();
     const highlight_secondary = game.settings.colors.highlight_secondary.toImguiVec4();
+    _ = highlight_secondary; // autofix
     const hover_secondary = game.settings.colors.hover_secondary.toImguiVec4();
+    _ = hover_secondary; // autofix
 
     style.colors[imgui.Col_WindowBg] = bg;
     style.colors[imgui.Col_Border] = bg;
-    style.colors[imgui.Col_Border] = fg;
-    style.colors[imgui.Col_MenuBarBg] = fg;
+    style.colors[imgui.Col_MenuBarBg] = text;
     style.colors[imgui.Col_Separator] = bg_text;
-    style.colors[imgui.Col_TitleBg] = fg;
-    style.colors[imgui.Col_TitleBgActive] = fg;
+    style.colors[imgui.Col_TitleBg] = text;
+    style.colors[imgui.Col_TitleBgActive] = text;
     style.colors[imgui.Col_Tab] = fg;
     style.colors[imgui.Col_TabUnfocused] = fg;
     style.colors[imgui.Col_TabUnfocusedActive] = fg;
@@ -555,10 +556,10 @@ pub fn init(state: *game.GameState) !void {
     style.colors[imgui.Col_ScrollbarGrabHovered] = hover_primary;
     style.colors[imgui.Col_ScrollbarBg] = bg;
     style.colors[imgui.Col_ScrollbarGrab] = fg;
-    style.colors[imgui.Col_Header] = highlight_secondary;
-    style.colors[imgui.Col_HeaderHovered] = hover_secondary;
-    style.colors[imgui.Col_HeaderActive] = highlight_secondary;
-    style.colors[imgui.Col_Button] = fg;
-    style.colors[imgui.Col_ButtonHovered] = hover_secondary;
-    style.colors[imgui.Col_ButtonActive] = highlight_secondary;
+    style.colors[imgui.Col_Header] = text;
+    style.colors[imgui.Col_HeaderHovered] = text;
+    style.colors[imgui.Col_HeaderActive] = text;
+    style.colors[imgui.Col_Button] = text;
+    style.colors[imgui.Col_ButtonHovered] = text;
+    style.colors[imgui.Col_ButtonActive] = text;
 }

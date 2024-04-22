@@ -33,6 +33,7 @@ pub fn system(world: *ecs.world_t) ecs.system_desc_t {
 
 var inspect_tile: ?components.Tile = null;
 var inspect_time: f32 = 0.0;
+var time: f32 = 0.0;
 var inspect_target: ecs.entity_t = 0;
 var last_width: f32 = 0.0;
 var secondary: bool = false;
@@ -128,79 +129,108 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                             secondary = false;
                         }
                     }
+                    if (inspect_time > 0.0) {
+                        if (inspect_target != 0 and ecs.is_alive(world, inspect_target)) {
+                            if (ecs.get(world, inspect_target, components.Position)) |target_tile_position| {
+                                //const target_tile_position = mouse_tile.toPosition(.position).toF32x4();
 
-                    if (inspect_target != 0 and ecs.is_alive(world, inspect_target)) {
-                        if (ecs.get(world, inspect_target, components.Position)) |target_tile_position| {
-                            //const target_tile_position = mouse_tile.toPosition(.position).toF32x4();
+                                const target_screen_position = game.state.camera.worldToScreen(target_tile_position.toF32x4());
 
-                            const target_screen_position = game.state.camera.worldToScreen(target_tile_position.toF32x4());
+                                const examine_text = createExamineText(game.state.allocator, inspect_target);
+                                defer game.state.allocator.free(examine_text);
 
-                            const examine_text = createExamineText(game.state.allocator, inspect_target);
-                            defer game.state.allocator.free(examine_text);
+                                const index: usize = std.math.clamp(@as(usize, @intFromFloat(@as(f32, @floatFromInt(examine_text.len)) * inspect_time)), 1, examine_text.len);
 
-                            const index: usize = std.math.clamp(@as(usize, @intFromFloat(@as(f32, @floatFromInt(examine_text.len)) * inspect_time)), 1, examine_text.len);
+                                const indexed_text = std.fmt.allocPrintZ(game.state.allocator, "{s}", .{examine_text[0..index]}) catch unreachable;
+                                defer game.state.allocator.free(indexed_text);
 
-                            const indexed_text = std.fmt.allocPrintZ(game.state.allocator, "{s}", .{examine_text[0..index]}) catch unreachable;
-                            defer game.state.allocator.free(indexed_text);
+                                var width = imgui.calcTextSize(indexed_text);
 
-                            var width = imgui.calcTextSize(indexed_text);
+                                if (width.x < last_width)
+                                    width.x = last_width;
 
-                            if (width.x < last_width)
-                                width.x = last_width;
+                                const height_offset: f32 = if (inspect_target == game.state.entities.player) 48.0 else 48.0;
 
-                            const height_offset: f32 = if (inspect_target == game.state.entities.player) 24.0 else 24.0;
+                                const window_pos: imgui.Vec2 = .{ .x = @trunc(target_screen_position[0] - width.x / 2.0), .y = @trunc(target_screen_position[1] - height_offset - imgui.getTextLineHeightWithSpacing()) };
+                                var bg_color = game.settings.colors.background;
+                                bg_color.value *= game.state.environment.ambientColor().value;
+                                bg_color.value[3] = std.math.clamp(inspect_time * game.settings.colors.background.value[3], 0.0, 1.0);
 
-                            const window_pos: imgui.Vec2 = .{ .x = @trunc(target_screen_position[0] - width.x / 2.0), .y = @trunc(target_screen_position[1] - height_offset - imgui.getTextLineHeightWithSpacing()) };
-                            var bg_color = game.settings.colors.background;
-                            bg_color.value *= game.state.environment.ambientColor().value;
-                            bg_color.value[3] = std.math.clamp(inspect_time * game.settings.colors.background.value[3], 0.0, 1.0);
+                                var text_color = game.settings.colors.text;
+                                text_color.value[3] = std.math.clamp(inspect_time * game.settings.colors.text.value[3], 0.0, 1.0);
 
-                            var text_color = game.settings.colors.text;
-                            text_color.value[3] = std.math.clamp(inspect_time * game.settings.colors.text.value[3], 0.0, 1.0);
+                                const im_text_color = text_color.toImguiVec4();
 
-                            imgui.pushStyleColorImVec4(imgui.Col_Button, bg_color.toImguiVec4());
-                            imgui.pushStyleColorImVec4(imgui.Col_Text, text_color.toImguiVec4());
-                            imgui.pushStyleColorImVec4(imgui.Col_WindowBg, bg_color.toImguiVec4());
+                                imgui.pushStyleColorImVec4(imgui.Col_Button, im_text_color);
+                                imgui.pushStyleColorImVec4(imgui.Col_ButtonHovered, .{ .x = im_text_color.x, .y = im_text_color.y, .z = im_text_color.z, .w = 1.0 });
+                                imgui.pushStyleColorImVec4(imgui.Col_WindowBg, bg_color.toImguiVec4());
+                                imgui.pushStyleColorImVec4(imgui.Col_Border, im_text_color);
+                                imgui.pushStyleColorImVec4(imgui.Col_Text, bg_color.toImguiVec4());
 
-                            defer imgui.popStyleColorEx(3);
+                                imgui.pushStyleVar(imgui.StyleVar_WindowBorderSize, 1.0);
+                                defer imgui.popStyleVar();
 
-                            imgui.setNextWindowPos(window_pos, imgui.Cond_Always);
-                            const flags: imgui.WindowFlags = imgui.WindowFlags_AlwaysAutoResize | imgui.WindowFlags_NoDecoration;
-                            if (imgui.begin("InspectDialog", null, flags)) {
-                                defer imgui.end();
+                                defer imgui.popStyleColorEx(5);
 
-                                last_width = imgui.getWindowWidth();
+                                imgui.setNextWindowPos(window_pos, imgui.Cond_Always);
+                                const flags: imgui.WindowFlags = imgui.WindowFlags_AlwaysAutoResize | imgui.WindowFlags_NoCollapse;
+                                if (imgui.begin("Scan...##InspectWindow", null, flags)) {
+                                    defer imgui.end();
 
-                                if (imgui.getForegroundDrawList()) |draw_list| {
-                                    draw_list.pushClipRectFullScreen();
-                                    defer draw_list.popClipRect();
+                                    imgui.popStyleColor();
+                                    imgui.pushStyleColorImVec4(imgui.Col_Text, im_text_color);
 
-                                    draw_list.addTriangleFilled(
-                                        .{ .x = @trunc(window_pos.x + imgui.getWindowWidth() / 2.0 - 5.0), .y = @trunc(window_pos.y + imgui.getWindowHeight() + 0.5) },
-                                        .{ .x = @trunc(window_pos.x + imgui.getWindowWidth() / 2.0), .y = @trunc(window_pos.y + imgui.getWindowHeight() + 8.5) },
-                                        .{ .x = @trunc(window_pos.x + 5.0 + imgui.getWindowWidth() / 2.0), .y = @trunc(window_pos.y + imgui.getWindowHeight() + 0.5) },
-                                        bg_color.toU32(),
-                                    );
+                                    last_width = imgui.getWindowWidth();
+
+                                    if (imgui.getForegroundDrawList()) |draw_list| {
+                                        draw_list.pushClipRectFullScreen();
+                                        defer draw_list.popClipRect();
+
+                                        const window_width = imgui.getWindowWidth();
+                                        const window_height = imgui.getWindowHeight();
+
+                                        draw_list.addTriangleFilled(
+                                            .{ .x = @trunc(window_pos.x + window_width / 2.0 - 5.0), .y = @trunc(window_pos.y + window_height + 1.5) },
+                                            .{ .x = @trunc(window_pos.x + window_width / 2.0), .y = @trunc(window_pos.y + window_height + 8.5 + 1.1) },
+                                            .{ .x = @trunc(window_pos.x + 5.0 + window_width / 2.0), .y = @trunc(window_pos.y + window_height + 1.5) },
+                                            text_color.toU32(),
+                                        );
+
+                                        //drawWindowEdges(window_pos, draw_list, text_color);
+                                    }
+                                    imgui.text(indexed_text);
                                 }
-                                imgui.text(indexed_text);
-                            }
 
-                            if (inspect_time > 0.0) {
+                                imgui.popStyleColor();
+                                imgui.pushStyleColorImVec4(imgui.Col_Text, bg_color.toImguiVec4());
+
                                 const useable = ecs.has_id(world, inspect_target, ecs.id(components.Useable));
 
                                 const show_choice_dialog = useable or inspect_target == game.state.entities.player;
 
                                 if (show_choice_dialog) {
-                                    imgui.pushStyleColorImVec4(imgui.Col_WindowBg, .{ .x = 0.0, .y = 0.0, .z = 0.0, .w = 0.0 });
-                                    defer imgui.popStyleColor();
+                                    // imgui.pushStyleColorImVec4(imgui.Col_WindowBg, .{ .x = 0.0, .y = 0.0, .z = 0.0, .w = 0.0 });
+                                    // defer imgui.popStyleColor();
 
-                                    imgui.pushStyleVarImVec2(imgui.StyleVar_WindowPadding, .{ .x = 20.0, .y = 20.0 });
+                                    imgui.pushStyleVarImVec2(imgui.StyleVar_WindowPadding, .{ .x = 10.0, .y = 10.0 });
                                     defer imgui.popStyleVar();
 
-                                    imgui.setNextWindowSize(.{ .x = 120, .y = 0.0 }, imgui.Cond_None);
+                                    // imgui.pushStyleVar(imgui.StyleVar_WindowBorderSize, 0.0);
+                                    // defer imgui.popStyleVar();
+
+                                    //imgui.sameLine();
+
+                                    imgui.setNextWindowSize(.{ .x = 85, .y = 0.0 }, imgui.Cond_None);
                                     imgui.setNextWindowPos(.{ .x = @trunc(target_screen_position[0] + game.settings.pixels_per_unit / 2.0 * game.state.camera.zoom / 2.0), .y = @trunc(target_screen_position[1]) }, imgui.Cond_Always);
-                                    if (imgui.begin("ChoiceDialog", null, flags)) {
+                                    if (imgui.begin("Act...##ChoiceDialog", null, flags)) {
                                         defer imgui.end();
+
+                                        // if (imgui.getForegroundDrawList()) |draw_list| {
+                                        //     draw_list.pushClipRectFullScreen();
+                                        //     defer draw_list.popClipRect();
+
+                                        //     drawWindowEdges(draw_list, text_color);
+                                        // }
 
                                         if (useable) {
                                             if (imgui.buttonEx(if (ecs.has_id(world, inspect_target, ecs.id(components.Consumeable))) "Consume" else "Use", .{ .x = -1.0, .y = 0.0 })) {
@@ -277,4 +307,71 @@ fn createExamineText(allocator: std.mem.Allocator, target: ecs.entity_t) [:0]u8 
             return std.fmt.allocPrintZ(allocator, "{s} {s}.", .{ prefix, fixed_name }) catch unreachable;
         }
     }
+}
+
+fn drawWindowEdges(draw_list: *imgui.DrawList, color: game.math.Color) void {
+    const window_pos = imgui.getWindowPos();
+    const window_width = imgui.getWindowWidth();
+    const window_height = imgui.getWindowHeight();
+
+    const length = 8.0;
+    const thickness = 2.0;
+
+    const offset = 1.0;
+
+    // TL
+    draw_list.addLineEx(
+        .{ .x = window_pos.x - offset, .y = window_pos.y - offset },
+        .{ .x = window_pos.x + length - offset, .y = window_pos.y - offset },
+        color.toU32(),
+        thickness,
+    );
+    draw_list.addLineEx(
+        .{ .x = window_pos.x - offset, .y = window_pos.y + length - offset },
+        .{ .x = window_pos.x - offset, .y = window_pos.y - offset },
+        color.toU32(),
+        thickness,
+    );
+
+    // BR
+    draw_list.addLineEx(
+        .{ .x = window_pos.x + window_width - length + offset, .y = window_pos.y + window_height + offset },
+        .{ .x = window_pos.x + window_width + offset, .y = window_pos.y + window_height + offset },
+        color.toU32(),
+        thickness,
+    );
+    draw_list.addLineEx(
+        .{ .x = window_pos.x + window_width + offset, .y = window_pos.y + window_height - length + offset },
+        .{ .x = window_pos.x + window_width + offset, .y = window_pos.y + window_height + offset },
+        color.toU32(),
+        thickness,
+    );
+
+    // TR
+    draw_list.addLineEx(
+        .{ .x = window_pos.x + window_width - length + offset, .y = window_pos.y - offset },
+        .{ .x = window_pos.x + window_width + offset, .y = window_pos.y - offset },
+        color.toU32(),
+        thickness,
+    );
+    draw_list.addLineEx(
+        .{ .x = window_pos.x + window_width + offset, .y = window_pos.y - offset },
+        .{ .x = window_pos.x + window_width + offset, .y = window_pos.y + length - offset },
+        color.toU32(),
+        thickness,
+    );
+
+    // BL
+    draw_list.addLineEx(
+        .{ .x = window_pos.x - offset, .y = window_pos.y + window_height - length + offset },
+        .{ .x = window_pos.x - offset, .y = window_pos.y + window_height + offset },
+        color.toU32(),
+        thickness,
+    );
+    draw_list.addLineEx(
+        .{ .x = window_pos.x - offset, .y = window_pos.y + window_height + offset },
+        .{ .x = window_pos.x + length - offset, .y = window_pos.y + window_height + offset },
+        color.toU32(),
+        thickness,
+    );
 }
