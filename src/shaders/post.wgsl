@@ -67,8 +67,8 @@ fn crt(texture: texture_2d<f32>, sampl: sampler, uv: vec2<f32> ) -> vec4<f32> {
     ) * edge.x * edge.y;
     
     //lines
-    if(i32(res_x) % 2 < 1) { output_color.rgb *= vec3(0.7, 0.7, 0.7); }
-    else if (i32(res_x) % 3 < 1) { output_color.rgb *= vec3(0.7, 0.7, 0.7); }
+    if(i32(res_x) % 2 < 1) { output_color.rgb *= vec3(0.8, 0.8, 0.8); }
+    else if (i32(res_x) % 3 < 1) { output_color.rgb *= vec3(0.8, 0.8, 0.8); }
     else { output_color *= vec3(1.2, 1.2, 1.2); }
 
     return vec4(output_color, 1.0);
