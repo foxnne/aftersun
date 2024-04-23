@@ -50,7 +50,7 @@ fn crt(texture: texture_2d<f32>, sampl: sampler, uv: vec2<f32> ) -> vec4<f32> {
 
     const BLUR = 0.021;
 
-    const CA_AMT = 1.012;
+    const CA_AMT = 1.006;
     //curving
     var crtUV = uv * 2.0 - 1.0;
     var offset = crtUV.yx / CURVATURE;
