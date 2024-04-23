@@ -63,8 +63,8 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
         draw_list.pushClipRectFullScreen();
         defer draw_list.popClipRect();
 
-        var color = game.settings.colors.text;
-        color.value[3] *= @max(inspect_time, 0.0);
+        const color = game.settings.colors.text;
+        //color.value[3] *= @max(inspect_time, 0.0);
 
         drawWindowEdges(draw_list, color);
     }
@@ -236,7 +236,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 
                                 imgui.setNextWindowSize(.{ .x = 85, .y = 0.0 }, imgui.Cond_None);
                                 imgui.setNextWindowPos(.{ .x = @trunc(target_screen_position[0] + game.settings.pixels_per_unit / 2.0 * game.state.camera.zoom / 2.0), .y = @trunc(target_screen_position[1]) }, imgui.Cond_Always);
-                                if (imgui.begin("Act...##ChoiceDialog", null, flags)) {
+                                if (imgui.begin("##ChoiceDialog", null, flags)) {
                                     defer imgui.end();
 
                                     // if (imgui.getForegroundDrawList()) |draw_list| {

@@ -32,7 +32,7 @@ struct VertexOut {
     @location(2) data: vec3<f32>,
 ) -> @location(0) vec4<f32> {
 
-    var render = tiltshift(texture, texture_sampler, uv);
+    var render = crt(texture, texture_sampler, uv);
 
     render = desaturate(render, 0.0);
     render = vignette(render, uv);
@@ -40,13 +40,48 @@ struct VertexOut {
     return render;
 }
 
+fn crt(texture: texture_2d<f32>, sampl: sampler, uv: vec2<f32> ) -> vec4<f32> {
+
+    const resolution = textureDimensions(texture);
+    const res_x = i32(f32(resolution.x) * uv.x);
+    const res_y = i32(f32(resolution.y) * uv.y);
+
+    const CURVATURE = 4.2;
+
+    const BLUR = 0.021;
+
+    const CA_AMT = 1.012;
+    //curving
+    var crtUV = uv * 2.0 - 1.0;
+    var offset = crtUV.yx / CURVATURE;
+    crtUV += crtUV * offset * offset;
+    crtUV = crtUV * 0.5 + 0.5;
+    
+    var edge = smoothstep(vec2(0.0, 0.0), vec2(BLUR, BLUR), crtUV) * (vec2(1.0, 1.0) - smoothstep(vec2(1.0 - BLUR, 1.0 - BLUR), vec2(1.0, 1.0), crtUV));
+    
+    //chromatic abberation
+    var output_color = vec3(
+        textureSample(texture, sampl, (crtUV - 0.5) * CA_AMT + 0.5).r,
+        textureSample(texture, sampl, crtUV).g,
+        textureSample(texture, sampl, (crtUV - 0.5) / CA_AMT + 0.5).b
+    ) * edge.x * edge.y;
+    
+    //lines
+    if(i32(res_x) % 2 < 1) { output_color.rgb *= vec3(0.7, 0.7, 0.7); }
+    else if (i32(res_x) % 3 < 1) { output_color.rgb *= vec3(0.7, 0.7, 0.7); }
+    else { output_color *= vec3(1.2, 1.2, 1.2); }
+
+    return vec4(output_color, 1.0);
+
+}
+
 fn vignette(color: vec4<f32>, uv: vec2<f32>) -> vec4<f32> {
     // Inner radius
-    var inner = 0.7;
+    var inner = 0.5;
     // Outer radius
-    var outer = 1.2;
+    var outer = 1.4;
     // Vignette strength/intensity
-    var strength = 0.5;
+    var strength = 0.7;
     // Vignette roundness, higher = smoother, lower = sharper
     var curvature = 0.3;
     
