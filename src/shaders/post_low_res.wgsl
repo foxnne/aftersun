@@ -38,9 +38,7 @@ struct VertexOut {
 }
 
 fn crt(texture: texture_2d<f32>, sampl: sampler, uv: vec2<f32> ) -> vec4<f32> {
-    const CURVATURE = 1.2;
-
-    const BLUR = 0.021;
+    const CURVATURE = 1.4;
 
     const CA_AMT = 1.006;
     //curving
@@ -49,15 +47,13 @@ fn crt(texture: texture_2d<f32>, sampl: sampler, uv: vec2<f32> ) -> vec4<f32> {
     crtUV += crtUV * offset * offset;
     crtUV = crtUV * 0.5 + 0.5;
     
-    var edge = smoothstep(vec2(0.0, 0.0), vec2(BLUR, BLUR), crtUV) * (vec2(1.0, 1.0) - smoothstep(vec2(1.0 - BLUR, 1.0 - BLUR), vec2(1.0, 1.0), crtUV));
-    
     //chromatic abberation
     var output_color = vec4(
         textureSample(texture, sampl, (crtUV - 0.5) * CA_AMT + 0.5).r,
         textureSample(texture, sampl, crtUV).g,
         textureSample(texture, sampl, (crtUV - 0.5) / CA_AMT + 0.5).b,
         1.0
-    ) * edge.x * edge.y;
+    );
 
     return output_color;
 }

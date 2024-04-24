@@ -32,11 +32,11 @@ struct VertexOut {
     @location(2) data: vec3<f32>,
 ) -> @location(0) vec4<f32> {
 
-    var render = textureSample(texture, texture_sampler, uv);
+    var render = tiltshift(texture, texture_sampler, uv);
 
     render = desaturate(render, 0.0);
     render = vignette(render, uv);
-    render = crt(render, uv, texture);
+    //render = crt(render, uv, texture);
 
     return render;
 }
@@ -49,8 +49,7 @@ fn crt(color: vec4<f32>, uv: vec2<f32>, texture: texture_2d<f32>) -> vec4<f32> {
     var res_y = i32(f32(resolution.y) * uv.y);
 
     //lines
-    if(i32(res_x) % 2 < 1) { line_color *= vec4(0.8, 0.8, 0.8, 1.0); }
-    else if (i32(res_x) % 3 < 1) { line_color *= vec4(0.8, 0.8, 0.8, 1.0); }
+    if(i32(res_x) % 2 < 1 || i32(res_x) % 3 < 1) { line_color *= vec4(0.8, 0.8, 0.8, 1.0); }
     else { line_color *= vec4(1.2, 1.2, 1.2, 1.0); }
 
     return line_color;
@@ -62,7 +61,7 @@ fn vignette(color: vec4<f32>, uv: vec2<f32>) -> vec4<f32> {
     // Outer radius
     var outer = 1.4;
     // Vignette strength/intensity
-    var strength = 0.7;
+    var strength = 0.6;
     // Vignette roundness, higher = smoother, lower = sharper
     var curvature = 0.3;
     
