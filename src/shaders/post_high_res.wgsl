@@ -32,47 +32,28 @@ struct VertexOut {
     @location(2) data: vec3<f32>,
 ) -> @location(0) vec4<f32> {
 
-    var render = crt(texture, texture_sampler, uv);
+    var render = textureSample(texture, texture_sampler, uv);
 
     render = desaturate(render, 0.0);
     render = vignette(render, uv);
+    render = crt(render, uv, texture);
 
     return render;
 }
 
-fn crt(texture: texture_2d<f32>, sampl: sampler, uv: vec2<f32> ) -> vec4<f32> {
+fn crt(color: vec4<f32>, uv: vec2<f32>, texture: texture_2d<f32>) -> vec4<f32> {
 
-    const resolution = textureDimensions(texture);
-    const res_x = i32(f32(resolution.x) * uv.x);
-    const res_y = i32(f32(resolution.y) * uv.y);
+    var line_color = color;
+    var resolution = textureDimensions(texture);
+    var res_x = i32(f32(resolution.x) * uv.x);
+    var res_y = i32(f32(resolution.y) * uv.y);
 
-    const CURVATURE = 4.2;
-
-    const BLUR = 0.021;
-
-    const CA_AMT = 1.006;
-    //curving
-    var crtUV = uv * 2.0 - 1.0;
-    var offset = crtUV.yx / CURVATURE;
-    crtUV += crtUV * offset * offset;
-    crtUV = crtUV * 0.5 + 0.5;
-    
-    var edge = smoothstep(vec2(0.0, 0.0), vec2(BLUR, BLUR), crtUV) * (vec2(1.0, 1.0) - smoothstep(vec2(1.0 - BLUR, 1.0 - BLUR), vec2(1.0, 1.0), crtUV));
-    
-    //chromatic abberation
-    var output_color = vec3(
-        textureSample(texture, sampl, (crtUV - 0.5) * CA_AMT + 0.5).r,
-        textureSample(texture, sampl, crtUV).g,
-        textureSample(texture, sampl, (crtUV - 0.5) / CA_AMT + 0.5).b
-    ) * edge.x * edge.y;
-    
     //lines
-    if(i32(res_x) % 2 < 1) { output_color.rgb *= vec3(0.8, 0.8, 0.8); }
-    else if (i32(res_x) % 3 < 1) { output_color.rgb *= vec3(0.8, 0.8, 0.8); }
-    else { output_color *= vec3(1.2, 1.2, 1.2); }
+    if(i32(res_x) % 2 < 1) { line_color *= vec4(0.8, 0.8, 0.8, 1.0); }
+    else if (i32(res_x) % 3 < 1) { line_color *= vec4(0.8, 0.8, 0.8, 1.0); }
+    else { line_color *= vec4(1.2, 1.2, 1.2, 1.0); }
 
-    return vec4(output_color, 1.0);
-
+    return line_color;
 }
 
 fn vignette(color: vec4<f32>, uv: vec2<f32>) -> vec4<f32> {

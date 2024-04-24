@@ -85,7 +85,8 @@ pub const GameState = struct {
     pipeline_bloom: *gpu.ComputePipeline = undefined,
     pipeline_environment: *gpu.RenderPipeline = undefined,
     pipeline_final: *gpu.RenderPipeline = undefined,
-    pipeline_post: *gpu.RenderPipeline = undefined,
+    pipeline_post_low_res: *gpu.RenderPipeline = undefined,
+    pipeline_post_high_res: *gpu.RenderPipeline = undefined,
     bind_group_default: *gpu.BindGroup = undefined,
     bind_group_reflection: *gpu.BindGroup = undefined,
     bind_group_diffuse: *gpu.BindGroup = undefined,
@@ -589,8 +590,8 @@ pub fn deinit(_: *App) void {
     state.pipeline_height.release();
     state.pipeline_glow.release();
     state.pipeline_environment.release();
-    state.pipeline_bloom.release();
-    state.pipeline_post.release();
+    state.pipeline_post_high_res.release();
+    state.pipeline_post_low_res.release();
     state.pipeline_final.release();
 
     state.bind_group_default.release();
@@ -645,7 +646,6 @@ pub fn deinit(_: *App) void {
 
     imgui_mach.shutdown();
     imgui.destroyContext(null);
-    //imgui.getIO().fonts.?.clear();
 
     state.allocator.free(state.root_path);
 

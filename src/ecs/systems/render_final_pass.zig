@@ -55,7 +55,7 @@ pub fn callback(it: *ecs.iter_t) callconv(.C) void {
     const post_uniforms: PostUniforms = .{ .mvp = zmath.transpose(game.state.camera.frameBufferMatrix()) };
 
     game.state.batcher.begin(.{
-        .pipeline_handle = game.state.pipeline_default,
+        .pipeline_handle = game.state.pipeline_post_low_res,
         .bind_group_handle = game.state.bind_group_framebuffer,
         .clear_color = game.math.Color.initBytes(0, 0, 0, 255).toGpuColor(),
         .output_handle = game.state.framebuffer_output.view_handle,
@@ -71,7 +71,7 @@ pub fn callback(it: *ecs.iter_t) callconv(.C) void {
     const framebuffer_uniforms: PostUniforms = .{ .mvp = zmath.transpose(zmath.mul(fb_translation, fb_ortho)) };
 
     game.state.batcher.begin(.{
-        .pipeline_handle = game.state.pipeline_post,
+        .pipeline_handle = game.state.pipeline_post_high_res,
         .bind_group_handle = game.state.bind_group_post,
         .clear_color = game.math.Color.initBytes(0, 0, 0, 255).toGpuColor(),
     }) catch unreachable;

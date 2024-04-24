@@ -47,7 +47,8 @@ pub fn init(state: *game.GameState) !void {
     const blur_shader_module = core.device.createShaderModuleWGSL("blur.wgsl", game.shaders.blur);
     const glow_shader_module = core.device.createShaderModuleWGSL("glow.wgsl", game.shaders.glow);
     const height_shader_module = core.device.createShaderModuleWGSL("height.wgsl", game.shaders.height);
-    const post_shader_module = core.device.createShaderModuleWGSL("default.wgsl", game.shaders.post);
+    const post_low_res_shader_module = core.device.createShaderModuleWGSL("post_low_res.wgsl", game.shaders.post_low_res);
+    const post_high_res_shader_module = core.device.createShaderModuleWGSL("post_high_res.wgsl", game.shaders.post_high_res);
 
     defer default_shader_module.release();
     defer diffuse_shader_module.release();
@@ -56,7 +57,8 @@ pub fn init(state: *game.GameState) !void {
     defer blur_shader_module.release();
     defer glow_shader_module.release();
     defer height_shader_module.release();
-    defer post_shader_module.release();
+    defer post_high_res_shader_module.release();
+    defer post_low_res_shader_module.release();
 
     const vertex_attributes = [_]gpu.VertexAttribute{
         .{ .format = .float32x3, .offset = @offsetOf(Vertex, "position"), .shader_location = 0 },
@@ -149,14 +151,26 @@ pub fn init(state: *game.GameState) !void {
         .buffers = &.{vertex_buffer_layout},
     });
 
-    const post_fragment = gpu.FragmentState.init(.{
-        .module = post_shader_module,
+    const post_low_res_fragment = gpu.FragmentState.init(.{
+        .module = post_low_res_shader_module,
         .entry_point = "frag_main",
         .targets = &.{color_target},
     });
 
-    const post_vertex = gpu.VertexState.init(.{
-        .module = post_shader_module,
+    const post_low_res_vertex = gpu.VertexState.init(.{
+        .module = post_low_res_shader_module,
+        .entry_point = "vert_main",
+        .buffers = &.{vertex_buffer_layout},
+    });
+
+    const post_high_res_fragment = gpu.FragmentState.init(.{
+        .module = post_high_res_shader_module,
+        .entry_point = "frag_main",
+        .targets = &.{color_target},
+    });
+
+    const post_high_res_vertex = gpu.VertexState.init(.{
+        .module = post_high_res_shader_module,
         .entry_point = "vert_main",
         .buffers = &.{vertex_buffer_layout},
     });
@@ -198,9 +212,14 @@ pub fn init(state: *game.GameState) !void {
         .vertex = final_vertex,
     };
 
-    const post_pipeline_descriptor = gpu.RenderPipeline.Descriptor{
-        .fragment = &post_fragment,
-        .vertex = post_vertex,
+    const post_low_res_pipeline_descriptor = gpu.RenderPipeline.Descriptor{
+        .fragment = &post_low_res_fragment,
+        .vertex = post_low_res_vertex,
+    };
+
+    const post_high_res_pipeline_descriptor = gpu.RenderPipeline.Descriptor{
+        .fragment = &post_high_res_fragment,
+        .vertex = post_high_res_vertex,
     };
 
     state.pipeline_default = core.device.createRenderPipeline(&default_pipeline_descriptor);
@@ -210,7 +229,8 @@ pub fn init(state: *game.GameState) !void {
     state.pipeline_glow = core.device.createRenderPipeline(&glow_pipeline_descriptor);
     state.pipeline_bloom = core.device.createComputePipeline(&bloom_pipeline_descriptor);
     state.pipeline_final = core.device.createRenderPipeline(&final_pipeline_descriptor);
-    state.pipeline_post = core.device.createRenderPipeline(&post_pipeline_descriptor);
+    state.pipeline_post_low_res = core.device.createRenderPipeline(&post_low_res_pipeline_descriptor);
+    state.pipeline_post_high_res = core.device.createRenderPipeline(&post_high_res_pipeline_descriptor);
 
     state.uniform_buffer_default = core.device.createBuffer(&.{
         .usage = .{ .copy_dst = true, .uniform = true },
