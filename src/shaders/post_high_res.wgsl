@@ -37,12 +37,10 @@ struct VertexOut {
     render = desaturate(render, 0.0);
     render = vignette(render, uv);
     //render = crt(render, uv, texture);
-
     return render;
 }
 
 fn crt(color: vec4<f32>, uv: vec2<f32>, texture: texture_2d<f32>) -> vec4<f32> {
-
     var line_color = color;
     var resolution = textureDimensions(texture);
     var res_x = i32(f32(resolution.x) * uv.x);
