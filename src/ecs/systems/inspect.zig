@@ -327,7 +327,7 @@ fn drawWindowEdges(draw_list: *imgui.DrawList, color: game.math.Color) void {
     const window_width = game.window_size[0];
     const window_height = game.window_size[1];
 
-    const length = 15.0;
+    const length = 10.0;
     const thickness = 1.0;
 
     const offset = -10.0;
