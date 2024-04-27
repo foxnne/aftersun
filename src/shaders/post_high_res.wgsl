@@ -55,13 +55,13 @@ fn crt(color: vec4<f32>, uv: vec2<f32>, texture: texture_2d<f32>) -> vec4<f32> {
 
 fn vignette(color: vec4<f32>, uv: vec2<f32>) -> vec4<f32> {
     // Inner radius
-    var inner = 0.4;
+    var inner = 0.8;
     // Outer radius
-    var outer = 1.2;
+    var outer = 1.1;
     // Vignette strength/intensity
     var strength = 0.5;
     // Vignette roundness, higher = smoother, lower = sharper
-    var curvature = 0.5;
+    var curvature = 0.2;
     
     // Calculate edge curvature
     var curve = pow(abs(uv * 2.0 - 1.0), vec2(1.0 / curvature));
