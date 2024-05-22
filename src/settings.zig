@@ -26,7 +26,7 @@ pub const pixels_per_unit: f32 = 32.0;
 
 /// The seconds it takes for a move to be completed from one tile to another.
 // TODO: Embed this in character stats.
-pub const movement_cooldown: f32 = 0.38;
+pub const movement_cooldown: f32 = 0.42;
 
 /// The number of sprites expected per batch to the batcher.
 pub const batcher_max_sprites = 40000;
@@ -38,7 +38,7 @@ pub const cell_size = 24;
 pub const max_visible_tiles: f32 = cell_size * 1.2;
 
 /// Speed at which the camera will lerp to new velocity.
-pub const camera_follow_speed = 0.5;
+pub const camera_follow_speed = 0.8;
 
 pub const font_size: f32 = 13.0;
 

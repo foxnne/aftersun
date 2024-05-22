@@ -85,6 +85,8 @@ pub fn loadCell(self: *Self, cell: components.Cell) void {
                         const rand_f = random.float(f32);
                         const leaf_color = math.Color.initBytes(if (rand_f <= 0.25) 14 else if (rand_f <= 0.5) 15 else if (rand_f <= 0.75) 16 else 15, 0, 0, 255).toSlice();
 
+                        const order_offset: usize = x_i + y_i;
+
                         const tree_leaves_01 = if (self.entity_pool.items.len > 0) self.entity_pool.pop() else ecs.new_id(game.state.world);
                         tile.count();
                         _ = ecs.set(game.state.world, tree_leaves_01, components.Position, tile.toPosition(.tile));
@@ -94,6 +96,7 @@ pub fn loadCell(self: *Self, cell: components.Cell) void {
                             .frag_mode = .palette,
                             .vert_mode = .top_sway,
                             .reflect = reflect,
+                            .order = 1 + order_offset,
                         });
                         _ = ecs.set_pair(game.state.world, tree_leaves_01, ecs.id(components.Cell), cell_entity, components.Cell, cell);
 
@@ -106,6 +109,7 @@ pub fn loadCell(self: *Self, cell: components.Cell) void {
                             .frag_mode = .palette,
                             .vert_mode = .top_sway,
                             .reflect = reflect,
+                            .order = 2 + order_offset,
                         });
 
                         _ = ecs.set_pair(game.state.world, tree_leaves_02, ecs.id(components.Cell), cell_entity, components.Cell, cell);
@@ -119,6 +123,7 @@ pub fn loadCell(self: *Self, cell: components.Cell) void {
                             .frag_mode = .palette,
                             .vert_mode = .top_sway,
                             .reflect = reflect,
+                            .order = 3 + order_offset,
                         });
                         _ = ecs.set_pair(game.state.world, tree_leaves_03, ecs.id(components.Cell), cell_entity, components.Cell, cell);
 
@@ -131,6 +136,7 @@ pub fn loadCell(self: *Self, cell: components.Cell) void {
                             .frag_mode = .palette,
                             .vert_mode = .top_sway,
                             .reflect = reflect,
+                            .order = 4 + order_offset,
                         });
                         _ = ecs.set_pair(game.state.world, tree_leaves_04, ecs.id(components.Cell), cell_entity, components.Cell, cell);
 
@@ -150,11 +156,7 @@ pub fn loadCell(self: *Self, cell: components.Cell) void {
                     const tree = if (self.entity_pool.items.len > 0) self.entity_pool.pop() else ecs.new_id(game.state.world);
                     tile.count();
                     _ = ecs.set(game.state.world, tree, components.Position, tile.toPosition(.tile));
-                    _ = ecs.set(game.state.world, tree, components.SpriteRenderer, .{
-                        .index = assets.aftersun_atlas.Pine_0_Trunk,
-                        .reflect = reflect,
-                        .vert_mode = .top_sway,
-                    });
+                    _ = ecs.set(game.state.world, tree, components.SpriteRenderer, .{ .index = assets.aftersun_atlas.Pine_0_Trunk, .reflect = reflect, .vert_mode = .top_sway, .order = x_i + y_i });
                     _ = ecs.set(game.state.world, tree, components.Collider, .{});
                     _ = ecs.set_pair(game.state.world, tree, ecs.id(components.Cell), cell_entity, components.Cell, cell);
 
@@ -165,6 +167,7 @@ pub fn loadCell(self: *Self, cell: components.Cell) void {
                         .index = assets.aftersun_atlas.Pine_0_Needles,
                         .vert_mode = .top_sway,
                         .reflect = reflect,
+                        .order = x_i + y_i,
                     });
                     _ = ecs.set_pair(game.state.world, tree_leaves_01, ecs.id(components.Cell), cell_entity, components.Cell, cell);
 

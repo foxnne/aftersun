@@ -13,7 +13,7 @@ pub const CharacterAnimator = struct {
     hair_set: AnimationSet,
     frame: usize = 0,
     elapsed: f32 = 0,
-    fps: usize = 10,
+    fps: usize = 8,
     state: State = State.idle,
 
     pub const State = enum { idle, walk };

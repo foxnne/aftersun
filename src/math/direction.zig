@@ -80,12 +80,12 @@ pub const Direction = enum(u8) {
 
     /// Returns horizontal axis of the direction.
     pub fn x(self: Direction) f32 {
-        return @as(f32, @floatFromInt(@as(i8, @bitCast(@intFromEnum(self))) << 4 >> 6));
+        return @floatFromInt(@as(i8, @bitCast(@intFromEnum(self))) << 4 >> 6);
     }
 
     /// Returns vertical axis of the direction.
     pub fn y(self: Direction) f32 {
-        return @as(f32, @floatFromInt(@as(i8, @bitCast(@intFromEnum(self))) << 6 >> 6));
+        return @floatFromInt(@as(i8, @bitCast(@intFromEnum(self))) << 6 >> 6);
     }
 
     /// Returns direction as a F32x4.

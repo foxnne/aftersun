@@ -51,7 +51,7 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
 
                             if (move_direction != .none) {
                                 animators[i].state = components.CharacterAnimator.State.walk;
-                                animators[i].fps = 11;
+                                animators[i].fps = @intFromFloat((((1.0 - game.settings.movement_cooldown) * 100.0) / 5.0));
                                 body_directions[i] = move_direction;
 
                                 // Clamp face direction to directions close to the movement direction

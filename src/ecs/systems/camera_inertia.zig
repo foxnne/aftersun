@@ -20,8 +20,10 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                 if (ecs.field(it, components.Inertia, 2)) |inertias| {
                     const step = it.delta_time * game.settings.camera_follow_speed;
 
-                    const target_v_x = directions[i].x();
-                    const target_v_y = directions[i].y();
+                    const movement = directions[i].f32x4();
+
+                    const target_v_x = movement[0];
+                    const target_v_y = movement[1];
 
                     if (inertias[i].x > target_v_x) {
                         if (inertias[i].x >= target_v_x + step) {
