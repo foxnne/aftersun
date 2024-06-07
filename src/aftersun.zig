@@ -8,7 +8,7 @@ const imgui = @import("zig-imgui");
 const imgui_mach = imgui.backends.mach;
 
 const core = @import("mach").core;
-const gpu = core.gpu;
+const gpu = @import("mach").gpu;
 
 pub const name: [:0]const u8 = "Aftersun";
 pub const settings = @import("settings.zig");
@@ -44,10 +44,7 @@ const Prefabs = @import("ecs/prefabs/prefabs.zig");
 
 pub const App = @This();
 
-pub const mach_core_options = core.ComptimeOptions{
-    .use_wgpu = !build_options.use_sysgpu,
-    .use_sysgpu = build_options.use_sysgpu,
-};
+pub const use_sysgpu = build_options.use_sysgpu;
 
 timer: core.Timer,
 title_timer: core.Timer,
@@ -593,6 +590,7 @@ pub fn deinit(_: *App) void {
     state.pipeline_post_high_res.release();
     state.pipeline_post_low_res.release();
     state.pipeline_final.release();
+    state.pipeline_bloom.release();
 
     state.bind_group_default.release();
     state.bind_group_diffuse.release();

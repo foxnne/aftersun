@@ -2,15 +2,16 @@ const std = @import("std");
 const game = @import("../aftersun.zig");
 const gfx = game.gfx;
 const zmath = @import("zmath");
-const core = @import("mach").core;
+const mach = @import("mach");
+const core = mach.core;
 
 pub const Batcher = struct {
     allocator: std.mem.Allocator,
-    encoder: ?*core.gpu.CommandEncoder = null,
+    encoder: ?*mach.gpu.CommandEncoder = null,
     vertices: []gfx.Vertex,
-    vertex_buffer_handle: *core.gpu.Buffer,
+    vertex_buffer_handle: *mach.gpu.Buffer,
     indices: []u32,
-    index_buffer_handle: *core.gpu.Buffer,
+    index_buffer_handle: *mach.gpu.Buffer,
     context: Context = undefined,
     vert_index: usize = 0,
     quad_count: usize = 0,
@@ -19,12 +20,12 @@ pub const Batcher = struct {
 
     /// Contains instructions on pipeline and binding for the current batch
     pub const Context = struct {
-        pipeline_handle: *core.gpu.RenderPipeline,
-        bind_group_handle: *core.gpu.BindGroup,
+        pipeline_handle: *mach.gpu.RenderPipeline,
+        bind_group_handle: *mach.gpu.BindGroup,
         // If output handle is null, render to the back buffer
         // otherwise, render to offscreen texture view handle
-        output_handle: ?*core.gpu.TextureView = null,
-        clear_color: core.gpu.Color = .{ .r = 0.0, .g = 0.0, .b = 0.0, .a = 1.0 },
+        output_handle: ?*mach.gpu.TextureView = null,
+        clear_color: mach.gpu.Color = .{ .r = 0.0, .g = 0.0, .b = 0.0, .a = 1.0 },
     };
 
     /// Describes the current state of the Batcher
@@ -278,7 +279,7 @@ pub const Batcher = struct {
         return self.append(quad);
     }
 
-    pub fn end(self: *Batcher, uniforms: anytype, buffer: *core.gpu.Buffer) !void {
+    pub fn end(self: *Batcher, uniforms: anytype, buffer: *mach.gpu.Buffer) !void {
         const UniformsType = @TypeOf(uniforms);
         const uniforms_type_info = @typeInfo(UniformsType);
         if (uniforms_type_info != .Struct) {
@@ -299,14 +300,14 @@ pub const Batcher = struct {
             const back_buffer_view = core.swap_chain.getCurrentTextureView() orelse break :pass;
             defer back_buffer_view.release();
 
-            const color_attachments = [_]core.gpu.RenderPassColorAttachment{.{
+            const color_attachments = [_]mach.gpu.RenderPassColorAttachment{.{
                 .view = if (self.context.output_handle) |out_handle| out_handle else back_buffer_view,
                 .load_op = .clear,
                 .store_op = .store,
                 .clear_value = self.context.clear_color,
             }};
 
-            const render_pass_info = core.gpu.RenderPassDescriptor{
+            const render_pass_info = mach.gpu.RenderPassDescriptor{
                 .color_attachment_count = color_attachments.len,
                 .color_attachments = &color_attachments,
             };
@@ -337,7 +338,7 @@ pub const Batcher = struct {
         }
     }
 
-    pub fn finish(self: *Batcher) !*core.gpu.CommandBuffer {
+    pub fn finish(self: *Batcher) !*mach.gpu.CommandBuffer {
         if (self.encoder) |encoder| {
             // Write the current vertex and index buffers to the queue.
             core.queue.writeBuffer(self.vertex_buffer_handle, 0, self.vertices[0 .. self.quad_count * 4]);

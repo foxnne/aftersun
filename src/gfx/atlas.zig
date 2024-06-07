@@ -15,7 +15,10 @@ pub const Atlas = struct {
 
         const options = std.json.ParseOptions{ .duplicate_field_behavior = .use_first, .ignore_unknown_fields = true };
         const parsed = std.json.parseFromSlice(Atlas, allocator, read, options) catch {
-            try std.fs.cwd().writeFile("test.json", read);
+            try std.fs.cwd().writeFile(.{
+                .sub_path = "test.json",
+                .data = read,
+            });
             return error.F;
         };
         defer parsed.deinit();

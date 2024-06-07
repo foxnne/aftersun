@@ -45,7 +45,7 @@ pub const Color = struct {
         };
     }
 
-    pub fn toGpuColor(self: Color) mach.core.gpu.Color {
+    pub fn toGpuColor(self: Color) mach.gpu.Color {
         return .{
             .r = @floatCast(self.value[0]),
             .g = @floatCast(self.value[1]),

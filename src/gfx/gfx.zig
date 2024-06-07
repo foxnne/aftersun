@@ -4,7 +4,7 @@ const imgui_mach = imgui.backends.mach;
 const build_options = @import("build-options");
 const zmath = @import("zmath");
 const core = @import("mach").core;
-const gpu = core.gpu;
+const gpu = @import("mach").gpu;
 const game = @import("../aftersun.zig");
 
 pub const Animation = @import("animation.zig").Animation;
