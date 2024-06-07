@@ -40,7 +40,7 @@ struct VertexOut {
 fn crt(texture: texture_2d<f32>, sampl: sampler, uv: vec2<f32> ) -> vec4<f32> {
     var curvature = 1.8;
 
-    var ca_amt = 1.006;
+    var ca_amt = 1.000;
     //curving
     var crtUV = uv * 2.0 - 1.0;
     var offset = crtUV.yx / curvature;
