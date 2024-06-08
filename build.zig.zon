@@ -14,12 +14,12 @@
             .hash = "122015e1dac4afaf275f7f2adde3814e6a27f5799cbef96bb487ee305f7e33f4dca3",
         },
         .zig_imgui = .{
-            .url = "https://github.com/foxnne/zig-imgui/archive/0fe4067e3c54aee08d808fa74270e10583d5f5bf.tar.gz",
-            .hash = "1220ed45ce2392c0828927f51f5ebd204d49e1f58c4d8f964bc9bcc41a30f0d4f54a",
+            .url = "https://github.com/foxnne/zig-imgui/archive/d5790495da5ec0282aa65e7eecf541f951afb44f.tar.gz",
+            .hash = "1220b58e522bd5c9995ababaf50771bab62cd9e1a3908dcb1b25ec42510770854cc1",
         },
         .zflecs = .{
-            .url = "https://github.com/foxnne/zflecs/archive/32d3cd69312aa64a42e48eca0aa0ee46b004d6be.tar.gz",
-            .hash = "12208c17bcd86f758b4d1c14af45de11af3d372e88a6107b3550ddb737668ad1dca4",
+            .url = "https://github.com/foxnne/zflecs/archive/ed80aece9f8cd47b7d2bda7e76b0cebb2dc988db.tar.gz",
+            .hash = "1220ef03172ba395c1f63788652c6401c3ac510e1f1e7911e6944bbb7195b6a76a44",
         },
         .zstbi = .{
             .url = "https://github.com/foxnne/zstbi/archive/d9a0947365b1ee8131fcf518feac8dfe896cfcfa.tar.gz",
