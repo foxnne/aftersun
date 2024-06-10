@@ -24,8 +24,16 @@ pub fn run(it: *ecs.iter_t) callconv(.C) void {
                 var target: zmath.F32x4 = position;
                 target[0] -= game.math.ease(0, std.math.sign(inertia[0]) * game.settings.pixels_per_unit, @abs(inertia[0]), .ease_in);
                 target[1] -= game.math.ease(0, std.math.sign(inertia[1]) * game.settings.pixels_per_unit, @abs(inertia[1]), .ease_in);
-                game.state.camera.position[0] = @trunc(target[0]);
-                game.state.camera.position[1] = @trunc(target[1]);
+
+                if (@abs(inertia[0]) > 0.9 or @abs(inertia[0]) < 0.1)
+                    game.state.camera.position[0] = @trunc(target[0])
+                else
+                    game.state.camera.position[0] = target[0];
+
+                if (@abs(inertia[1]) > 0.9 or @abs(inertia[1]) < 0.1)
+                    game.state.camera.position[1] = @trunc(target[1])
+                else
+                    game.state.camera.position[1] = target[1];
             }
         }
     }
